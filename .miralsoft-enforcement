@@ -1,0 +1,14 @@
+# Enforcement configuration read by the local git hooks and by CI (.github/workflows/).
+# Commits are checked only when they are the project's own; contributions from outside are not.
+
+# Committer identity of this private project.
+OWNER_NAME=Sanaka
+OWNER_EMAIL=20637644+miralsoft@users.noreply.github.com
+
+# Files checked for em-dashes. LICENSE is third-party text and is not matched.
+CONTENT_GLOBS=*.md *.ps1 *.psm1 *.psd1 *.yml
+CONTENT_EXCLUDE=
+
+# PowerShell checks.
+POWERSHELL_TARGET=5.1
+PSSA_MODULE=.modules/PSScriptAnalyzer/1.25.0/PSScriptAnalyzer.psd1

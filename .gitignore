@@ -1,0 +1,12 @@
+# Pinned PowerShell modules, restored by Restore-PinnedModules.ps1.
+/.modules/
+
+# Inventory output and any copy of real game or plugin data. Never commit these.
+/out/
+*.inventory.json
+
+# Editor and OS clutter.
+.vs/
+.vscode/
+Thumbs.db
+desktop.ini

@@ -1,0 +1,140 @@
+# PowerShell checks, the CI half of the pre-commit hook's PowerShell section (R-17), plus the
+# tests (T-04). For a project that declares rules/languages/powershell.md.
+#
+# Copied from: miralsoft-foundation-docs, enforcement/ci/powershell-checks.yml
+# Foundation version: 5.1.0
+# Copied on: 2026-11-03
+#
+# Keep the three lines above and fill in the date (M-19).
+#
+# What it expects at the project root: PinnedModules.psd1 and Restore-PinnedModules.ps1 (both
+# from the foundation's enforcement/powershell/), PSScriptAnalyzerSettings.psd1, and the tests
+# under tests/ as *.Tests.ps1. Strict throughout: a check that examined nothing, or a rule that
+# crashed, fails the run (R-23).
+#
+# On a Windows runner, because the product targets Windows PowerShell 5.1, which exists only on
+# Windows; `shell: powershell` is Windows PowerShell there, and the first step proves it rather
+# than trusting the label. Windows minutes cost more than Linux minutes on a private
+# repository, which R-22 is about.
+
+name: PowerShell checks
+
+on:
+  push:
+    branches:
+      - '**'
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: powershell-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  powershell:
+    name: PowerShell checks
+    # A named image, not windows-latest, which GitHub moves to newer versions over one to two
+    # months and recommends naming a version to avoid.
+    runs-on: windows-2025
+    defaults:
+      run:
+        shell: powershell
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+
+      - name: The runtime is Windows PowerShell 5.1
+        run: |
+          Set-StrictMode -Version Latest
+          $ErrorActionPreference = 'Stop'
+          $version = $PSVersionTable.PSVersion
+          if ($PSVersionTable.PSEdition -ne 'Desktop' -or $version.Major -ne 5 -or $version.Minor -ne 1) {
+              throw ('Expected Windows PowerShell 5.1, got {0} {1}' -f $PSVersionTable.PSEdition, $version)
+          }
+          'Windows PowerShell {0}' -f $version
+
+      - name: PowerShell files are UTF-8 with a byte-order mark
+        run: |
+          Set-StrictMode -Version Latest
+          $ErrorActionPreference = 'Stop'
+          function Test-Bom([byte[]] $Bytes) {
+              $Bytes.Length -ge 3 -and $Bytes[0] -eq 0xEF -and $Bytes[1] -eq 0xBB -and $Bytes[2] -eq 0xBF
+          }
+          # R-20: the test accepts a marked file and refuses an unmarked one before it is trusted.
+          if (-not (Test-Bom ([byte[]](0xEF, 0xBB, 0xBF, 0x41)))) { throw 'BOM detector is dead' }
+          if (Test-Bom ([byte[]](0x41, 0x42, 0x43))) { throw 'BOM detector accepts anything' }
+
+          $files = @(git ls-files -- '*.ps1' '*.psm1' '*.psd1')
+          if ($files.Count -eq 0) { throw 'No PowerShell files tracked, so nothing was checked (R-23).' }
+          $bad = @($files | Where-Object { -not (Test-Bom ([System.IO.File]::ReadAllBytes((Join-Path -Path (Get-Location).Path -ChildPath $_)))) })
+          if ($bad.Count -gt 0) {
+              $bad | ForEach-Object { '{0}: not UTF-8 with a byte-order mark' -f $_ }
+              throw ('{0} file(s) Windows PowerShell 5.1 would read in the ANSI code page.' -f $bad.Count)
+          }
+          '{0} PowerShell file(s), all UTF-8 with BOM.' -f $files.Count
+
+      - name: Restore the pinned modules
+        run: |
+          Set-StrictMode -Version Latest
+          $ErrorActionPreference = 'Stop'
+          & .\Restore-PinnedModules.ps1 -ManifestPath .\PinnedModules.psd1 -Destination .\.modules -Verbose
+
+      - name: PSScriptAnalyzer
+        run: |
+          Set-StrictMode -Version Latest
+          $ErrorActionPreference = 'Stop'
+          $manifest = Import-PowerShellDataFile -LiteralPath .\PinnedModules.psd1
+          $pin = $manifest.Modules | Where-Object { $_.Name -eq 'PSScriptAnalyzer' }
+          Import-Module -Name (Join-Path -Path (Get-Location).Path -ChildPath ('.modules\PSScriptAnalyzer\{0}\PSScriptAnalyzer.psd1' -f $pin.Version))
+          $files = @(git ls-files -- '*.ps1' '*.psm1' '*.psd1')
+          if ($files.Count -eq 0) { throw 'No PowerShell files tracked, so nothing was analysed (R-23).' }
+          # Project change to the copied template: a warm-up pass, results discarded. UseCorrectCasing
+          # in 1.25.0 intermittently throws a NullReferenceException on the first analyses in a fresh
+          # process (docs/decisions.md, 2026-11-03). The strict pass below is unchanged.
+          foreach ($file in $files) {
+              $null = Invoke-ScriptAnalyzer -Path $file -Settings .\PSScriptAnalyzerSettings.psd1 -ErrorAction SilentlyContinue
+          }
+          $failed = $false
+          foreach ($file in $files) {
+              $analyzerErrors = $null
+              $found = @(Invoke-ScriptAnalyzer -Path $file -Settings .\PSScriptAnalyzerSettings.psd1 -ErrorVariable analyzerErrors -ErrorAction SilentlyContinue)
+              $found | ForEach-Object { '{0}:{1} {2} [{3}] {4}' -f $file, $_.Line, $_.RuleName, $_.Severity, $_.Message }
+              if ($found | Where-Object { $_.Severity -in 'Error', 'Warning', 'ParseError' }) { $failed = $true }
+              # A suppression is an exception and carries its reason. PSScriptAnalyzer accepts a
+              # SuppressMessageAttribute without a Justification and hides the finding all the same,
+              # measured with 1.25.0, so the reason is required here instead.
+              $unexplained = @(Invoke-ScriptAnalyzer -Path $file -Settings .\PSScriptAnalyzerSettings.psd1 -SuppressedOnly |
+                      Where-Object { [string]::IsNullOrWhiteSpace($_.Justification) })
+              $unexplained | ForEach-Object { '{0}:{1} {2} suppressed without a Justification' -f $file, $_.Line, $_.RuleName }
+              if ($unexplained.Count -gt 0) { $failed = $true }
+              # A crashed rule is a non-terminating RULE_ERROR. Counting findings alone would pass
+              # over it, so any analyzer error fails the step (R-23).
+              if (@($analyzerErrors).Count -gt 0) {
+                  $analyzerErrors | ForEach-Object { 'analyzer error in {0}: {1}' -f $file, $_ }
+                  $failed = $true
+              }
+          }
+          if ($failed) { throw 'PSScriptAnalyzer reported issues (C-03).' }
+          'PSScriptAnalyzer {0}: {1} file(s), no issue.' -f $pin.Version, $files.Count
+
+      - name: Pester
+        run: |
+          Set-StrictMode -Version Latest
+          $ErrorActionPreference = 'Stop'
+          $manifest = Import-PowerShellDataFile -LiteralPath .\PinnedModules.psd1
+          $pin = $manifest.Modules | Where-Object { $_.Name -eq 'Pester' }
+          # By path, and checked: Windows ships Pester 3.4.0 in its own module path, and a failed or
+          # missing import lets PowerShell autoload that one the moment Invoke-Pester is called.
+          Import-Module -Name (Join-Path -Path (Get-Location).Path -ChildPath ('.modules\Pester\{0}\Pester.psd1' -f $pin.Version))
+          $loaded = (Get-Module -Name Pester).Version.ToString()
+          if ($loaded -ne $pin.Version) { throw ('Pester {0} is loaded, {1} is pinned.' -f $loaded, $pin.Version) }
+          $configuration = New-PesterConfiguration
+          $configuration.Run.Path = '.\tests'
+          $configuration.Run.PassThru = $true
+          $configuration.Output.Verbosity = 'Detailed'
+          $result = Invoke-Pester -Configuration $configuration
+          if ($result.TotalCount -eq 0) { throw 'No tests ran, so nothing was tested (R-23).' }
+          if ($result.FailedCount -gt 0) { throw ('{0} test(s) failed.' -f $result.FailedCount) }
+          'Pester {0}: {1} test(s) passed.' -f $loaded, $result.PassedCount

@@ -1,0 +1,319 @@
+# Content checks, the server-side half of the git hooks (R-17).
+#
+# Copied from: miralsoft-foundation-docs, enforcement/ci/content-checks.yml
+# Foundation version: 5.2.0
+# Copied on: 2026-11-03
+#
+# Keep the three lines above and fill in the date. A hook is fetched again on every fresh
+# clone, so it cannot go stale; a workflow file is committed and ages silently, and nothing
+# about it says so. The version line is what the release-time review of the declared
+# foundation version (M-17) has to compare against, and M-19 requires it.
+#
+# ---------------------------------------------------------------------------------------
+#
+# Deliberately language-neutral. It needs git, grep and sed and nothing else, so it is the
+# same file whether the project builds .NET on Windows or WordPress assets on Linux. The
+# build, the tests and the linters are the project's own business and belong in the
+# project's own workflow; only the checks that are the same everywhere live here.
+#
+# Two ways to use it, and the choice is not cosmetic:
+#
+#   1. Copy this file to .github/workflows/content-checks.yml as its own workflow.
+#      Then **add "Content checks" to the repository's required status checks**, or it runs,
+#      reports, and blocks nothing. A job that cannot block is a job that eventually gets
+#      ignored.
+#   2. Paste the `steps:` below into an existing build job. Correct when branch protection
+#      names one required check by job name: a second job would report separately and would
+#      not stop a merge.
+#
+# It reads CONTENT_GLOBS and CONTENT_EXCLUDE from .miralsoft-enforcement, the same file the
+# hooks read, so the local and the server-side check can never disagree about what is
+# covered.
+
+name: Content checks
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+# One run per ref. Without this a branch with an open pull request runs twice for the same
+# commit, once from push and once from pull_request.
+concurrency:
+  group: content-checks-${{ github.ref }}
+  cancel-in-progress: true
+
+# A workflow that only reads cannot write (S-03, S-13).
+permissions:
+  contents: read
+
+jobs:
+  content:
+    name: Content checks
+    # A named image, not ubuntu-latest. The actions below are pinned to commits so that nothing
+    # changes under this workflow without a commit saying so; a moving runner label would undo
+    # that one level down. GitHub announced on 2026-09-17 that ubuntu-latest moves to 26.04 in
+    # November 2026; a run of this repository on 2026-10-20 still reported ubuntu-24.04. Moving to
+    # a newer image is a deliberate change, made here, with its own run to look at.
+    runs-on: ubuntu-24.04
+    steps:
+      # Pinned to an immutable digest, not to a tag (S-13). A tag is movable, so a tag
+      # reference is somebody else's code running with this repository's token. Update the
+      # digest and the trailing version comment together.
+      #
+      # fetch-depth 0 because the commit-message check reads a range of commits. On a very
+      # large repository, narrow it to the range the event actually covers.
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          fetch-depth: 0
+
+      - name: Read the enforcement configuration
+        run: |
+          set -eu
+          test -f .miralsoft-enforcement || {
+            echo "No .miralsoft-enforcement at the repository root." >&2
+            echo "The hooks and this workflow both read it. See enforcement/README.md." >&2
+            exit 1
+          }
+          cat .miralsoft-enforcement
+
+      # R-20. A check whose only observable outcome is silence cannot be told apart from a
+      # check that does nothing, so every detector is tried against something it must match
+      # and something it must not, before any of them is trusted. This is not decoration:
+      # the em-dash pattern loop in the shared hook once lost its patterns to shell
+      # expansion and passed over almost every file it was configured to read.
+      #
+      # The secret probes are assembled from pieces rather than written out, because a line
+      # that looks like a secret is one as far as the scan is concerned, and this file is
+      # scanned like any other.
+      #
+      # The step that checks own commits defines its detectors as functions and tests them
+      # itself, where they are used, so they are not repeated here.
+      - name: The detectors can fail
+        run: |
+          set -euf
+          fail=0
+          emdash=$(printf '\342\200\224')
+
+          printf 'planted %s here\n' "$emdash" | grep -q -- "$emdash" \
+            || { echo "em-dash detector is dead" >&2; fail=1; }
+          printf 'a clean line\n' | grep -q -- "$emdash" \
+            && { echo "em-dash detector matches anything" >&2; fail=1; }
+
+          pk_probe=$(printf -- '-----%s %s %s %s-----' 'BEGIN' 'RSA' 'PRIVATE' 'KEY')
+          key_probe=$(printf '%s_%s = "%s"' 'api' 'key' 'abcdefghij1234567890')
+          prose_probe='the api key is mentioned in ordinary prose'
+          printf '%s\n' "$pk_probe" | grep -Eq 'BEGIN [A-Z ]*PRIVATE KEY' \
+            || { echo "private-key pattern is dead" >&2; fail=1; }
+          printf '%s\n' "$key_probe" \
+            | grep -Eiq '(api[_-]?key|secret|token)["'"'"' ]*[:=]["'"'"' ]*[A-Za-z0-9_-]{16,}' \
+            || { echo "api-key pattern is dead" >&2; fail=1; }
+          printf '%s\n' "$prose_probe" \
+            | grep -Eiq '(api[_-]?key|secret|token)["'"'"' ]*[:=]["'"'"' ]*[A-Za-z0-9_-]{16,}' \
+            && { echo "api-key pattern matches ordinary prose" >&2; fail=1; }
+
+          if [ "$fail" -ne 0 ]; then
+            echo "The checks below cannot be trusted, including a pass." >&2
+            exit 1
+          fi
+          echo "Every detector fires on a planted case and stays quiet on a clean one."
+
+      # I-02. The patterns come from .miralsoft-enforcement rather than being repeated here.
+      # Matched with `case`, exactly as the hook does, where `*` also spans a slash.
+      #
+      # -f matters as much as the patterns do: without it, `for g in $globs` expands each
+      # pattern against the working directory first and every pattern loses its meaning.
+      - name: No em-dash in prose
+        run: |
+          set -euf
+          emdash=$(printf '\342\200\224')
+          globs=$(sed -n 's/^CONTENT_GLOBS=//p' .miralsoft-enforcement)
+          excludes=$(sed -n 's/^CONTENT_EXCLUDE=//p' .miralsoft-enforcement)
+          if [ -z "$globs" ]; then
+            echo "CONTENT_GLOBS is empty, so nothing would be checked (I-02)." >&2
+            exit 1
+          fi
+          echo "globs:    $globs"
+          echo "excludes: ${excludes:-none}"
+
+          hits=""
+          for f in $(git ls-files); do
+            skip=""
+            for e in $excludes; do
+              case "$f" in $e) skip=1; break ;; esac
+            done
+            [ -n "$skip" ] && continue
+            for g in $globs; do
+              case "$f" in
+              $g)
+                if grep -q -- "$emdash" "$f"; then hits="$hits $f"; fi
+                break
+                ;;
+              esac
+            done
+          done
+
+          if [ -n "$hits" ]; then
+            echo "Em-dash characters found (I-02):" >&2
+            for h in $hits; do echo "  $h" >&2; done
+            echo "Use commas, parentheses, or separate sentences." >&2
+            exit 1
+          fi
+          echo "No em-dash characters found."
+
+      # R-10, S-02. The same patterns the pre-commit hook applies, over the tracked files
+      # rather than over a staged diff, because CI has no staging area.
+      - name: No secrets
+        run: |
+          set -euf
+          fail=0
+          files=$(git ls-files)
+
+          if printf '%s\n' "$files" | xargs -r grep -lE 'BEGIN [A-Z ]*PRIVATE KEY'; then
+            echo "A private key header was found (R-10/S-02)." >&2
+            fail=1
+          fi
+          if printf '%s\n' "$files" | xargs -r grep -lEi \
+            '(api[_-]?key|secret|token)["'"'"' ]*[:=]["'"'"' ]*[A-Za-z0-9_-]{16,}'; then
+            echo "An API-key-like assignment was found (R-10/S-02)." >&2
+            fail=1
+          fi
+          if [ "$fail" -ne 0 ]; then exit 1; fi
+          echo "No secret patterns found."
+
+      # R-09, I-06, R-03 and R-19 for the commits of a push or pull request that are the
+      # project's own: those whose author or committer is a declared identity, or carries a
+      # declared name or a declared address. A commit made through the GitHub API or the web
+      # interface, or in a clone where the hooks were never installed, never passed a hook, and a
+      # fresh clone is where an AI working for the owner is most likely to forget.
+      #
+      # A commit from outside, whose author and committer are both foreign, is not checked at all:
+      # what outside contributors write is theirs, and the maintainer's review of the pull request
+      # is the gate. An AI author with a declared committer is own, so `--author` alone does not
+      # get past this. `GitHub <noreply@github.com>`, which GitHub writes as committer for a merge
+      # or a web edit, is foreign like any other undeclared identity.
+      #
+      # Forbidden in an own commit: a line that attributes the work to an AI (a trailer or a
+      # phrase such as Co-Authored-By, Assisted-by, Generated with, Written by, naming an AI), an AI
+      # as author or committer, and an identity that carries a declared name or address but is not
+      # exactly a declared identity. A human co-author and an AI named in ordinary prose pass.
+      - name: Own commits carry no AI attribution and only declared identities
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          set -euf
+          empty='0000000000000000000000000000000000000000'
+          value() { sed -n "s/^$1=//p" .miralsoft-enforcement | sed 's/^[[:space:]]*//; s/[[:space:]]*$//'; }
+          owner_name=$(value OWNER_NAME | tail -n 1)
+          owner_email=$(value OWNER_EMAIL | tail -n 1)
+          declared=$(printf '%s <%s>\n' "${owner_name:-MIRAL Soft}" \
+            "${owner_email:-20637644+miralsoft@users.noreply.github.com}"; value ALLOWED_IDENTITY)
+
+          attribution='co-authored-by|assisted-by|generated[ -](with|by)|(created|written|made|built) (with|by)|ai-generated'
+          markers='claude|anthropic|openai|gpt|copilot|gemini|codex'
+          ai_word='(^|[^[:alnum:]])ai([^[:alnum:]]|$)'
+          # Reads a message on stdin. Entrypoint filenames are stripped first: M-12 requires
+          # CLAUDE.md, and naming a file is not attribution. One awk reads the whole message,
+          # because a second grep -q that stops early kills the first grep with SIGPIPE.
+          attributes_ai() {
+            sed -E 's#[A-Za-z0-9_./-]*(CLAUDE|GEMINI|AGENTS)\.md#<entrypoint-file>#g' \
+              | awk -v a="$attribution" -v m="$markers|$ai_word" \
+                'BEGIN { r = 1 } { l = tolower($0) } l ~ a && l ~ m { r = 0 } END { exit r }'
+          }
+          is_ai_identity() { printf '%s\n' "$1" | grep -Eiq "$markers"; }
+          # exact, partial (a declared name or address in an undeclared identity) or foreign.
+          own_state() {
+            if printf '%s\n' "$declared" | grep -Fxq -- "$1"; then echo exact; return; fi
+            name=${1% <*}
+            email=${1##*<}
+            email=$(printf '%s\n' "${email%>}" | tr '[:upper:]' '[:lower:]')
+            # Addresses compare without case by lowering both sides: grep 3.0 of Git for
+            # Windows aborts on -F with -i, and an abort reads as no match.
+            if printf '%s\n' "$declared" | sed -n 's/ <.*//p' | grep -Fxq -- "$name" \
+              || printf '%s\n' "$declared" | sed -n 's/.*<//; s/>$//p' \
+                | tr '[:upper:]' '[:lower:]' | grep -Fxq -- "$email"; then
+              echo partial
+            else
+              echo foreign
+            fi
+          }
+
+          # R-20: every function the loop below relies on fires on a planted case and stays quiet
+          # on a clean one, including the cases this check once got wrong.
+          probe() {
+            if printf '%s\n' "$2" | attributes_ai; then got=reject; else got=accept; fi
+            [ "$got" = "$1" ] || { echo "self-test: expected to $1 '$2', would $got it" >&2; exit 1; }
+          }
+          probe reject 'Co-Authored-By: Claude <noreply@anthropic.com>'
+          probe reject 'Generated with Claude Code'
+          probe reject 'Assisted-by: GitHub Copilot'
+          probe reject 'AI-generated'
+          probe accept 'Co-Authored-By: Jane Doe <123+jane@users.noreply.github.com>'
+          probe accept 'Fix the Claude Code settings parser'
+          probe accept 'Add docs/CLAUDE.md and entrypoints/GEMINI.md'
+          is_ai_identity 'Claude <noreply@anthropic.com>' \
+            || { echo "self-test: AI identity not recognised" >&2; exit 1; }
+          is_ai_identity 'Jane Doe <123+jane@users.noreply.github.com>' \
+            && { echo "self-test: human identity taken for an AI" >&2; exit 1; }
+          first=$(printf '%s\n' "$declared" | head -n 1)
+          [ "$(own_state "$first")" = exact ] \
+            || { echo "self-test: declared identity not recognised" >&2; exit 1; }
+          [ "$(own_state "${first% <*} <someone@example.com>")" = partial ] \
+            || { echo "self-test: declared name with another address not caught" >&2; exit 1; }
+          [ "$(own_state 'Jane Doe <123+jane@users.noreply.github.com>')" = foreign ] \
+            || { echo "self-test: outside contributor taken for own" >&2; exit 1; }
+
+          # A new branch reports an all-zero base, and a base can be missing from a shallow
+          # clone. Fall back to the head commit alone rather than checking nothing.
+          if [ -n "${BASE_SHA:-}" ] && [ "${BASE_SHA}" != "$empty" ] \
+            && git rev-parse -q --verify "${BASE_SHA}^{commit}" >/dev/null 2>&1; then
+            echo "Checking ${BASE_SHA}..${HEAD_SHA}"
+            commits=$(git rev-list "${BASE_SHA}..${HEAD_SHA}")
+          else
+            echo "No usable base, checking the head commit only."
+            commits=$(git rev-parse "${HEAD_SHA}")
+          fi
+          if [ -z "$commits" ]; then
+            echo "No commits in range."
+            exit 0
+          fi
+
+          fail=0
+          own=0
+          foreign=0
+          for c in $commits; do
+            author=$(git log -1 --format='%an <%ae>' "$c")
+            committer=$(git log -1 --format='%cn <%ce>' "$c")
+            a=$(own_state "$author")
+            k=$(own_state "$committer")
+            if [ "$a" = foreign ] && [ "$k" = foreign ]; then
+              foreign=$((foreign + 1))
+              continue
+            fi
+            own=$((own + 1))
+            if git log -1 --format='%B' "$c" | attributes_ai; then
+              echo "$c: a line of the message attributes the work to an AI (R-09, I-06)." >&2
+              fail=1
+            fi
+            for who in "$author" "$committer"; do
+              if is_ai_identity "$who"; then
+                echo "$c: AI identity as author or committer: $who (R-09, I-06)." >&2
+                fail=1
+              fi
+            done
+            if [ "$a" = partial ]; then
+              echo "$c: author is not exactly a declared identity: $author (R-03, R-19)." >&2
+              fail=1
+            fi
+            if [ "$k" = partial ]; then
+              echo "$c: committer is not exactly a declared identity: $committer (R-03, R-19)." >&2
+              fail=1
+            fi
+          done
+          if [ "$fail" -ne 0 ]; then
+            echo "Declared identities:" >&2
+            printf '%s\n' "$declared" | sed '/^$/d; s/^/  /' >&2
+            exit 1
+          fi
+          echo "$own own commit(s) checked, $foreign from outside not checked."
