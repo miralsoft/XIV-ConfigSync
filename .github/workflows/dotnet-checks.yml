@@ -1,0 +1,84 @@
+# .NET checks for the product (R-17, T-04): the two halves of the C# check, the tests, the XAML
+# check and the dependency audit, as the C# and WPF profiles name them. The foundation has no CI
+# template for C#; this workflow follows the shape of its PowerShell template and is recorded in
+# docs/decisions.md (2026-11-05).
+#
+# On a Windows runner, because the application targets net10.0-windows (WPF). Standard runners
+# are free in a public repository; R-22 still applies to every push.
+
+name: .NET checks
+
+on:
+  push:
+    branches:
+      - '**'
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: dotnet-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  dotnet:
+    name: .NET checks
+    runs-on: windows-2025
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: pwsh
+    env:
+      DOTNET_NOLOGO: '1'
+      DOTNET_CLI_TELEMETRY_OPTOUT: '1'
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          global-json-file: global.json
+
+      - name: The SDK is the pinned one
+        run: |
+          $pinned = (Get-Content global.json -Raw | ConvertFrom-Json).sdk.version
+          $actual = dotnet --version
+          if ($actual -ne $pinned) { throw "SDK $actual is used, $pinned is pinned." }
+          "SDK $actual"
+
+      - name: Restore (locked)
+        run: |
+          dotnet tool restore
+          if ($LASTEXITCODE -ne 0) { throw 'dotnet tool restore failed.' }
+          dotnet restore XivConfigSync.slnx --locked-mode
+          if ($LASTEXITCODE -ne 0) { throw 'dotnet restore failed.' }
+
+      - name: Format (C#)
+        run: |
+          dotnet format whitespace XivConfigSync.slnx --verify-no-changes --no-restore
+          if ($LASTEXITCODE -ne 0) { throw 'C# files are not in the normal form.' }
+
+      - name: Build (warnings are errors)
+        run: |
+          dotnet build XivConfigSync.slnx --no-restore --configuration Release
+          if ($LASTEXITCODE -ne 0) { throw 'Build failed.' }
+
+      - name: Tests
+        timeout-minutes: 10
+        run: |
+          # Exit code 8 means no test ran; it fails the step like any other non-zero code (R-23).
+          dotnet test --project tests/XivConfigSync.Core.Tests/XivConfigSync.Core.Tests.csproj --no-build --configuration Release
+          if ($LASTEXITCODE -ne 0) { throw "Tests failed with exit code $LASTEXITCODE." }
+
+      - name: Format (XAML)
+        run: |
+          dotnet xstyler --passive -d src -r --config Settings.XamlStyler
+          if ($LASTEXITCODE -ne 0) { throw 'XAML files are not in the normal form.' }
+
+      - name: Vulnerable packages
+        run: |
+          $report = dotnet list XivConfigSync.slnx package --vulnerable --include-transitive 2>&1 | Out-String
+          if ($LASTEXITCODE -ne 0) { throw "dotnet list package failed: $report" }
+          if ($report -match 'has the following vulnerable packages') { throw $report }
+          'No known vulnerable package.'
