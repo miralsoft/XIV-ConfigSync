@@ -186,3 +186,74 @@ Describe 'Get-XivEnvironment' {
         $report.DocumentsRedirectedToOneDrive | Should -BeOfType ([bool])
     }
 }
+
+Describe 'Read-XivConfigText' {
+    It 'reads sections, keys and values, including empty values' {
+        $file = Join-Path -Path $TestDrive -ChildPath 'read.cfg'
+        $text = "<Config File>`r`n`r`n<Display Settings>`r`nUiBaseScale`t2`r`nDktSessionId`t`r`n<Sound>`r`nSoundMaster`t50`r`nnot a key line`r`n"
+        [System.IO.File]::WriteAllText($file, $text, (New-Object -TypeName System.Text.UTF8Encoding -ArgumentList $false))
+        $entries = @(Read-XivConfigText -LiteralPath $file)
+        $entries.Count | Should -Be 3
+        $entries[0].Section | Should -Be 'Display Settings'
+        $entries[0].Key | Should -Be 'UiBaseScale'
+        $entries[0].Value | Should -Be '2'
+        $entries[1].Value | Should -Be ''
+        $entries[2].Section | Should -Be 'Sound'
+    }
+}
+
+Describe 'Compare-XivConfigText' {
+    It 'reports added, removed and changed keys, matched by section' {
+        $old = Join-Path -Path $TestDrive -ChildPath 'old.cfg'
+        $new = Join-Path -Path $TestDrive -ChildPath 'new.cfg'
+        Set-Content -LiteralPath $old -Encoding ASCII -Value @('<A>', "Scale`t1", "Gone`tx", "Same`t5", '<B>', "Scale`t1")
+        Set-Content -LiteralPath $new -Encoding ASCII -Value @('<A>', "Scale`t2", "Same`t5", "New`ty", '<B>', "Scale`t1")
+        $result = @(Compare-XivConfigText -ReferencePath $old -DifferencePath $new)
+        $result.Count | Should -Be 3
+        $changed = @($result | Where-Object { $_.Status -eq 'Changed' })
+        $changed.Count | Should -Be 1
+        $changed[0].Section | Should -Be 'A'
+        $changed[0].ReferenceValue | Should -Be '1'
+        $changed[0].DifferenceValue | Should -Be '2'
+        @($result | Where-Object { $_.Status -eq 'Removed' })[0].Key | Should -Be 'Gone'
+        @($result | Where-Object { $_.Status -eq 'Added' })[0].Key | Should -Be 'New'
+        @(Compare-XivConfigText -ReferencePath $old -DifferencePath $new -IncludeUnchanged).Count | Should -Be 5
+    }
+}
+
+Describe 'Save-XivConfigSnapshot' {
+    BeforeEach {
+        $root = Join-Path -Path $TestDrive -ChildPath ([guid]::NewGuid().ToString('N'))
+        Initialize-SampleTree -Root $root
+        $snapshot = Join-Path -Path $TestDrive -ChildPath ('{0}.cfg' -f [guid]::NewGuid().ToString('N'))
+    }
+
+    It 'copies only the top-level settings files, with their time stamp' {
+        $copied = @(Save-XivConfigSnapshot -Path $root -OutputDirectory $snapshot)
+        $copied.Count | Should -Be 1
+        $copied[0].Name | Should -Be 'FFXIV.cfg'
+        $source = Get-Item -LiteralPath (Join-Path -Path $root -ChildPath 'FFXIV.cfg')
+        $copied[0].LastWriteTimeUtc | Should -Be $source.LastWriteTimeUtc
+        (Get-FileHash -LiteralPath $copied[0].FullName).Hash | Should -Be (Get-FileHash -LiteralPath $source.FullName).Hash
+    }
+
+    It 'refuses to write inside the source folder' {
+        $inside = Join-Path -Path $root -ChildPath 'snap'
+        { Save-XivConfigSnapshot -Path $root -OutputDirectory $inside } | Should -Throw '*inside the source folder*'
+        Test-Path -LiteralPath $inside | Should -BeFalse
+    }
+
+    It 'refuses an existing snapshot folder without -Force' {
+        $null = Save-XivConfigSnapshot -Path $root -OutputDirectory $snapshot
+        { Save-XivConfigSnapshot -Path $root -OutputDirectory $snapshot } | Should -Throw '*use -Force*'
+        { Save-XivConfigSnapshot -Path $root -OutputDirectory $snapshot -Force } | Should -Not -Throw
+    }
+
+    It 'writes nothing under -WhatIf and changes nothing in the source folder' {
+        $before = Get-TreeState -Root $root
+        $null = Save-XivConfigSnapshot -Path $root -OutputDirectory $snapshot -WhatIf
+        Test-Path -LiteralPath $snapshot | Should -BeFalse
+        $null = Save-XivConfigSnapshot -Path $root -OutputDirectory $snapshot
+        Get-TreeState -Root $root | Should -Be $before
+    }
+}

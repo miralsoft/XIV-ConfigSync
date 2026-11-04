@@ -33,3 +33,12 @@ Append-only. Never edit or delete past entries; a later entry may supersede an e
   `CommandInfo.Parameters` (in 6 of 9 fresh processes, measured). After one pass it did not recur
   in 162 analyses over 6 processes. The strict pass that follows still fails on any analyzer error.
   The CI workflow therefore differs from its template in this one step.
+- (2026-11-04) `Export-Inventory.ps1` also copies the inventoried folder's top-level `*.cfg` files
+  into a folder next to the inventory, unless `-NoConfigSnapshot` is given. Rationale: an
+  inventory holds hashes only, so it shows that `FFXIV.cfg` changed but not which setting. The copy
+  holds a last-login value and a session ID, so like the inventories it is written only below the
+  ignored `out/` folder and never committed. Rejected: storing the values inside the inventory
+  JSON, which would have changed its schema for one file; asking the owner to copy the file by
+  hand at every step, which is easy to forget mid-experiment.
+- (2026-11-04) The file matrix is kept as a public draft in `docs/file-matrix.md`, with how well
+  each row is known. Device names, character IDs and values from real files stay out of it.

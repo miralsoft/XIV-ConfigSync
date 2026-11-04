@@ -452,6 +452,204 @@ function Get-XivEnvironment {
     }
 }
 
+function Read-XivConfigText {
+    <#
+    .SYNOPSIS
+        Reads a text settings file of the game, such as FFXIV.cfg, as section, key and value.
+
+    .DESCRIPTION
+        Read-only. The file consists of section headers in angle brackets and lines of a key, a
+        tab and a value. Lines of any other shape are skipped. The file is opened with every share
+        mode granted, so a running game is never blocked.
+
+    .PARAMETER LiteralPath
+        The settings file.
+
+    .EXAMPLE
+        Read-XivConfigText -LiteralPath "$ffxiv\FFXIV.cfg"
+    #>
+    [CmdletBinding()]
+    [OutputType([pscustomobject])]
+    param (
+        [Parameter(Mandatory = $true)]
+        [string] $LiteralPath
+    )
+
+    $share = [System.IO.FileShare]::ReadWrite -bor [System.IO.FileShare]::Delete
+    $stream = [System.IO.File]::Open($LiteralPath, [System.IO.FileMode]::Open, [System.IO.FileAccess]::Read, $share)
+    try {
+        $reader = New-Object -TypeName System.IO.StreamReader -ArgumentList $stream, ([System.Text.Encoding]::UTF8)
+        try {
+            $text = $reader.ReadToEnd()
+        } finally {
+            $reader.Dispose()
+        }
+    } finally {
+        $stream.Dispose()
+    }
+
+    $section = ''
+    foreach ($line in ($text -split "\r?\n")) {
+        if ($line -match '^<(.+)>$') {
+            $section = $Matches[1]
+            continue
+        }
+        if ($line -match '^([^\t]+)\t(.*)$') {
+            [pscustomobject] @{
+                Section = $section
+                Key     = $Matches[1]
+                Value   = $Matches[2]
+            }
+        }
+    }
+}
+
+function Compare-XivConfigText {
+    <#
+    .SYNOPSIS
+        Compares two text settings files key by key.
+
+    .DESCRIPTION
+        Keys are matched by section and name. Reports keys that were added, removed or whose value
+        changed, which is what a single change in the game's settings dialog leaves behind.
+
+    .PARAMETER ReferencePath
+        The earlier file.
+
+    .PARAMETER DifferencePath
+        The later file.
+
+    .PARAMETER IncludeUnchanged
+        Also reports keys with the same value in both.
+
+    .EXAMPLE
+        Compare-XivConfigText -ReferencePath .\out\A-before-V01.cfg\FFXIV.cfg -DifferencePath .\out\A-after-V01.cfg\FFXIV.cfg
+    #>
+    [CmdletBinding()]
+    [OutputType([pscustomobject])]
+    param (
+        [Parameter(Mandatory = $true)]
+        [string] $ReferencePath,
+
+        [Parameter(Mandatory = $true)]
+        [string] $DifferencePath,
+
+        [Parameter()]
+        [switch] $IncludeUnchanged
+    )
+
+    $before = New-Object -TypeName 'System.Collections.Generic.Dictionary[string,string]' -ArgumentList ([System.StringComparer]::Ordinal)
+    $order = New-Object -TypeName 'System.Collections.Generic.List[string]'
+    foreach ($entry in @(Read-XivConfigText -LiteralPath $ReferencePath)) {
+        $id = $entry.Section + "`t" + $entry.Key
+        if (-not $before.ContainsKey($id)) { $order.Add($id) }
+        $before[$id] = $entry.Value
+    }
+    $after = New-Object -TypeName 'System.Collections.Generic.Dictionary[string,string]' -ArgumentList ([System.StringComparer]::Ordinal)
+    foreach ($entry in @(Read-XivConfigText -LiteralPath $DifferencePath)) {
+        $id = $entry.Section + "`t" + $entry.Key
+        if (-not $before.ContainsKey($id) -and -not $after.ContainsKey($id)) { $order.Add($id) }
+        $after[$id] = $entry.Value
+    }
+
+    foreach ($id in $order) {
+        $inBefore = $before.ContainsKey($id)
+        $inAfter = $after.ContainsKey($id)
+        if (-not $inBefore) {
+            $status = 'Added'
+        } elseif (-not $inAfter) {
+            $status = 'Removed'
+        } elseif ($before[$id] -cne $after[$id]) {
+            $status = 'Changed'
+        } else {
+            $status = 'Unchanged'
+        }
+        if ($status -eq 'Unchanged' -and -not $IncludeUnchanged) { continue }
+
+        $parts = $id -split "`t", 2
+        [pscustomobject] @{
+            Status          = $status
+            Section         = $parts[0]
+            Key             = $parts[1]
+            ReferenceValue  = if ($inBefore) { $before[$id] } else { $null }
+            DifferenceValue = if ($inAfter) { $after[$id] } else { $null }
+        }
+    }
+}
+
+function Save-XivConfigSnapshot {
+    <#
+    .SYNOPSIS
+        Copies the text settings files at the top of a folder into a separate snapshot folder.
+
+    .DESCRIPTION
+        Inventories hold hashes only, which shows that a file changed but not which setting. The
+        snapshot keeps the small text files (*.cfg) so that two of them can be compared key by key.
+        Only the top level is copied, cloud placeholders are skipped, the source is only read, and
+        the snapshot folder must not lie inside the source folder. An existing snapshot folder is
+        refused unless -Force is given.
+
+    .PARAMETER Path
+        The folder whose text settings files are copied.
+
+    .PARAMETER OutputDirectory
+        The snapshot folder to create.
+
+    .PARAMETER Force
+        Writes into an existing snapshot folder, replacing files of the same name.
+
+    .EXAMPLE
+        Save-XivConfigSnapshot -Path $ffxiv -OutputDirectory .\out\A-before-V01.cfg
+    #>
+    [CmdletBinding(SupportsShouldProcess = $true)]
+    [OutputType([System.IO.FileInfo])]
+    param (
+        [Parameter(Mandatory = $true)]
+        [string] $Path,
+
+        [Parameter(Mandatory = $true)]
+        [string] $OutputDirectory,
+
+        [Parameter()]
+        [switch] $Force
+    )
+
+    $root = (Get-Item -LiteralPath $Path -ErrorAction Stop).FullName.TrimEnd('\')
+    $target = [System.IO.Path]::GetFullPath($OutputDirectory).TrimEnd('\')
+    if ($target -eq $root -or $target.StartsWith($root + '\', [System.StringComparison]::OrdinalIgnoreCase)) {
+        throw ('Refusing to write inside the source folder: {0}' -f $target)
+    }
+    if ((Test-Path -LiteralPath $target) -and -not $Force) {
+        throw ('Snapshot folder exists, use -Force to overwrite: {0}' -f $target)
+    }
+
+    $sources = @(Get-ChildItem -LiteralPath $root -File -Force -Filter '*.cfg' | Where-Object {
+            -not (Test-XivCloudPlaceholder -Attributes ([long] $_.Attributes))
+        })
+    if (-not $PSCmdlet.ShouldProcess($target, ('Copy {0} settings files' -f $sources.Count))) { return }
+
+    if (-not (Test-Path -LiteralPath $target)) {
+        $null = New-Item -ItemType Directory -Path $target
+    }
+    $share = [System.IO.FileShare]::ReadWrite -bor [System.IO.FileShare]::Delete
+    foreach ($source in $sources) {
+        $destination = Join-Path -Path $target -ChildPath $source.Name
+        $reading = [System.IO.File]::Open($source.FullName, [System.IO.FileMode]::Open, [System.IO.FileAccess]::Read, $share)
+        try {
+            $writing = [System.IO.File]::Open($destination, [System.IO.FileMode]::Create, [System.IO.FileAccess]::Write, [System.IO.FileShare]::None)
+            try {
+                $reading.CopyTo($writing)
+            } finally {
+                $writing.Dispose()
+            }
+        } finally {
+            $reading.Dispose()
+        }
+        [System.IO.File]::SetLastWriteTimeUtc($destination, $source.LastWriteTimeUtc)
+        Get-Item -LiteralPath $destination
+    }
+}
+
 Export-ModuleMember -Function @(
     'ConvertTo-XivPseudonym'
     'Test-XivCloudPlaceholder'
@@ -461,4 +659,7 @@ Export-ModuleMember -Function @(
     'Compare-XivInventory'
     'Read-XivInventory'
     'Get-XivEnvironment'
+    'Read-XivConfigText'
+    'Compare-XivConfigText'
+    'Save-XivConfigSnapshot'
 )

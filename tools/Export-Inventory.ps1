@@ -19,8 +19,13 @@
 .PARAMETER KeepIdentifiers
     Keeps character content IDs in folder names.
 
+.PARAMETER NoConfigSnapshot
+    Skips the copy of the folder's text settings files (*.cfg). By default they are copied into a
+    folder next to the output file, named like it with the extension .cfg, so that two snapshots
+    can be compared key by key with Compare-ConfigText.ps1.
+
 .PARAMETER Force
-    Overwrites an existing output file.
+    Overwrites an existing output file and snapshot.
 
 .EXAMPLE
     powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tools\Export-Inventory.ps1 -OutputPath .\out\A-before-V01.inventory.json -Label A-before-V01
@@ -41,6 +46,9 @@ param (
     [switch] $KeepIdentifiers,
 
     [Parameter()]
+    [switch] $NoConfigSnapshot,
+
+    [Parameter()]
     [switch] $Force
 )
 
@@ -51,5 +59,16 @@ Import-Module -Name (Join-Path -Path $PSScriptRoot -ChildPath 'XivInventory.psm1
 $written = Export-XivInventory -Path $Path -OutputPath $OutputPath -Label $Label -KeepIdentifiers:$KeepIdentifiers -Force:$Force -WhatIf:$WhatIfPreference
 if ($written) {
     $written.FullName
+}
+
+# A folder with text settings files also gets a snapshot of them next to the inventory, so that a
+# change can later be traced to the single setting behind it.
+if (-not $NoConfigSnapshot -and @(Get-ChildItem -LiteralPath $Path -File -Force -Filter '*.cfg').Count -gt 0) {
+    $full = [System.IO.Path]::GetFullPath($OutputPath)
+    $snapshot = ($full -replace '(\.inventory)?\.json$', '') + '.cfg'
+    $copied = @(Save-XivConfigSnapshot -Path $Path -OutputDirectory $snapshot -Force:$Force -WhatIf:$WhatIfPreference)
+    if ($copied.Count -gt 0) {
+        '{0} ({1} files)' -f $snapshot, $copied.Count
+    }
 }
 exit 0
