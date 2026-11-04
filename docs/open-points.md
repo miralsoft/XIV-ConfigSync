@@ -37,6 +37,9 @@
 
 ## Tooling
 
-- Whether the extended warm-up (see `decisions.md`, 2026-11-04) ends the intermittent analyzer
-  failures in CI. If one recurs, the owner chooses between a retry and a newer PSScriptAnalyzer
-  release.
+- The extended warm-up (see `decisions.md`, 2026-11-04) did not end the intermittent analyzer
+  failures in CI: two of the next four CI attempts failed with `RULE_ERROR` "Get-Command is not
+  recognized", ten times each, always in `tests/XivInventory.Tests.ps1`; a rerun passed both
+  times. It has not been reproduced locally (every local build passed). Open for the owner: retry a
+  file once on an analyzer error and fail only if it persists, or try a newer PSScriptAnalyzer
+  release (a new pinned dependency).
