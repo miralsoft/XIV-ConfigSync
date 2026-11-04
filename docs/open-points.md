@@ -4,10 +4,9 @@
 
 - Where the UI scale lives. `FFXIV.cfg` holds `UiBaseScale` and `UiHighScale`; whether that is the
   whole story is what experiment V01 answers.
-- Whether the HUD layout (`ADDON.DAT`) carries over to a device with another aspect ratio. A
-  third-party source describes the positions as relative to the screen, with a question mark; a
-  community tool keeps one copy per resolution anyway. Experiment V03 decides; the fallback is one
-  copy per aspect ratio, always as a whole file.
+- The HUD layout (`ADDON.DAT`) carries over from a 16:9 device to a 16:10 device (transfer test,
+  2026-11-04). Open: the other direction, and why the game rewrote a few hundred bytes of the
+  applied file after play.
 - What the `cfgcopy` folder (`FFXIV_CFGCPY<id>.dat`) is for. No source describes it.
 - Which files the game rewrites on every start even when nothing changed (V00).
 - When the game writes: at logout, at exit, or continuously.

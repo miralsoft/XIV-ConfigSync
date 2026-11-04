@@ -26,9 +26,20 @@ V03 turn rows into confirmed ones or move them. Release 0.1 syncs only rows conf
 | `FFXIV_BOOT.cfg` | Device | confirmed (content), unconfirmed (class) | Launcher state: licence agreement flags, browser, region, data centre |
 | `FFXIV_CHARA_nn.dat` | Shared, not in 0.1 | unconfirmed (third-party source code) | Character creation appearance presets, 212 bytes each |
 | `cfgcopy\FFXIV_CFGCPY<id>.dat` | Device, Sensitive | confirmed (content), unknown (purpose) | Section format masked with 0x73, like `MACRO.DAT`: a character's name, world and content ID, plus two values that change on every write. Rewritten together with `FFXIV.cfg` and `UISAVE.DAT` |
-| `FFXIV_CHR<id>\*.DAT` | Shared | unconfirmed | Per character: HUD, hotbars, macros, gear sets, key bindings, item order. V02 confirms file by file |
-| `FFXIV_CHR<id>\COMMON.DAT`, `CONTROL0.DAT`, `CONTROL1.DAT` | Shared | confirmed (format), unconfirmed (class) | Plain text like `FFXIV.cfg`: character, game pad and keyboard settings, no window positions |
-| `FFXIV_CHR<id>\ADDON.DAT` | Shared or per aspect ratio | confirmed (format), unconfirmed (class) | HUD layout. Own format, not masked. A layout from a 16:10 device has been in use on a 16:9 device without a problem the owner noticed; V03 checks the edge cases |
+| `MACROSYS.dat` | Shared | confirmed (transfer) | The macros shared by all characters ("all characters" tab), in the top folder, not in a character folder. Masked like `MACRO.DAT` |
+| `FFXIV_CHR<id>\*.DAT` | Shared | unconfirmed | Per character: HUD, hotbars, macros, gear sets, key bindings, item order. The rows below are confirmed file by file |
+| `FFXIV_CHR<id>\HOTBAR.DAT` | Shared | confirmed (transfer) | Hotbars and cross hotbars |
+| `FFXIV_CHR<id>\KEYBIND.DAT` | Shared | confirmed (transfer) | Key bindings; one changed binding is three bytes |
+| `FFXIV_CHR<id>\CONTROL0.DAT` | Shared | confirmed (transfer) | Plain text: settings for mouse and keyboard mode, including which HUD info is shown (for example the server info) |
+| `FFXIV_CHR<id>\COMMON.DAT`, `CONTROL1.DAT` | Shared | confirmed (format), unconfirmed (class) | Plain text like `FFXIV.cfg`: character settings and game pad mode, no window positions |
+| `FFXIV_CHR<id>\ADDON.DAT` | Shared | confirmed (transfer, one direction) | HUD layout. Own format, not masked. A layout set up on a 16:9 device, with one element moved, was applied to a 16:10 device and showed correctly there. After play the game rewrote 380 of its bytes; why is unknown |
+| `*.old` next to a file | Ignore | confirmed | The game's own previous generation, rotated by the game when it writes; left in place on apply |
+| `<name>-<COMPUTERNAME>[-n].<ext>` | Ignore | confirmed | Conflict copies a cloud client left behind; reported, never synced |
+| `screenshots\`, `log\`, `downloads\` | Ignore | confirmed | Not configuration |
+
+"Confirmed (transfer)" means: changed in the game on one device, copied as a whole file to the
+other device while the game was closed, and seen in the game there (2026-11-04, from the 16:9
+device to the 16:10 device; the other direction is not tested).
 
 ### Binary character files
 
@@ -37,9 +48,6 @@ byte (confirmed on real files, layout as published by the libxivdat project). Th
 header's type field changes with game patches, so it acts as a format version. The sync never
 applies a file whose format version differs from the one on the target device; reading the field
 is enough, nothing in the file is changed.
-| `*.old` next to a file | Ignore | confirmed | The game's own previous generation; left in place on apply |
-| `<name>-<COMPUTERNAME>[-n].<ext>` | Ignore | confirmed | Conflict copies a cloud client left behind; reported, never synced |
-| `screenshots\`, `log\`, `downloads\` | Ignore | confirmed | Not configuration |
 
 ### Inside `FFXIV.cfg`
 

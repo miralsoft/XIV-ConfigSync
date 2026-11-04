@@ -32,6 +32,11 @@ Feasibility analysis (gate 1) in progress since 2026-11-03. No product code.
 
 ## File matrix
 
+- **Transfer test (2026-11-04):** five settings changed on device B, copied to device A as whole
+  files with the game closed, all five seen in the game on A, including a HUD layout from 16:9 on
+  16:10. Rolled back afterwards from a hash-checked backup. Shared macros live in `MACROSYS.dat`
+  in the top folder, not in the character folder.
+
 - **Draft (2026-11-04):** `docs/file-matrix.md`, from conflict copies of an earlier whole-folder
   sync and a read-only look at the plugin folder. `FFXIV.cfg` and `dalamudConfig.json` turned out
   to be mixed files, and one plugin configuration holds an API key in plain text.
