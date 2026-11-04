@@ -126,7 +126,7 @@
   <data name="Reason_SourceOutdated" xml:space="preserve"><value>The source has an older state of this file.</value></data>
   <data name="Reason_UpToDate" xml:space="preserve"><value>Same on both devices.</value></data>
   <data name="Recovery_LeftAlone" xml:space="preserve"><value>{0} files changed after the interruption and were left as they are. You can take them on the Transfer page.</value></data>
-  <data name="Recovery_Text" xml:space="preserve"><value>A transfer was interrupted, for example by a power cut. Yes: finish it. No: go back to the state before it. Cancel: decide later.</value></data>
+  <data name="Recovery_Text" xml:space="preserve"><value>A transfer or an undo was interrupted, for example by a power cut or because the game was started. Yes: finish it. No: go back to the state before it. Cancel: decide later.</value></data>
   <data name="Recovery_Title" xml:space="preserve"><value>Interrupted transfer</value></data>
   <data name="Refuse_Busy" xml:space="preserve"><value>Another operation is running. Please try again in a moment.</value></data>
   <data name="Refuse_ChangedSincePlan" xml:space="preserve"><value>Some files changed since the comparison, for example because the game ran. Nothing was written. Please compare again.</value></data>
