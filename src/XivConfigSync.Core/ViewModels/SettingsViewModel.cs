@@ -130,40 +130,64 @@ public sealed partial class SettingsViewModel : ObservableObject
     }
 
     [RelayCommand]
-    public void Save()
+    public async Task SaveAsync()
     {
-        var s = main.Engine.Settings;
-        var languageChanged = s.Language != Language?.Code;
-        s.DisplayName = string.IsNullOrWhiteSpace(DeviceName) ? s.DisplayName : DeviceName.Trim();
-        s.GameConfigFolder = string.IsNullOrWhiteSpace(GameFolder) ? null : GameFolder.Trim();
-        s.PluginConfigFolder = string.IsNullOrWhiteSpace(PluginFolder) ? null : PluginFolder.Trim();
-        s.GameInstallFolder = string.IsNullOrWhiteSpace(InstallFolder) ? null : InstallFolder.Trim();
-        s.BackUpPlugins = BackUpPlugins;
-        s.BackupOnGameExit = BackupOnGameExit;
-        s.AutoApplyAlways = AutoApply;
-        s.CloseAction = MinimizeOnClose ? CloseAction.MinimizeToTray : CloseAction.Exit;
-        s.Language = Language?.Code;
-        s.KeepRevisions = Math.Clamp(KeepRevisions, 5, 500);
-        s.CharacterNames = Characters.Where(c => !string.IsNullOrWhiteSpace(c.Name)).ToDictionary(c => c.Folder, c => c.Name.Trim());
-        try
+        // The values are read here, on the UI thread, and applied inside the operation queue, so a
+        // backup or an apply never sees half-changed settings (review finding 16).
+        var languageCode = Language?.Code;
+        var languageChanged = main.Engine.Settings.Language != languageCode;
+        var deviceName = DeviceName.Trim();
+        var gameFolder = string.IsNullOrWhiteSpace(GameFolder) ? null : GameFolder.Trim();
+        var pluginFolder = string.IsNullOrWhiteSpace(PluginFolder) ? null : PluginFolder.Trim();
+        var installFolder = string.IsNullOrWhiteSpace(InstallFolder) ? null : InstallFolder.Trim();
+        var backUpPlugins = BackUpPlugins;
+        var backupOnGameExit = BackupOnGameExit;
+        var autoApply = AutoApply;
+        var minimizeOnClose = MinimizeOnClose;
+        var keepRevisions = Math.Clamp(KeepRevisions, 5, 500);
+        var names = Characters.Where(c => !string.IsNullOrWhiteSpace(c.Name)).ToDictionary(c => c.Folder, c => c.Name.Trim());
+        var autostart = Autostart;
+        var association = FileAssociation;
+
+        var saved = await main.RunAsync(Strings.Settings_Title, () =>
         {
-            shell.SetAutostart(Autostart);
-            shell.SetFileAssociation(FileAssociation);
-            s.FileAssociation = FileAssociation;
+            var s = main.Engine.Settings;
+            s.DisplayName = deviceName.Length == 0 ? s.DisplayName : deviceName;
+            s.GameConfigFolder = gameFolder;
+            s.PluginConfigFolder = pluginFolder;
+            s.GameInstallFolder = installFolder;
+            s.BackUpPlugins = backUpPlugins;
+            s.BackupOnGameExit = backupOnGameExit;
+            s.AutoApplyAlways = autoApply;
+            s.CloseAction = minimizeOnClose ? CloseAction.MinimizeToTray : CloseAction.Exit;
+            s.Language = languageCode;
+            s.KeepRevisions = keepRevisions;
+            s.CharacterNames = names;
+
+            // Only what changed is written, so saving other settings leaves the registry alone.
+            if (autostart != shell.IsAutostartEnabled)
+            {
+                shell.SetAutostart(autostart);
+            }
+
+            if (association != shell.IsFileAssociationRegistered)
+            {
+                shell.SetFileAssociation(association);
+            }
+
+            s.FileAssociation = association;
             main.Engine.SaveSettings();
             main.Engine.UpdateDeviceInfo();
-        }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Security.SecurityException)
+        }).ConfigureAwait(true);
+
+        if (saved)
         {
-            ui.ShowError(Text.ForError(ex));
-            return;
+            main.StatusText = languageChanged ? Strings.Settings_LanguageRestart : Strings.Settings_Saved;
         }
 
-        main.StatusText = languageChanged ? Strings.Settings_LanguageRestart : Strings.Settings_Saved;
         Load();
-        _ = main.RefreshAsync();
+        await main.RefreshAsync().ConfigureAwait(true);
     }
-
     [RelayCommand]
     public void BrowseGameFolder()
     {

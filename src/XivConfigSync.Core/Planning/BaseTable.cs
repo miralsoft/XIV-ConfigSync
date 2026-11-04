@@ -10,6 +10,9 @@ public sealed class BaseTable
 {
     public int Schema { get; set; } = 1;
 
+    /// <summary>The source device's epoch these hashes belong to; a different epoch makes them void.</summary>
+    public string SourceEpoch { get; set; } = string.Empty;
+
     public Dictionary<string, string> Files { get; set; } = new(StringComparer.OrdinalIgnoreCase);
 
     /// <summary>Loads a base table, or an empty one.</summary>

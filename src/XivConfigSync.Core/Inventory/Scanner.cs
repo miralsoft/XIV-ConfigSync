@@ -25,6 +25,47 @@ public sealed class ScanResult
 /// <summary>Scans configuration folders read-only (X-05): path, size, SHA-256, flags.</summary>
 public static class Scanner
 {
+    /// <summary>
+    /// Every file below a folder. Symbolic links and junctions are not followed and not listed;
+    /// other reparse points, such as cloud placeholders under OneDrive, are ordinary files here
+    /// (review finding 13). Folders that cannot be read are skipped.
+    /// </summary>
+    public static IEnumerable<string> Walk(string folder)
+    {
+        var pending = new Stack<DirectoryInfo>();
+        pending.Push(new DirectoryInfo(folder));
+        while (pending.Count > 0)
+        {
+            var directory = pending.Pop();
+            List<FileSystemInfo> entries;
+            try
+            {
+                entries = [.. directory.EnumerateFileSystemInfos()];
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                continue;
+            }
+
+            foreach (var entry in entries.OrderBy(e => e.Name, StringComparer.OrdinalIgnoreCase))
+            {
+                if (entry.LinkTarget is not null)
+                {
+                    continue;
+                }
+
+                if (entry is DirectoryInfo sub)
+                {
+                    pending.Push(sub);
+                }
+                else if (!entry.Attributes.HasFlag(FileAttributes.Device))
+                {
+                    yield return entry.FullName;
+                }
+            }
+        }
+    }
+
     /// <summary>Scans every root that has a folder. A root whose folder is null or missing is skipped.</summary>
     /// <param name="roots">Root name to folder.</param>
     /// <param name="rules">Exclusions to apply.</param>
@@ -39,13 +80,7 @@ public static class Scanner
                 continue;
             }
 
-            var options = new EnumerationOptions
-            {
-                RecurseSubdirectories = true,
-                IgnoreInaccessible = true,
-                AttributesToSkip = FileAttributes.ReparsePoint | FileAttributes.Device,
-            };
-            foreach (var full in Directory.EnumerateFiles(folder, "*", options))
+            foreach (var full in Walk(folder))
             {
                 if (!RelativePath.TryNormalize(Path.GetRelativePath(folder, full), out var relative))
                 {

@@ -31,6 +31,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     private readonly SemaphoreSlim work = new(1, 1);
     private readonly Timer periodic;
     private bool disposed;
+    private int sequences;
 
     public MainViewModel(SyncEngine engine, IUiServices ui, Log log, IGameMonitor game, IShellIntegration shell, IGameLocator locator)
     {
@@ -98,7 +99,19 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     /// <summary>Runs one operation at a time, off the UI thread, and turns failures into messages.</summary>
     public async Task<bool> RunAsync(string busyText, Action operation, bool showErrors = true)
     {
+        if (disposed)
+        {
+            // A continuation after the window model was replaced (review finding 10).
+            return false;
+        }
+
         await work.WaitAsync().ConfigureAwait(true);
+        if (disposed)
+        {
+            work.Release();
+            return false;
+        }
+
         Busy = true;
         StatusText = busyText;
         try
@@ -107,7 +120,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             StatusText = Strings.Status_Ready;
             return true;
         }
-        catch (Exception ex) when (ex is RefusedException or IOException or UnauthorizedAccessException or InvalidOperationException or InvalidDataException or System.Text.Json.JsonException)
+        catch (Exception ex) when (ex is RefusedException or IOException or UnauthorizedAccessException or InvalidOperationException or InvalidDataException or System.Text.Json.JsonException or System.Security.SecurityException)
         {
             log.Warning("ui", $"{busyText}: {ex.GetType().Name}: {ex.Message}");
             StatusText = Text.ForError(ex);
@@ -128,15 +141,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     /// <summary>Called once after the window opened.</summary>
     public async Task StartAsync()
     {
-        if (Engine.HasInterruptedApply)
-        {
-            var finish = ui.Ask(Strings.Recovery_Title, Strings.Recovery_Text);
-            if (finish is not null)
-            {
-                await RunAsync(Strings.Status_Recovering, () => Engine.ResolveInterruptedApply(rollBack: finish == false)).ConfigureAwait(true);
-            }
-        }
-
+        await AskRecoveryAsync().ConfigureAwait(true);
         await RefreshAsync().ConfigureAwait(true);
         if (!game.IsRunning)
         {
@@ -224,10 +229,32 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         _ = RefreshAsync();
     }
 
+    /// <summary>Asks whether to finish or roll back an interrupted apply, if there is one.</summary>
+    public async Task AskRecoveryAsync()
+    {
+        if (!Engine.HasInterruptedApply || game.IsRunning)
+        {
+            return;
+        }
+
+        var finish = ui.Ask(Strings.Recovery_Title, Strings.Recovery_Text);
+        if (finish is null)
+        {
+            return;
+        }
+
+        IReadOnlyList<string> leftAlone = [];
+        if (await RunAsync(Strings.Status_Recovering, () => leftAlone = Engine.ResolveInterruptedApply(rollBack: finish == false)).ConfigureAwait(true)
+            && leftAlone.Count > 0)
+        {
+            ui.Inform(Strings.Recovery_Title, Text.Format(Strings.Recovery_LeftAlone, leftAlone.Count));
+        }
+    }
+
     /// <summary>Clears the sync folder and asks the application to run the set-up again.</summary>
     public void RequestSetup()
     {
-        if (Busy)
+        if (Busy || sequences > 0)
         {
             ui.Inform(Strings.App_Title, Strings.Close_Busy);
             return;
@@ -248,7 +275,10 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         disposed = true;
         game.RunningChanged -= OnGameRunningChanged;
         periodic.Dispose();
-        work.Dispose();
+        LogPage.Dispose();
+
+        // The semaphore is not disposed: a continuation that is still pending may wait on it, and
+        // RunAsync returns at once once disposed is set.
     }
 
     partial void OnGameRunningChanged(bool value) => OnPropertyChanged(nameof(GameStateText));
@@ -256,6 +286,20 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     /// <summary>Backs up this device, then takes what the rules allow from the others.</summary>
     private async Task BackupAndPullAsync(RevisionOrigin origin, bool quiet, IReadOnlyList<DeviceInfo>? alreadyFound = null)
     {
+        sequences++;
+        try
+        {
+            await BackupAndPullCoreAsync(origin, quiet, alreadyFound).ConfigureAwait(true);
+        }
+        finally
+        {
+            sequences--;
+        }
+    }
+
+    private async Task BackupAndPullCoreAsync(RevisionOrigin origin, bool quiet, IReadOnlyList<DeviceInfo>? alreadyFound)
+    {
+        await AskRecoveryAsync().ConfigureAwait(true);
         if (Engine.Settings.BackupOnGameExit != false || origin != RevisionOrigin.GameExit)
         {
             await RunAsync(Strings.Status_BackingUp, () => Engine.Backup(origin), showErrors: !quiet).ConfigureAwait(true);
@@ -299,7 +343,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             {
                 // The game writes its files while it shuts down; give it time to finish (V00).
                 await Task.Delay(TimeSpan.FromSeconds(15)).ConfigureAwait(true);
-                if (!game.IsRunning)
+                if (!disposed && !game.IsRunning)
                 {
                     await BackupAndPullAsync(RevisionOrigin.GameExit, quiet: true).ConfigureAwait(true);
                 }
@@ -309,7 +353,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
     private async Task PeriodicAsync()
     {
-        if (disposed || game.IsRunning || Busy)
+        if (disposed || game.IsRunning || Busy || sequences > 0)
         {
             return;
         }

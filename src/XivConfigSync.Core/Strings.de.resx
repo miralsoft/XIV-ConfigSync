@@ -117,15 +117,17 @@
   <data name="Reason_MissingLocally" xml:space="preserve"><value>Gibt es auf diesem Gerät noch nicht.</value></data>
   <data name="Reason_NeverRule" xml:space="preserve"><value>Gehört zum Quellgerät (Regel „nie“).</value></data>
   <data name="Reason_NoCommonState" xml:space="preserve"><value>Auf beiden Geräten verschieden, und ein gemeinsamer Stand ist noch nicht bekannt (erste Übertragung). Du entscheidest.</value></data>
+  <data name="Reason_NotScanned" xml:space="preserve"><value>Von der Sicherung dieses Geräts ausgenommen (durch eine Regel, Größe oder Verknüpfung); nur von Hand.</value></data>
   <data name="Reason_OnRequestRule" xml:space="preserve"><value>Auf der Quelle neuer; wird nur auf Anforderung übertragen.</value></data>
   <data name="Reason_Restore" xml:space="preserve"><value>Weicht von der gewählten älteren Sicherung ab.</value></data>
   <data name="Reason_SourceNewer" xml:space="preserve"><value>Auf der Quelle neuer.</value></data>
   <data name="Reason_SourceOutdated" xml:space="preserve"><value>Die Quelle hat einen älteren Stand dieser Datei.</value></data>
   <data name="Reason_UpToDate" xml:space="preserve"><value>Auf beiden Geräten gleich.</value></data>
+  <data name="Recovery_LeftAlone" xml:space="preserve"><value>{0} Dateien wurden nach der Unterbrechung geändert und so gelassen, wie sie sind. Du kannst sie auf der Seite Übertragen übernehmen.</value></data>
   <data name="Recovery_Text" xml:space="preserve"><value>Eine Übertragung wurde unterbrochen, zum Beispiel durch einen Stromausfall. Ja: zu Ende führen. Nein: auf den Stand davor zurück. Abbrechen: später entscheiden.</value></data>
   <data name="Recovery_Title" xml:space="preserve"><value>Unterbrochene Übertragung</value></data>
   <data name="Refuse_Busy" xml:space="preserve"><value>Ein anderer Vorgang läuft gerade. Bitte versuche es gleich noch einmal.</value></data>
-  <data name="Refuse_ClockBehind" xml:space="preserve"><value>Die Uhr dieses PCs liegt vor der letzten Sicherung zurück. Bitte prüfe Datum und Uhrzeit.</value></data>
+  <data name="Refuse_ChangedSincePlan" xml:space="preserve"><value>Einige Dateien haben sich seit dem Vergleich geändert, zum Beispiel weil das Spiel lief. Es wurde nichts geschrieben. Bitte vergleiche noch einmal.</value></data>
   <data name="Refuse_Damaged" xml:space="preserve"><value>Einige Dateien dieser Sicherung fehlen oder sind beschädigt, vielleicht weil OneDrive sie noch nicht vollständig heruntergeladen hat. Es wurde nichts übertragen. Versuche es später noch einmal.</value></data>
   <data name="Refuse_GameRunning" xml:space="preserve"><value>Das Spiel läuft. Solange es läuft, wird nichts in seine Dateien geschrieben; das passiert, nachdem du es beendet hast.</value></data>
   <data name="Refuse_GameVersion" xml:space="preserve"><value>Die Spielversion ist auf beiden Geräten verschieden. Bitte aktualisiere das Spiel zuerst auf beiden Geräten.</value></data>
@@ -178,11 +180,13 @@
   <data name="Settings_SyncFolder" xml:space="preserve"><value>Sync-Ordner</value></data>
   <data name="Settings_Title" xml:space="preserve"><value>Einstellungen</value></data>
   <data name="Setup_AgainDevice" xml:space="preserve"><value>Dieser PC ist schon im Sync-Ordner und wurde neu eingerichtet:</value></data>
+  <data name="Setup_AgainRecent" xml:space="preserve"><value>{0} war am {1} noch aktiv. Richte diesen PC nur als {0} ein, wenn jener PC nicht mehr benutzt wird; zwei PCs unter einem Namen stören sich gegenseitig. Fortfahren?</value></data>
   <data name="Setup_Back" xml:space="preserve"><value>Zurück</value></data>
   <data name="Setup_ChooseFolder" xml:space="preserve"><value>Sync-Ordner</value></data>
   <data name="Setup_DeviceHint" xml:space="preserve"><value>Der Name wird auf deinen anderen Geräten angezeigt.</value></data>
   <data name="Setup_DeviceName" xml:space="preserve"><value>Name dieses Geräts</value></data>
   <data name="Setup_DeviceTitle" xml:space="preserve"><value>Dieses Gerät</value></data>
+  <data name="Setup_DoneAgain" xml:space="preserve"><value>Dieser PC ist unter seinem alten Namen neu eingerichtet. Seine letzten Sicherungen findest du auf der Seite Übertragen, falls du eine zurückholen willst. Die anderen PCs übernehmen von diesem PC nichts ohne Rückfrage, bis einmal verglichen wurde.</value></data>
   <data name="Setup_DoneJoined" xml:space="preserve"><value>Dieses Gerät ist eingerichtet und gesichert. Auf der Seite „Übertragen“ kannst du jetzt die Einstellungen deines anderen Geräts übernehmen.</value></data>
   <data name="Setup_DoneNew" xml:space="preserve"><value>Der Sync-Ordner ist eingerichtet und dieses Gerät gesichert. Wähle auf deinem nächsten PC denselben Ordner oder doppelklicke die .xivsync-Datei darin.</value></data>
   <data name="Setup_Finish" xml:space="preserve"><value>Fertigstellen</value></data>
@@ -233,6 +237,7 @@
   <data name="Transfer_ThisDevice" xml:space="preserve"><value>(dieses Gerät)</value></data>
   <data name="Transfer_Title" xml:space="preserve"><value>Übertragen</value></data>
   <data name="Transfer_Undo" xml:space="preserve"><value>Letzte Übertragung rückgängig</value></data>
+  <data name="Transfer_UndoChanged" xml:space="preserve"><value>Vorsicht: {0} dieser Dateien wurden seit der Übertragung geändert, zum Beispiel weil du gespielt hast. Rückgängig setzt auch sie zurück; der aktuelle Stand wird vorher gesichert.</value></data>
   <data name="Transfer_UndoConfirm" xml:space="preserve"><value>Die Übertragung vom {0} rückgängig machen? {1} Dateien werden auf den Stand davor zurückgesetzt.</value></data>
   <data name="Transfer_Undone" xml:space="preserve"><value>Die Übertragung wurde rückgängig gemacht.</value></data>
   <data name="Tray_BackupNow" xml:space="preserve"><value>Jetzt sichern</value></data>

@@ -22,6 +22,9 @@ public sealed class AppSettings
 
     public string DeviceId { get; set; } = string.Empty;
 
+    /// <summary>This device's epoch; see <see cref="Model.DeviceInfo.Epoch"/>.</summary>
+    public string DeviceEpoch { get; set; } = string.Empty;
+
     public string DisplayName { get; set; } = string.Empty;
 
     public string? SyncFolder { get; set; }

@@ -48,7 +48,9 @@ public sealed partial class LocalizationTests
 
         // Refusal and warning keys are written as literals in the code; find them there.
         var source = Path.Combine(FindRepositoryRoot(), "src");
-        foreach (var file in Directory.EnumerateFiles(source, "*.cs", SearchOption.AllDirectories))
+        foreach (var file in Directory.EnumerateFiles(source, "*.cs", SearchOption.AllDirectories)
+            .Where(f => !f.Contains(Path.DirectorySeparatorChar + "obj" + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase)
+                && !f.Contains(Path.DirectorySeparatorChar + "bin" + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase)))
         {
             keys.AddRange(LiteralKey().Matches(File.ReadAllText(file)).Select(m => m.Groups[1].Value));
         }

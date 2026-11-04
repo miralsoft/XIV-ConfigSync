@@ -352,7 +352,15 @@ public sealed partial class SyncStore
     /// Removes the own device's revisions beyond the newest <paramref name="keep"/>, except those
     /// another device marked as received last, then deletes objects no kept revision uses.
     /// </summary>
-    public (int Revisions, int Objects) ApplyRetention(string ownDeviceId, int keep, IReadOnlySet<string> protectedIds)
+    public (int Revisions, int Objects) ApplyRetention(string ownDeviceId, int keep, IReadOnlySet<string> protectedIds) =>
+        ApplyRetention(ownDeviceId, keep, protectedIds, TimeSpan.FromDays(2), DateTime.UtcNow);
+
+    /// <summary>
+    /// As above; objects are deleted only when older than <paramref name="grace"/>, so an object
+    /// whose manifest has not arrived yet (or was written by a second PC under the same ID by
+    /// mistake) is never taken away (review finding 9).
+    /// </summary>
+    public (int Revisions, int Objects) ApplyRetention(string ownDeviceId, int keep, IReadOnlySet<string> protectedIds, TimeSpan grace, DateTime nowUtc)
     {
         var revisions = ListRevisions(ownDeviceId);
         var receivedByOthers = ListDevices()
@@ -386,7 +394,7 @@ public sealed partial class SyncStore
             foreach (var path in Directory.EnumerateFiles(objectsRoot, "*", SearchOption.AllDirectories).ToList())
             {
                 var name = Path.GetFileName(path);
-                if (IsHash(name) && !used.Contains(name))
+                if (IsHash(name) && !used.Contains(name) && nowUtc - File.GetLastWriteTimeUtc(path) > grace)
                 {
                     File.Delete(path);
                     deleted++;
@@ -417,8 +425,14 @@ public sealed partial class SyncStore
             throw new InvalidDataException("The revision does not belong where it was found.");
         }
 
+        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         foreach (var (root, file) in manifest.AllFiles())
         {
+            if (!seen.Add(root + "/" + file.Path))
+            {
+                throw new InvalidDataException("The revision lists a file twice and is rejected as a whole.");
+            }
+
             if (!Model.Roots.All.Contains(root) || !IsHash(file.Hash) || !RelativePath.TryNormalize(file.Path, out var normalized) || normalized != file.Path)
             {
                 throw new InvalidDataException("The revision contains an invalid entry and is rejected as a whole.");

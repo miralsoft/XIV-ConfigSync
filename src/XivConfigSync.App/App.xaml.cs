@@ -184,7 +184,7 @@ public partial class App : Application
         tray = new TrayIcon(ShowMainWindow, () => _ = mainModel.BackupNowAsync(), ExitApplication);
         mainModel.PropertyChanged += (_, args) =>
         {
-            if (args.PropertyName == nameof(MainViewModel.StatusText))
+            if (args.PropertyName == nameof(MainViewModel.StatusText) && tray is not null && mainModel is not null)
             {
                 tray.SetText(Strings.App_Title + ": " + mainModel.StatusText);
             }

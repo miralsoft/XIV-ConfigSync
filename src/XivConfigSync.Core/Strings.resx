@@ -117,15 +117,17 @@
   <data name="Reason_MissingLocally" xml:space="preserve"><value>Does not exist on this device yet.</value></data>
   <data name="Reason_NeverRule" xml:space="preserve"><value>Belongs to the source device (rule &quot;never&quot;).</value></data>
   <data name="Reason_NoCommonState" xml:space="preserve"><value>Different on both devices and no common state is known yet (first transfer). You decide.</value></data>
+  <data name="Reason_NotScanned" xml:space="preserve"><value>Left out of this device&apos;s backup (by a rule, size or link); taken only by hand.</value></data>
   <data name="Reason_OnRequestRule" xml:space="preserve"><value>Newer on the source; applied only on request.</value></data>
   <data name="Reason_Restore" xml:space="preserve"><value>Differs from the chosen older backup.</value></data>
   <data name="Reason_SourceNewer" xml:space="preserve"><value>Newer on the source.</value></data>
   <data name="Reason_SourceOutdated" xml:space="preserve"><value>The source has an older state of this file.</value></data>
   <data name="Reason_UpToDate" xml:space="preserve"><value>Same on both devices.</value></data>
+  <data name="Recovery_LeftAlone" xml:space="preserve"><value>{0} files changed after the interruption and were left as they are. You can take them on the Transfer page.</value></data>
   <data name="Recovery_Text" xml:space="preserve"><value>A transfer was interrupted, for example by a power cut. Yes: finish it. No: go back to the state before it. Cancel: decide later.</value></data>
   <data name="Recovery_Title" xml:space="preserve"><value>Interrupted transfer</value></data>
   <data name="Refuse_Busy" xml:space="preserve"><value>Another operation is running. Please try again in a moment.</value></data>
-  <data name="Refuse_ClockBehind" xml:space="preserve"><value>The clock of this PC is behind the last backup. Please check the date and time.</value></data>
+  <data name="Refuse_ChangedSincePlan" xml:space="preserve"><value>Some files changed since the comparison, for example because the game ran. Nothing was written. Please compare again.</value></data>
   <data name="Refuse_Damaged" xml:space="preserve"><value>Some files of this backup are missing or damaged, possibly because OneDrive has not finished downloading them. Nothing was applied. Try again later.</value></data>
   <data name="Refuse_GameRunning" xml:space="preserve"><value>The game is running. Nothing is written to its files while it runs; this happens after you close it.</value></data>
   <data name="Refuse_GameVersion" xml:space="preserve"><value>The game version differs between the two devices. Please update the game on both devices first.</value></data>
@@ -178,11 +180,13 @@
   <data name="Settings_SyncFolder" xml:space="preserve"><value>Sync folder</value></data>
   <data name="Settings_Title" xml:space="preserve"><value>Settings</value></data>
   <data name="Setup_AgainDevice" xml:space="preserve"><value>This PC is already in the sync folder and was set up again:</value></data>
+  <data name="Setup_AgainRecent" xml:space="preserve"><value>{0} was active on {1}. Set this PC up as {0} only if that PC is no longer used; two PCs under one name would disturb each other. Continue?</value></data>
   <data name="Setup_Back" xml:space="preserve"><value>Back</value></data>
   <data name="Setup_ChooseFolder" xml:space="preserve"><value>Sync folder</value></data>
   <data name="Setup_DeviceHint" xml:space="preserve"><value>The name is shown on your other devices.</value></data>
   <data name="Setup_DeviceName" xml:space="preserve"><value>Name of this device</value></data>
   <data name="Setup_DeviceTitle" xml:space="preserve"><value>This device</value></data>
+  <data name="Setup_DoneAgain" xml:space="preserve"><value>This PC is set up again under its old name. Its last backups are on the Transfer page if you want to restore one. The other PCs will not take anything from this PC without asking until you have compared once.</value></data>
   <data name="Setup_DoneJoined" xml:space="preserve"><value>This device is set up and backed up. On the Transfer page you can now take the settings of your other device.</value></data>
   <data name="Setup_DoneNew" xml:space="preserve"><value>The sync folder is set up and this device is backed up. On your next PC, choose the same folder or double-click the .xivsync file in it.</value></data>
   <data name="Setup_Finish" xml:space="preserve"><value>Finish</value></data>
@@ -233,6 +237,7 @@
   <data name="Transfer_ThisDevice" xml:space="preserve"><value>(this device)</value></data>
   <data name="Transfer_Title" xml:space="preserve"><value>Transfer</value></data>
   <data name="Transfer_Undo" xml:space="preserve"><value>Undo last transfer</value></data>
+  <data name="Transfer_UndoChanged" xml:space="preserve"><value>Careful: {0} of these files changed since the transfer, for example because you played. Undo sets them back too; the current state is saved first and stays available.</value></data>
   <data name="Transfer_UndoConfirm" xml:space="preserve"><value>Undo the transfer of {0}? {1} files are set back to the state before it.</value></data>
   <data name="Transfer_Undone" xml:space="preserve"><value>The transfer was undone.</value></data>
   <data name="Tray_BackupNow" xml:space="preserve"><value>Back up now</value></data>

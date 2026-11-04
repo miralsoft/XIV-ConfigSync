@@ -1,6 +1,7 @@
 using System.Reflection;
 using XivConfigSync.Core.Apply;
 using XivConfigSync.Core.Discovery;
+using XivConfigSync.Core.IO;
 using XivConfigSync.Core.Inventory;
 using XivConfigSync.Core.Logging;
 using XivConfigSync.Core.Model;
@@ -159,6 +160,12 @@ public sealed class SyncEngine
             throw new RefusedException("Refuse_GameRunning");
         }
 
+        if (HasInterruptedApply)
+        {
+            // A half-applied state must not become a revision (review finding 6).
+            throw new RefusedException("Refuse_OpenJournal");
+        }
+
         using var busy = TakeLock();
         var store = OpenStore();
         var deviceId = Settings.DeviceId;
@@ -184,12 +191,13 @@ public sealed class SyncEngine
         var now = DateTimeOffset.UtcNow;
         var manifest = new RevisionManifest
         {
-            RevisionId = SyncStore.NewRevisionId(deviceId, now),
+            RevisionId = SyncStore.NewRevisionId(deviceId, NotBefore(now, head)),
             DeviceId = deviceId,
             Created = now,
             Parent = head,
             Origin = origin,
             AppVersion = AppVersion,
+            Epoch = Settings.DeviceEpoch,
             GameVersion = LocalGameVersion,
             Excluded = scan.Excluded,
         };
@@ -202,12 +210,6 @@ public sealed class SyncEngine
                     .Select(f => new FileEntry { Path = f.Path, Hash = f.Hash, Size = f.Size, Flags = [.. f.Flags] })
                     .ToList(),
             };
-        }
-
-        if (head is not null && string.CompareOrdinal(manifest.RevisionId, head) <= 0)
-        {
-            // The clock went back; keep IDs ordered so the newest revision stays the newest.
-            throw new RefusedException("Refuse_ClockBehind");
         }
 
         store.Publish(manifest);
@@ -297,11 +299,20 @@ public sealed class SyncEngine
                 continue;
             }
 
-            var manifest = store.ReadRevision(device.DeviceId, head);
-            if (store.FindDamaged(manifest).Count == 0)
+            try
             {
-                store.WriteReceived(Settings.DeviceId, device.DeviceId, head);
-                confirmed++;
+                var manifest = store.ReadRevision(device.DeviceId, head);
+                if (store.FindDamaged(manifest).Count == 0)
+                {
+                    store.WriteReceived(Settings.DeviceId, device.DeviceId, head);
+                    confirmed++;
+                }
+            }
+            catch (Exception ex) when (ex is IOException or InvalidDataException or System.Text.Json.JsonException or UnauthorizedAccessException)
+            {
+                // Not arrived completely yet, or written by a newer version: this device only, the
+                // others still count (review finding 7).
+                log.Debug("receipt", $"Revision {head} of another device cannot be confirmed yet: {ex.GetType().Name}.");
             }
         }
 
@@ -327,7 +338,14 @@ public sealed class SyncEngine
 
         if (fresh.Count > 0)
         {
-            ConfirmReceived();
+            try
+            {
+                ConfirmReceived();
+            }
+            catch (RefusedException ex)
+            {
+                log.Debug("receipt", "Receipts not written now: " + ex.ReasonKey);
+            }
         }
 
         return fresh;
@@ -361,15 +379,44 @@ public sealed class SyncEngine
     public ApplyPlan Plan(string sourceDeviceId, string? revisionId)
     {
         var store = OpenStore();
+        var roots = Roots;
         var id = revisionId ?? store.ReadHead(sourceDeviceId) ?? throw new RefusedException("Refuse_NoRevision");
         var source = store.ReadRevision(sourceDeviceId, id);
-        var scan = Scanner.Scan(Roots, Rules);
+        var scan = Scanner.Scan(roots, Rules);
+
+        // Files of the source this scan did not cover: hash them where they are, so they are never
+        // taken for missing (review finding 2).
+        var outsideScan = new Dictionary<string, string?>(StringComparer.OrdinalIgnoreCase);
+        foreach (var (root, file) in source.AllFiles())
+        {
+            if (scan.Find(root, file.Path) is not null || !roots.TryGetValue(root, out var folder) || folder is null)
+            {
+                continue;
+            }
+
+            var full = RelativePath.Combine(folder, file.Path);
+            var excluded = Rules.ExclusionReason(root, file.Path) is not null;
+            if (excluded || File.Exists(full))
+            {
+                outsideScan[BaseTable.Key(root, file.Path)] = File.Exists(full) ? FileOps.HashFile(full) : null;
+            }
+        }
+
+        // What this device shared with the source counts only within the source's current epoch:
+        // a device set up again starts without a common state (review finding 3).
+        var bases = BaseTable.Load(local.BasePath(sourceDeviceId));
+        if (bases.SourceEpoch != source.Epoch)
+        {
+            bases = new BaseTable { SourceEpoch = source.Epoch };
+        }
+
         var plan = ApplyPlanner.Plan(
             source,
             scan,
-            BaseTable.Load(local.BasePath(sourceDeviceId)),
-            History(store, sourceDeviceId, exclude: id),
-            History(store, Settings.DeviceId, exclude: null),
+            outsideScan,
+            bases,
+            History(store, sourceDeviceId, before: id, epoch: source.Epoch),
+            History(store, Settings.DeviceId, before: null, epoch: null),
             Rules,
             Settings.DeviceId,
             LocalGameVersion);
@@ -381,13 +428,14 @@ public sealed class SyncEngine
         }
 
         // A root this device does not back up (plugins turned off, or no Dalamud) is not offered.
-        var unknownRoots = plan.Items.Select(i => i.Root).Distinct().Where(root => !Roots.TryGetValue(root, out var folder) || folder is null).ToList();
+        var unknownRoots = plan.Items.Select(i => i.Root).Distinct().Where(root => !roots.TryGetValue(root, out var folder) || folder is null).ToList();
         if (unknownRoots.Count > 0)
         {
             plan.Items.RemoveAll(i => unknownRoots.Contains(i.Root));
             plan.Warnings.Add("Warn_PluginsOff");
         }
 
+        plan.SourceEpoch = source.Epoch;
         return plan;
     }
 
@@ -415,38 +463,47 @@ public sealed class SyncEngine
         using (TakeLock())
         {
             var store = OpenStore();
-            var applier = new Applier(store, local.JournalPath, local.SnapshotsFolder, Roots, probe);
-            if (applier.HasOpenJournal)
-            {
-                throw new RefusedException("Refuse_OpenJournal");
-            }
-
+            var applier = NewApplier(store);
             log.Info(correlation, $"Apply of {plan.SourceRevisionId}: {selected.Count} files.");
-            snapshotId = applier.Apply(plan.SourceDeviceId, plan.SourceRevisionId, selected.Select(i => new ApplyTarget(i.Root, i.Path, i.SourceHash)).ToList());
+            snapshotId = applier.Apply(
+                plan.SourceDeviceId,
+                plan.SourceRevisionId,
+                selected.Select(i => new ApplyTarget(i.Root, i.Path, i.SourceHash, i.LocalHash)).ToList());
 
             if (!plan.IsOwnDevice)
             {
-                var bases = BaseTable.Load(local.BasePath(plan.SourceDeviceId));
+                var path = local.BasePath(plan.SourceDeviceId);
+                var bases = BaseTable.Load(path);
+                if (bases.SourceEpoch != plan.SourceEpoch)
+                {
+                    bases = new BaseTable { SourceEpoch = plan.SourceEpoch };
+                }
+
                 foreach (var item in plan.Items.Where(i => i.Selected || i.Reason == PlanReason.UpToDate))
                 {
                     bases.Set(item.Root, item.Path, item.SourceHash);
                 }
 
-                bases.Save(local.BasePath(plan.SourceDeviceId));
+                bases.Save(path);
             }
 
             applier.PruneSnapshots(20, TimeSpan.FromDays(30), DateTimeOffset.UtcNow);
             log.Info(correlation, $"Apply done; snapshot {snapshotId}.");
         }
 
-        var backup = Backup(RevisionOrigin.AfterApply);
-        return new ApplyResult(snapshotId, selected.Count, backup.RevisionId);
+        return new ApplyResult(snapshotId, selected.Count, BackupAfterChange(correlation));
     }
 
-    /// <summary>The snapshots that can be restored, newest first.</summary>
-    public IReadOnlyList<SnapshotManifest> ListSnapshots() => NewApplier(OpenStore()).ListSnapshots();
+    /// <summary>The applies that can be undone, newest first. Works without the sync folder.</summary>
+    public IReadOnlyList<SnapshotManifest> ListSnapshots() => NewApplier(null).ListSnapshots();
 
-    /// <summary>Undoes an apply by restoring its snapshot, then backs up the restored state.</summary>
+    /// <summary>The files of an apply that changed since it wrote them; shown before an undo.</summary>
+    public IReadOnlyList<string> ChangedSinceApply(SnapshotManifest snapshot) => NewApplier(null).ChangedSinceApply(snapshot);
+
+    /// <summary>
+    /// Undoes an apply by restoring its snapshot (after saving the current state), then backs up
+    /// the restored state. Works without the sync folder; the backup then follows later.
+    /// </summary>
     public void Undo(string snapshotId)
     {
         if (game.IsRunning)
@@ -454,9 +511,10 @@ public sealed class SyncEngine
             throw new RefusedException("Refuse_GameRunning");
         }
 
+        var correlation = Correlation();
         using (TakeLock())
         {
-            var applier = NewApplier(OpenStore());
+            var applier = NewApplier(null);
             var snapshot = applier.ListSnapshots().FirstOrDefault(s => s.SnapshotId == snapshotId)
                 ?? throw new RefusedException("Refuse_NoSnapshot");
             applier.Restore(snapshotId);
@@ -476,17 +534,20 @@ public sealed class SyncEngine
 
             // An undone apply is not offered for undo again; the next "undo" takes the one before.
             applier.DeleteSnapshot(snapshotId);
-            log.Info(Correlation(), $"Snapshot {snapshotId} restored.");
+            log.Info(correlation, $"Snapshot {snapshotId} restored.");
         }
 
-        Backup(RevisionOrigin.AfterApply);
+        BackupAfterChange(correlation);
     }
 
     /// <summary>Whether an interrupted apply waits (FR-066).</summary>
     public bool HasInterruptedApply => File.Exists(local.JournalPath);
 
-    /// <summary>Finishes or rolls back an interrupted apply.</summary>
-    public void ResolveInterruptedApply(bool rollBack)
+    /// <summary>
+    /// Finishes or rolls back an interrupted apply, after saving the current state. Returns the
+    /// files a finish left alone because they changed since the interruption.
+    /// </summary>
+    public IReadOnlyList<string> ResolveInterruptedApply(bool rollBack)
     {
         if (game.IsRunning)
         {
@@ -494,19 +555,19 @@ public sealed class SyncEngine
         }
 
         using var busy = TakeLock();
-        var applier = NewApplier(OpenStore());
+        IReadOnlyList<string> leftAlone = [];
         if (rollBack)
         {
-            applier.RollBackOpenJournal();
+            NewApplier(null).RollBackOpenJournal();
         }
         else
         {
-            applier.FinishOpenJournal();
+            leftAlone = NewApplier(OpenStore()).FinishOpenJournal();
         }
 
-        log.Info(Correlation(), rollBack ? "Interrupted apply rolled back." : "Interrupted apply finished.");
+        log.Info(Correlation(), rollBack ? "Interrupted apply rolled back." : $"Interrupted apply finished; {leftAlone.Count} changed files left alone.");
+        return leftAlone;
     }
-
     /// <summary>Revisions of a device, newest first, with their dates.</summary>
     public IReadOnlyList<(string RevisionId, DateTimeOffset Created, RevisionOrigin Origin, int Files)> ListRevisions(string deviceId)
     {
@@ -531,10 +592,13 @@ public sealed class SyncEngine
     /// <summary>A scan of this device without storing anything; for diagnostics.</summary>
     public ScanResult ScanOnly() => Scanner.Scan(Roots, Rules);
 
-    private static Dictionary<string, HashSet<string>> History(SyncStore store, string deviceId, string? exclude)
+    private static Dictionary<string, HashSet<string>> History(SyncStore store, string deviceId, string? before, string? epoch)
     {
         var history = new Dictionary<string, HashSet<string>>(StringComparer.OrdinalIgnoreCase);
-        foreach (var id in store.ListRevisions(deviceId).Where(id => id != exclude))
+
+        // Only revisions older than the chosen one count as "what the source had before" (review
+        // finding 11), and only those of the same epoch (finding 3).
+        foreach (var id in store.ListRevisions(deviceId).Where(id => before is null || string.CompareOrdinal(id, before) < 0))
         {
             RevisionManifest manifest;
             try
@@ -546,6 +610,10 @@ public sealed class SyncEngine
                 continue;
             }
 
+            if (epoch is not null && manifest.Epoch != epoch)
+            {
+                continue;
+            }
             foreach (var (root, file) in manifest.AllFiles())
             {
                 var key = BaseTable.Key(root, file.Path);
@@ -571,7 +639,40 @@ public sealed class SyncEngine
 
     private static string Correlation() => Guid.NewGuid().ToString("N")[..8];
 
-    private Applier NewApplier(SyncStore store) => new(store, local.JournalPath, local.SnapshotsFolder, Roots, probe);
+    private Applier NewApplier(SyncStore? store) => new(store, local.JournalPath, local.SnapshotsFolder, Roots, () => game.IsRunning, probe);
+
+    /// <summary>
+    /// A revision time not before the latest one of this device: a clock that went back must not
+    /// lock backups out (review finding 8).
+    /// </summary>
+    private static DateTimeOffset NotBefore(DateTimeOffset now, string? head)
+    {
+        if (head is null || !DateTime.TryParseExact(head[..19], "yyyyMMdd'T'HHmmssfff'Z'", System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.AdjustToUniversal | System.Globalization.DateTimeStyles.AssumeUniversal, out var last))
+        {
+            return now;
+        }
+
+        var next = new DateTimeOffset(last, TimeSpan.Zero).AddMilliseconds(1);
+        return now > next ? now : next;
+    }
+
+    /// <summary>
+    /// Backs up after an apply or an undo. The change itself already succeeded, so a failure here
+    /// (the game was started, the sync folder is away) is logged, not reported as a failed apply;
+    /// the next backup catches up (review finding 8).
+    /// </summary>
+    private string? BackupAfterChange(string correlation)
+    {
+        try
+        {
+            return Backup(RevisionOrigin.AfterApply).RevisionId;
+        }
+        catch (Exception ex) when (ex is RefusedException or IOException or UnauthorizedAccessException or InvalidOperationException)
+        {
+            log.Warning(correlation, "The backup after the change follows later: " + (ex is RefusedException refused ? refused.ReasonKey : ex.Message));
+            return null;
+        }
+    }
 
     private void EnsureDeviceId()
     {
@@ -584,12 +685,16 @@ public sealed class SyncEngine
     private void JoinAs(SyncStore store, string deviceId, string displayName)
     {
         var existing = store.ListDevices().FirstOrDefault(d => d.DeviceId == deviceId);
+        // A new epoch on every set-up, also when a device is set up again under its old ID, so other
+        // devices do not trust a fresh installation as a continuation (review finding 3).
+        Settings.DeviceEpoch = SyncStore.NewDeviceId();
         store.WriteDeviceInfo(new DeviceInfo
         {
             DeviceId = deviceId,
             DisplayName = displayName,
             Created = existing?.Created ?? DateTimeOffset.UtcNow,
             LastSeen = DateTimeOffset.UtcNow,
+            Epoch = Settings.DeviceEpoch,
         });
         Settings.DisplayName = displayName;
         Settings.SyncFolder = store.Root;

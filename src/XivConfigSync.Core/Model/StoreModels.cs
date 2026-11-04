@@ -53,6 +53,13 @@ public sealed class DeviceInfo
     public DateTimeOffset Created { get; set; }
 
     public DateTimeOffset LastSeen { get; set; }
+
+    /// <summary>
+    /// Changes when the device is set up again (for example after Windows was reinstalled). Other
+    /// devices treat revisions of a new epoch as having no common state with them, so a fresh
+    /// installation's default files are never applied over their settings without asking.
+    /// </summary>
+    public string Epoch { get; set; } = string.Empty;
 }
 
 /// <summary>One file in a revision.</summary>
@@ -118,6 +125,9 @@ public sealed class RevisionManifest
     public RevisionOrigin Origin { get; set; }
 
     public string AppVersion { get; set; } = string.Empty;
+
+    /// <summary>The device's epoch when the revision was made; see <see cref="DeviceInfo.Epoch"/>.</summary>
+    public string Epoch { get; set; } = string.Empty;
 
     public string? GameVersion { get; set; }
 

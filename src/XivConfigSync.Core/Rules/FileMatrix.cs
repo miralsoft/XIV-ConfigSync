@@ -91,6 +91,8 @@ public static class FileMatrix
     public static IReadOnlyList<(string Root, Glob Glob, string ReasonKey)> Exclusions { get; } =
     [
         (Roots.Game, new Glob("**/*.old"), "Exclude_Old"),
+        (Roots.Game, new Glob("**/.*.tmp"), "Exclude_Temp"),
+        (Roots.Plugins, new Glob("**/.*.tmp"), "Exclude_Temp"),
         (Roots.Game, new Glob("screenshots/**"), "Exclude_NotConfig"),
         (Roots.Game, new Glob("log/**"), "Exclude_NotConfig"),
         (Roots.Game, new Glob("logs/**"), "Exclude_NotConfig"),

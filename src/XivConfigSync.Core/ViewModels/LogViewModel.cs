@@ -9,7 +9,7 @@ namespace XivConfigSync.Core.ViewModels;
 public sealed record LogRow(string Time, string Level, string Message);
 
 /// <summary>The log page.</summary>
-public sealed partial class LogViewModel
+public sealed partial class LogViewModel : IDisposable
 {
     private readonly Log log;
     private readonly IUiServices ui;
@@ -23,15 +23,20 @@ public sealed partial class LogViewModel
             Rows.Insert(0, ToRow(entry));
         }
 
-        log.Written += (_, entry) => ui.OnUiThread(() =>
-        {
-            Rows.Insert(0, ToRow(entry));
-            while (Rows.Count > 500)
-            {
-                Rows.RemoveAt(Rows.Count - 1);
-            }
-        });
+        log.Written += OnWritten;
     }
+
+    /// <summary>Stops following the log (review finding 10).</summary>
+    public void Dispose() => log.Written -= OnWritten;
+
+    private void OnWritten(object? sender, LogEntry entry) => ui.OnUiThread(() =>
+    {
+        Rows.Insert(0, ToRow(entry));
+        while (Rows.Count > 500)
+        {
+            Rows.RemoveAt(Rows.Count - 1);
+        }
+    });
 
     public ObservableCollection<LogRow> Rows { get; } = [];
 

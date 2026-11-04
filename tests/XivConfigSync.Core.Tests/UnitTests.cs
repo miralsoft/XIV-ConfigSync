@@ -237,8 +237,12 @@ public sealed class SyncStoreTests
         }
 
         store.WriteReceived(b, a, ids[1]);
-        var (revisions, objects) = store.ApplyRetention(a, 2, new HashSet<string>());
-        Assert.Equal(3, revisions);
+        // Fresh objects are kept for a grace period; here the grace is zero.
+        var early = store.ApplyRetention(a, 2, new HashSet<string>());
+        Assert.Equal(3, early.Revisions);
+        Assert.Equal(0, early.Objects);
+        var (revisions, objects) = store.ApplyRetention(a, 2, new HashSet<string>(), TimeSpan.Zero, DateTime.UtcNow.AddSeconds(1));
+        Assert.Equal(0, revisions);
         Assert.Equal(3, objects);
         Assert.Equal([ids[5], ids[4], ids[1]], store.ListRevisions(a));
     }

@@ -33,6 +33,7 @@ public static class PlanReason
     public const string NeverRule = "Reason_NeverRule";
     public const string OnRequestRule = "Reason_OnRequestRule";
     public const string Restore = "Reason_Restore";
+    public const string NotScanned = "Reason_NotScanned";
 }
 
 /// <summary>One file in an apply plan.</summary>
@@ -76,6 +77,9 @@ public sealed class ApplyPlan
 
     public required bool IsOwnDevice { get; init; }
 
+    /// <summary>The source device's epoch the plan was made in.</summary>
+    public string SourceEpoch { get; set; } = string.Empty;
+
     public List<PlanItem> Items { get; } = [];
 
     /// <summary>Reasons that refuse the whole apply; resource keys.</summary>
@@ -99,8 +103,13 @@ public static class ApplyPlanner
     /// <summary>Builds a plan.</summary>
     /// <param name="source">The revision to apply.</param>
     /// <param name="local">A fresh scan of this device.</param>
-    /// <param name="baseTable">What this device last shared with the source device.</param>
-    /// <param name="sourceHistory">Per <c>root/path</c>, every hash the file had in the source device's older revisions.</param>
+    /// <param name="outsideScan">
+    /// Per <c>root/path</c>, files of the source that the scan did not cover on this device (left out
+    /// by a rule, too large, or a link), with their current hash or null when they do not exist. They
+    /// are never applied on their own (review finding 2).
+    /// </param>
+    /// <param name="baseTable">What this device last shared with the source device, in the source's current epoch.</param>
+    /// <param name="sourceHistory">Per <c>root/path</c>, every hash the file had in the source device's older revisions of the same epoch.</param>
     /// <param name="localHistory">Per <c>root/path</c>, every hash the file had in this device's own revisions.</param>
     /// <param name="rules">The effective rules.</param>
     /// <param name="ownDeviceId">This device.</param>
@@ -108,6 +117,7 @@ public static class ApplyPlanner
     public static ApplyPlan Plan(
         RevisionManifest source,
         ScanResult local,
+        IReadOnlyDictionary<string, string?> outsideScan,
         BaseTable baseTable,
         IReadOnlyDictionary<string, HashSet<string>> sourceHistory,
         IReadOnlyDictionary<string, HashSet<string>> localHistory,
@@ -129,12 +139,14 @@ public static class ApplyPlanner
 
         foreach (var (root, file) in source.AllFiles())
         {
-            var localFile = local.Find(root, file.Path);
             var key = BaseTable.Key(root, file.Path);
+            var notScanned = outsideScan.TryGetValue(key, out var outsideHash);
+            var localHash = notScanned ? outsideHash : local.Find(root, file.Path)?.Hash;
             var item = Decide(
                 root,
                 file,
-                localFile?.Hash,
+                localHash,
+                notScanned,
                 baseTable.Get(root, file.Path),
                 sourceHistory.TryGetValue(key, out var sh) ? sh : null,
                 localHistory.TryGetValue(key, out var lh) ? lh : null,
@@ -156,6 +168,7 @@ public static class ApplyPlanner
         string root,
         FileEntry file,
         string? localHash,
+        bool notScanned,
         string? baseHash,
         HashSet<string>? sourceHistory,
         HashSet<string>? localHistory,
@@ -164,6 +177,7 @@ public static class ApplyPlanner
     {
         var matrix = FileMatrix.Lookup(root, file.Path);
         var rule = rules.RuleFor(root, file.Path);
+        var automatic = rule == ApplyRule.Always && !notScanned;
 
         PlanAction action;
         string reason;
@@ -180,26 +194,45 @@ public static class ApplyPlanner
         {
             (action, reason) = (PlanAction.Skip, PlanReason.NeverRule);
         }
+        else if (notScanned)
+        {
+            // Left out of this device's backup on purpose (or unreadable as a link): only by hand.
+            (action, reason) = (PlanAction.Offer, PlanReason.NotScanned);
+        }
         else if (localHash is null)
         {
-            (action, reason) = (rule == ApplyRule.Always ? PlanAction.Apply : PlanAction.Offer, PlanReason.MissingLocally);
+            (action, reason) = (automatic ? PlanAction.Apply : PlanAction.Offer, PlanReason.MissingLocally);
         }
-        else if (baseHash == file.Hash || (localHistory?.Contains(file.Hash) ?? false))
+        else if (baseHash is not null)
         {
-            // The source still has a state this device already had or shared: the local change is
-            // newer. Never applied on its own, but offered, so the user can still take any file.
-            (action, reason) = (PlanAction.Offer, baseHash == file.Hash ? PlanReason.LocalChangedOnly : PlanReason.SourceOutdated);
+            // A known common state decides alone; the histories only fill in where it is unknown
+            // (review finding 1: an old source state equal to a new local one proves nothing).
+            if (baseHash == localHash)
+            {
+                (action, reason) = automatic ? (PlanAction.Apply, PlanReason.SourceNewer) : (PlanAction.Offer, PlanReason.OnRequestRule);
+            }
+            else if (baseHash == file.Hash)
+            {
+                (action, reason) = (PlanAction.Offer, PlanReason.LocalChangedOnly);
+            }
+            else
+            {
+                (action, reason) = (PlanAction.Conflict, PlanReason.BothChanged);
+            }
         }
-        else if (baseHash == localHash || (sourceHistory?.Contains(localHash) ?? false))
+        else if (localHistory?.Contains(file.Hash) ?? false)
+        {
+            // The source still has a state this device had before: the local copy is newer.
+            (action, reason) = (PlanAction.Offer, PlanReason.SourceOutdated);
+        }
+        else if (sourceHistory?.Contains(localHash) ?? false)
         {
             // The local file is a state the source had before: the source is newer.
-            (action, reason) = rule == ApplyRule.Always
-                ? (PlanAction.Apply, PlanReason.SourceNewer)
-                : (PlanAction.Offer, PlanReason.OnRequestRule);
+            (action, reason) = automatic ? (PlanAction.Apply, PlanReason.SourceNewer) : (PlanAction.Offer, PlanReason.OnRequestRule);
         }
         else
         {
-            (action, reason) = (PlanAction.Conflict, baseHash is null ? PlanReason.NoCommonState : PlanReason.BothChanged);
+            (action, reason) = (PlanAction.Conflict, PlanReason.NoCommonState);
         }
 
         return new PlanItem

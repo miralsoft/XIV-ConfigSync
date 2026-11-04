@@ -11,7 +11,7 @@ using XivConfigSync.Core.Store;
 namespace XivConfigSync.Core.ViewModels;
 
 /// <summary>A device already in the chosen sync folder.</summary>
-public sealed record ExistingDevice(string DeviceId, string Name);
+public sealed record ExistingDevice(string DeviceId, string Name, DateTimeOffset LastSeen);
 
 /// <summary>
 /// The first-start wizard (FR-003, FR-045): one sync folder for every device; the application
@@ -184,6 +184,13 @@ public sealed partial class SetupViewModel : ObservableObject
                 Step = 1;
                 break;
             case 1 when !string.IsNullOrWhiteSpace(DeviceName) && (!SetUpAgain || AgainAs is not null):
+                // Two PCs under one identity would disturb each other (review finding 9).
+                if (SetUpAgain && AgainAs is not null && DateTimeOffset.UtcNow - AgainAs.LastSeen < TimeSpan.FromDays(1)
+                    && !ui.Confirm(Strings.Setup_Title, Text.Format(Strings.Setup_AgainRecent, AgainAs.Name, Text.Time(AgainAs.LastSeen))))
+                {
+                    break;
+                }
+
                 Step = 2;
                 break;
             case 2 when GameFolders.LooksLikeGameConfigFolder(GameFolder):
@@ -244,7 +251,7 @@ public sealed partial class SetupViewModel : ObservableObject
                     var devices = SyncStore.Open(Folder).ListDevices();
                     foreach (var device in devices)
                     {
-                        ExistingDevices.Add(new ExistingDevice(device.DeviceId, device.DisplayName));
+                        ExistingDevices.Add(new ExistingDevice(device.DeviceId, device.DisplayName, device.LastSeen));
                     }
 
                     FolderUsable = true;
@@ -316,8 +323,15 @@ public sealed partial class SetupViewModel : ObservableObject
 
             try
             {
-                shell.SetAutostart(Autostart);
-                shell.SetFileAssociation(FileAssociation);
+                if (Autostart != shell.IsAutostartEnabled)
+                {
+                    shell.SetAutostart(Autostart);
+                }
+
+                if (FileAssociation != shell.IsFileAssociationRegistered)
+                {
+                    shell.SetFileAssociation(FileAssociation);
+                }
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Security.SecurityException)
             {
@@ -326,7 +340,7 @@ public sealed partial class SetupViewModel : ObservableObject
 
             engine.SaveSettings();
             Progress = string.Empty;
-            ui.Inform(Strings.Setup_Title, joins ? Strings.Setup_DoneJoined : Strings.Setup_DoneNew);
+            ui.Inform(Strings.Setup_Title, again is not null ? Strings.Setup_DoneAgain : joins ? Strings.Setup_DoneJoined : Strings.Setup_DoneNew);
             Completed?.Invoke(this, EventArgs.Empty);
         }
         catch (Exception ex) when (ex is RefusedException or IOException or UnauthorizedAccessException or InvalidOperationException or InvalidDataException)

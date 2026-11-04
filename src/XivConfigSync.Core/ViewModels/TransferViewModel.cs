@@ -179,20 +179,37 @@ public sealed partial class TransferViewModel : ObservableObject
     [RelayCommand]
     public async Task UndoLastAsync()
     {
-        var snapshots = main.Engine.ListSnapshots();
-        var last = snapshots.Count > 0 ? snapshots[0] : null;
+        Apply.SnapshotManifest? last = null;
+        IReadOnlyList<string> changed = [];
+        if (!await main.RunAsync(Strings.Status_Comparing, () =>
+        {
+            var snapshots = main.Engine.ListSnapshots();
+            last = snapshots.Count > 0 ? snapshots[0] : null;
+            changed = last is null ? [] : main.Engine.ChangedSinceApply(last);
+        }).ConfigureAwait(true))
+        {
+            return;
+        }
+
         if (last is null)
         {
             ui.Inform(Strings.Transfer_Title, Strings.Transfer_NothingToUndo);
             return;
         }
 
-        if (!ui.Confirm(Strings.Transfer_Title, Text.Format(Strings.Transfer_UndoConfirm, Text.Time(last.Created), last.Files.Count)))
+        var question = Text.Format(Strings.Transfer_UndoConfirm, Text.Time(last.Created), last.Files.Count);
+        if (changed.Count > 0)
+        {
+            question += Environment.NewLine + Environment.NewLine + Text.Format(Strings.Transfer_UndoChanged, changed.Count);
+        }
+
+        if (!ui.Confirm(Strings.Transfer_Title, question))
         {
             return;
         }
 
-        if (await main.RunAsync(Strings.Status_Applying, () => main.Engine.Undo(last.SnapshotId)).ConfigureAwait(true))
+        var undo = last;
+        if (await main.RunAsync(Strings.Status_Applying, () => main.Engine.Undo(undo.SnapshotId)).ConfigureAwait(true))
         {
             ui.Inform(Strings.Transfer_Title, Strings.Transfer_Undone);
             await main.RefreshAsync().ConfigureAwait(true);
