@@ -92,9 +92,12 @@ jobs:
           if ($files.Count -eq 0) { throw 'No PowerShell files tracked, so nothing was analysed (R-23).' }
           # Project change to the copied template: a warm-up pass, results discarded. UseCorrectCasing
           # in 1.25.0 intermittently throws a NullReferenceException on the first analyses in a fresh
-          # process (docs/decisions.md, 2026-11-03). The strict pass below is unchanged.
+          # process (docs/decisions.md, 2026-11-03). It also runs the -SuppressedOnly analysis, which
+          # failed once with a RULE_ERROR after the plain warm-up (2026-11-04). The strict pass below
+          # still fails on any analyzer error.
           foreach ($file in $files) {
               $null = Invoke-ScriptAnalyzer -Path $file -Settings .\PSScriptAnalyzerSettings.psd1 -ErrorAction SilentlyContinue
+              $null = Invoke-ScriptAnalyzer -Path $file -Settings .\PSScriptAnalyzerSettings.psd1 -SuppressedOnly -ErrorAction SilentlyContinue
           }
           $failed = $false
           foreach ($file in $files) {
@@ -105,8 +108,10 @@ jobs:
               # A suppression is an exception and carries its reason. PSScriptAnalyzer accepts a
               # SuppressMessageAttribute without a Justification and hides the finding all the same,
               # measured with 1.25.0, so the reason is required here instead.
-              $unexplained = @(Invoke-ScriptAnalyzer -Path $file -Settings .\PSScriptAnalyzerSettings.psd1 -SuppressedOnly |
+              $suppressedErrors = $null
+              $unexplained = @(Invoke-ScriptAnalyzer -Path $file -Settings .\PSScriptAnalyzerSettings.psd1 -SuppressedOnly -ErrorVariable suppressedErrors -ErrorAction SilentlyContinue |
                       Where-Object { [string]::IsNullOrWhiteSpace($_.Justification) })
+              $analyzerErrors = @($analyzerErrors) + @($suppressedErrors) | Where-Object { $_ }
               $unexplained | ForEach-Object { '{0}:{1} {2} suppressed without a Justification' -f $file, $_.Line, $_.RuleName }
               if ($unexplained.Count -gt 0) { $failed = $true }
               # A crashed rule is a non-terminating RULE_ERROR. Counting findings alone would pass

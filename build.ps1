@@ -64,8 +64,11 @@ $settings = Join-Path -Path $root -ChildPath 'PSScriptAnalyzerSettings.psd1'
 # PSScriptAnalyzer 1.25.0 intermittently throws a NullReferenceException from
 # CommandInfo.Parameters (observed 2026-11-03, docs/decisions.md). After one pass over the files
 # it did not recur in 162 analyses. The strict pass below still fails on any analyzer error.
+# The warm-up also runs the -SuppressedOnly analysis, which failed once in CI with a RULE_ERROR
+# ("Get-Command is not recognized") after the plain warm-up (observed 2026-11-04).
 foreach ($file in $powershellFiles) {
     $null = Invoke-ScriptAnalyzer -Path (Join-Path -Path $root -ChildPath $file) -Settings $settings -ErrorAction SilentlyContinue
+    $null = Invoke-ScriptAnalyzer -Path (Join-Path -Path $root -ChildPath $file) -Settings $settings -SuppressedOnly -ErrorAction SilentlyContinue
 }
 $failed = $false
 foreach ($file in $powershellFiles) {
@@ -74,8 +77,10 @@ foreach ($file in $powershellFiles) {
     $found = @(Invoke-ScriptAnalyzer -Path $full -Settings $settings -ErrorVariable analyzerErrors -ErrorAction SilentlyContinue)
     $found | ForEach-Object { '{0}:{1} {2} [{3}] {4}' -f $file, $_.Line, $_.RuleName, $_.Severity, $_.Message }
     if ($found | Where-Object { $_.Severity -in 'Error', 'Warning', 'ParseError' }) { $failed = $true }
-    $unexplained = @(Invoke-ScriptAnalyzer -Path $full -Settings $settings -SuppressedOnly |
+    $suppressedErrors = $null
+    $unexplained = @(Invoke-ScriptAnalyzer -Path $full -Settings $settings -SuppressedOnly -ErrorVariable suppressedErrors -ErrorAction SilentlyContinue |
             Where-Object { [string]::IsNullOrWhiteSpace($_.Justification) })
+    $analyzerErrors = @($analyzerErrors) + @($suppressedErrors) | Where-Object { $_ }
     $unexplained | ForEach-Object { '{0}:{1} {2} suppressed without a Justification' -f $file, $_.Line, $_.RuleName }
     if ($unexplained.Count -gt 0) { $failed = $true }
     if (@($analyzerErrors).Count -gt 0) {

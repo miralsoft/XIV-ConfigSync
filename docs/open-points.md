@@ -37,8 +37,6 @@
 
 ## Tooling
 
-- PSScriptAnalyzer 1.25.0 also failed once in CI (2026-11-04) outside the warm-up's reach: a
-  `RULE_ERROR` saying `Get-Command` is not recognized, in the `-SuppressedOnly` pass. A rerun
-  passed. Options: warm up that pass too, retry a file once on an analyzer error and fail only if
-  it persists (a softening of the strict rule, so the owner decides), or move to a newer release
-  once one fixes it.
+- Whether the extended warm-up (see `decisions.md`, 2026-11-04) ends the intermittent analyzer
+  failures in CI. If one recurs, the owner chooses between a retry and a newer PSScriptAnalyzer
+  release.

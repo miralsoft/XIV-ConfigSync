@@ -65,3 +65,9 @@ Append-only. Never edit or delete past entries; a later entry may supersede an e
   large; the owner lowered the value by hand to get the right size. The decision stands: the value
   is device-specific, and a silent transfer would spoil the HUD on the other device, not break the
   game.
+- (2026-11-04) The PSScriptAnalyzer warm-up in `build.ps1` and in the CI workflow also runs the
+  `-SuppressedOnly` analysis, and analyzer errors raised by that pass are now collected and reported
+  like those of the main pass instead of aborting the step. Rationale: that pass failed once in CI
+  with a `RULE_ERROR` after the plain warm-up. Chosen by the owner. Rejected: retrying a file once
+  and failing only if the error persists, which would soften the rule that any analyzer error
+  fails; moving to a newer release, which needs a new pinned dependency.
