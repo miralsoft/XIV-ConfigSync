@@ -8,11 +8,14 @@
 
     In CI, PSScriptAnalyzer (1.24.0 and 1.25.0 alike) intermittently fails with "The term
     'Get-Command' is not recognized". Once it appears, every later analysis in the same process
-    fails the same way (docs/decisions.md, 2026-11-04). So the analysis runs in a child process
-    (a worker) that writes one result line per file as it goes, and this script decides:
+    fails the same way, and in one CI job it came back in fresh processes too (docs/decisions.md,
+    2026-11-04). So the analysis runs in a child process (a worker) that writes one result line per
+    file as it goes, and this script decides:
 
     - A file whose only analyzer errors are that one: this file and every file after it are
-      analysed again in a fresh worker. Results the broken worker gave before it are kept.
+      analysed again in a fresh worker. Results the broken worker gave before it are kept. Every
+      worker after the first gets a module analysis cache of its own, empty, instead of the one
+      the machine shares; that costs time, so the first worker keeps the shared one.
     - A worker that ends or is stopped (timeout) before reporting every file: the files it did not
       report are analysed again in a fresh worker.
     - Any other analyzer error, an unreadable result, or a worker that cannot load the analyzer:
@@ -78,8 +81,18 @@ param (
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
+if ($PSCmdlet.ParameterSetName -eq 'Worker') {
+    # Loaded by path, so the worker's own commands need no command discovery: with an empty module
+    # analysis cache, discovery scans every module on the machine, which took about 20 s per
+    # worker on the CI runner (2026-11-04). The path is built without Join-Path, which lives in
+    # one of these modules.
+    foreach ($baseModule in 'Microsoft.PowerShell.Utility', 'Microsoft.PowerShell.Management') {
+        Import-Module -Name ('{0}\Modules\{1}\{1}.psd1' -f $PSHOME, $baseModule)
+    }
+}
+
 $transient = "The term 'Get-Command' is not recognized"
-$utf8 = New-Object -TypeName System.Text.UTF8Encoding -ArgumentList $false
+$utf8 = [System.Text.UTF8Encoding]::new($false)
 
 function Test-TransientError {
     [CmdletBinding()]
@@ -223,7 +236,9 @@ function Invoke-WorkerProcess {
         [string] $ModulePath,
 
         [Parameter(Mandatory = $true)]
-        [int] $TimeoutSeconds
+        [int] $TimeoutSeconds,
+
+        [switch] $PrivateCache
     )
 
     $list = Join-Path -Path $WorkDirectory -ChildPath ('worker{0}.list' -f $Number)
@@ -249,12 +264,15 @@ function Invoke-WorkerProcess {
         RedirectStandardOutput = $stdout
         RedirectStandardError  = $stderr
     }
-    # Every worker gets a module analysis cache of its own. In CI the fault stayed in every fresh
-    # worker of one job (2026-11-04), so it lives in state the processes share, and the module
-    # analysis cache under %LOCALAPPDATA% is the one such state command discovery reads. The
-    # worker inherits the variable from this process, so it is set only around the start.
+    # In CI the fault stayed in every fresh worker of one job (2026-11-04), so it lives in state the
+    # processes share. The module analysis cache is such state: the CI image points
+    # PSModuleAnalysisCachePath at one pre-built cache for the whole machine. A worker after a
+    # failure therefore gets an empty cache of its own. The worker inherits the variable from this
+    # process, so it is set only around the start.
     $savedCache = $env:PSModuleAnalysisCachePath
-    $env:PSModuleAnalysisCachePath = Join-Path -Path $WorkDirectory -ChildPath ('worker{0}.analysiscache' -f $Number)
+    if ($PrivateCache) {
+        $env:PSModuleAnalysisCachePath = Join-Path -Path $WorkDirectory -ChildPath ('worker{0}.analysiscache' -f $Number)
+    }
     try {
         $process = Start-Process @start
     } finally {
@@ -344,7 +362,16 @@ function Invoke-Analysis {
     try {
         while ($pending.Count -gt 0) {
             $number++
-            $run = Invoke-WorkerProcess -File $pending.ToArray() -WorkDirectory $workDirectory -Number $number -SettingsPath $SettingsPath -ModulePath $ModulePath -TimeoutSeconds $TimeoutSeconds
+            $worker = @{
+                File           = $pending.ToArray()
+                WorkDirectory  = $workDirectory
+                Number         = $number
+                SettingsPath   = $SettingsPath
+                ModulePath     = $ModulePath
+                TimeoutSeconds = $TimeoutSeconds
+                PrivateCache   = $number -gt 1
+            }
+            $run = Invoke-WorkerProcess @worker
             if ($null -ne $run.Fatal) {
                 throw ('The analyzer worker could not start: {0}' -f $run.Fatal)
             }

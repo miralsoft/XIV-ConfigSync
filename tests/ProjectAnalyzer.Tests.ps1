@@ -85,13 +85,15 @@ Describe 'Invoke-ProjectAnalyzer.ps1 with a fake worker' {
         Get-WorkerList | Should -Be @('a.ps1,b.ps1,c.ps1', 'b.ps1,c.ps1', 'b.ps1,c.ps1')
     }
 
-    It 'gives every worker a module analysis cache of its own' {
-        { Invoke-Fake -Plan @(@{ Mode = 'transient'; At = 1 }, @{ Mode = 'ok' }) } | Should -Not -Throw
+    It 'keeps the shared module cache for the first worker and gives later ones their own' {
+        $shared = [string]$env:PSModuleAnalysisCachePath
+        { Invoke-Fake -Plan @(@{ Mode = 'transient'; At = 1 }, @{ Mode = 'transient'; At = 0 }, @{ Mode = 'ok' }) } | Should -Not -Throw
         $caches = @(Get-Content -LiteralPath (Join-Path -Path $TestDrive -ChildPath 'plan.json.cache'))
-        $caches.Count | Should -Be 2
-        $caches | ForEach-Object { $_ | Should -Match 'worker\d+\.analysiscache$' }
-        $caches[0] | Should -Not -Be $caches[1]
-        $env:PSModuleAnalysisCachePath | Should -Not -Match 'analysiscache$'
+        $caches.Count | Should -Be 3
+        $caches[0] | Should -Be $shared
+        $caches[1] | Should -Match 'worker2\.analysiscache$'
+        $caches[2] | Should -Match 'worker3\.analysiscache$'
+        [string]$env:PSModuleAnalysisCachePath | Should -Be $shared
     }
 
     It 'analyses again what a crashed worker did not report' {
@@ -105,9 +107,10 @@ Describe 'Invoke-ProjectAnalyzer.ps1 with a fake worker' {
     }
 
     It 'stops a worker that hangs and analyses again in a fresh one' {
-        { Invoke-Fake -Plan @(@{ Mode = 'hang' }, @{ Mode = 'ok' }) -TimeoutSeconds 3 } | Should -Not -Throw
+        # Ten seconds leave a fresh worker on a slow CI runner time to start.
+        { Invoke-Fake -Plan @(@{ Mode = 'hang' }, @{ Mode = 'ok' }) -TimeoutSeconds 10 } | Should -Not -Throw
         @(Get-WorkerList).Count | Should -Be 2
-        $captured -join "`n" | Should -Match 'no result within 3 s'
+        $captured -join "`n" | Should -Match 'no result within 10 s'
     }
 
     It 'fails at once on any other analyzer error' {

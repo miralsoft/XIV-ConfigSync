@@ -108,3 +108,12 @@ Append-only. Never edit or delete past entries; a later entry may supersede an e
   cause is not proven; the next runs show it. The same run showed that the attempts were counted
   from the first worker, so a file could get one worker more than the limit; they are now counted
   per file.
+- (2026-11-04) Narrows the entry before: only the workers after a failure get a module analysis
+  cache of their own; the first keeps the one the machine shares. Rationale: the next CI run
+  showed that the runner image itself points `PSModuleAnalysisCachePath` at one pre-built cache
+  for the whole machine, which fits the shared state the fault lives in, and that an empty cache
+  costs about 20 s per worker start there, which made the analyzer step 64 s instead of 17 s and
+  let the hang test run out of time. The worker now also loads the two base modules of Windows
+  PowerShell by path before anything else, so its own commands need no command discovery; measured
+  locally against 300 large modules with an empty cache, a worker started in 0.3 s instead of
+  1.2 s. The hang test allows 10 s instead of 3 s.

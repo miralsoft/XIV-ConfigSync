@@ -55,4 +55,5 @@
   the run with exit code 5, is now replaced the same way.
 - First real case (2026-11-04): the fault came back in four fresh workers of one CI job, always on
   `tests/XivInventory.Tests.ps1`, so its state is shared between the processes of a job. Every
-  worker now gets its own module analysis cache; whether that ends it is open.
+  worker after a failure now gets its own module analysis cache, because the runner image points
+  all processes at one shared, pre-built cache; whether that ends it is open.
