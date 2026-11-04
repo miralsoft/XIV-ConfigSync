@@ -8,7 +8,7 @@
   2026-11-04). Open: why the game rewrote a few hundred bytes of the
   applied file after play.
 - What the `cfgcopy` folder (`FFXIV_CFGCPY<id>.dat`) is for. No source describes it.
-- Which files the game rewrites on every start even when nothing changed (V00).
+- What the game changes by itself in `ADDON.DAT` and `UISAVE.DAT` on every login (V00), and how the sync tells such a change from a deliberate one. Until then, these files are sent only on the user's request, not on a changed hash.
 - When the game writes: at logout, at exit, or continuously.
 - The game keeps a `.old` copy next to several files. Whether a sync must carry it or leave it.
 - In which release the advanced mode for `FFXIV.cfg` comes (compare key by key, show the

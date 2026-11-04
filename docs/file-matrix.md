@@ -25,17 +25,26 @@ V03 turn rows into confirmed ones or move them. Release 0.1 syncs only rows conf
 | `FFXIV.cfg` | Mixed | confirmed | Text, 213 keys in 15 sections. See the next section |
 | `FFXIV_BOOT.cfg` | Device | confirmed (content), unconfirmed (class) | Launcher state: licence agreement flags, browser, region, data centre |
 | `FFXIV_CHARA_nn.dat` | Shared, not in 0.1 | unconfirmed (third-party source code) | Character creation appearance presets, 212 bytes each |
-| `cfgcopy\FFXIV_CFGCPY<id>.dat` | Device, Sensitive | confirmed (content), unknown (purpose) | Section format masked with 0x73, like `MACRO.DAT`: a character's name, world and content ID, plus two values that change on every write. Rewritten together with `FFXIV.cfg` and `UISAVE.DAT` |
+| `cfgcopy\FFXIV_CFGCPY<id>.dat` | Device, Sensitive | confirmed (content), unknown (purpose) | Section format masked with 0x73, like `MACRO.DAT`: a character's name, world and content ID, plus two values that change on every write. Rewritten together with `FFXIV.cfg` and `UISAVE.DAT`; V00: one value per character changed on a login with no change |
 | `MACROSYS.dat` | Shared | confirmed (transfer) | The macros shared by all characters ("all characters" tab), in the top folder, not in a character folder. Masked like `MACRO.DAT` |
 | `FFXIV_CHR<id>\*.DAT` | Shared | unconfirmed | Per character: HUD, hotbars, macros, gear sets, key bindings, item order. The rows below are confirmed file by file |
 | `FFXIV_CHR<id>\HOTBAR.DAT` | Shared | confirmed (transfer) | Hotbars and cross hotbars |
 | `FFXIV_CHR<id>\KEYBIND.DAT` | Shared | confirmed (transfer) | Key bindings; one changed binding is three bytes |
 | `FFXIV_CHR<id>\CONTROL0.DAT` | Shared | confirmed (transfer) | Plain text: settings for mouse and keyboard mode, including which HUD info is shown (for example the server info) |
 | `FFXIV_CHR<id>\COMMON.DAT`, `CONTROL1.DAT` | Shared | confirmed (format), unconfirmed (class) | Plain text like `FFXIV.cfg`: character settings and game pad mode, no window positions |
-| `FFXIV_CHR<id>\ADDON.DAT` | Shared | confirmed (transfer, one direction) | HUD layout. Own format, not masked. A layout set up on a 16:9 device, with one element moved, was applied to a 16:10 device and showed correctly there. After play the game rewrote 380 of its bytes; why is unknown |
+| `FFXIV_CHR<id>\ADDON.DAT` | Shared | confirmed (transfer, one direction) | HUD layout. Own format, not masked. A layout set up on a 16:9 device, with one element moved, was applied to a 16:10 device and showed correctly there. After play the game rewrote 380 of its bytes; V00: a login and logout with no change rewrote 1,307 bytes in about 450 places. The file changes without the user, so a changed hash alone does not mean a changed layout |
+| `FFXIV_CHR<id>\UISAVE.DAT` | unknown | confirmed (changes by itself, V00) | Three 8-byte values change on every login with no change by the user; likely time stamps or counters. Not in 0.1 until its content is known |
+| `FFXIV_CHR<id>\ITEMODR.DAT` | unknown | confirmed (changes by itself, V00) | Item order. V00: grew by 240 bytes at the end on a login with no change, the existing bytes unchanged. Probably follows the server's inventory, so likely not worth syncing |
 | `*.old` next to a file | Ignore | confirmed | The game's own previous generation, rotated by the game when it writes; left in place on apply |
 | `<name>-<COMPUTERNAME>[-n].<ext>` | Ignore | confirmed | Conflict copies a cloud client left behind; reported, never synced |
 | `screenshots\`, `log\`, `downloads\` | Ignore | confirmed | Not configuration |
+
+Experiment V00 (2026-11-04, device A): a login and logout with no change touched only the folder of
+the character that logged in; the other character folders and the files in the top folder kept
+their write times, except `FFXIV.cfg`. The game wrote `FFXIV.cfg` and these character files back
+with identical content: `ACQ`, `COMMON`, `CONTROL0`, `CONTROL1`, `GEARSET`, `GS`, `HOTBAR`,
+`MACRO`. A write time therefore says nothing; only the content does. `ADDON`, `UISAVE`, `ITEMODR`
+and the `cfgcopy` file changed in content without any change by the user.
 
 "Confirmed (transfer)" means: changed in the game on one device, copied as a whole file to the
 other device while the game was closed, and seen in the game there (2026-11-04, from the 16:9
@@ -87,7 +96,7 @@ position.
 
 | File or pattern | Class | Known | Note |
 |---|---|---|---|
-| `pluginConfigs\<Plugin>.json` | Shared, opt-in per plugin | unconfirmed | One file per plugin. Some hold device paths or window positions |
+| `pluginConfigs\<Plugin>.json` | Shared, opt-in per plugin | unconfirmed | One file per plugin. Some hold device paths or window positions. V00: one login with no change rewrote 35 files below `pluginConfigs`, 9 of them with different content (settings and caches alike) |
 | `pluginConfigs\<Plugin>\` | per plugin | confirmed (existence) | Holds caches, data exports and logs as often as settings |
 | Navigation meshes (`*.navmesh`) | Cache | confirmed | About 430 MB on one device |
 | Plugin logs (`*.ahlog`), lock files (`*.lock`), `*.bak`, `*_backup.json` | Ignore | confirmed (existence) | |

@@ -5,7 +5,7 @@
 - [x] Repository skeleton, licence, hooks, CI workflows
 - [x] Read-only inventory and comparison tool with tests
 - [x] Baseline inventory and backup on device A
-- [ ] Experiments V00 (idle), V01 (UI scale), V02a to V02f (single settings) on device A
+- [x] Experiment V00 (login and logout with no change) on device A (2026-11-04); V01 and V02 are covered by the transfer test and the key-by-key comparison
 - [x] Transfer test from device B to device A: shared macros, hotbar, key binding, HUD layout and
   a HUD info setting, each changed on B, copied as whole files and seen in the game on A; then
   rolled back from a verified backup (2026-11-04)

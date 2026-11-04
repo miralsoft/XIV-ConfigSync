@@ -11,8 +11,9 @@ Feasibility analysis (gate 1) in progress since 2026-11-03. No product code.
   verified backup of its game configuration folder exists locally.
 - **Done (2026-11-04):** key-by-key comparison of the game's text settings files, and a snapshot
   of those files next to every inventory, so that a change can be traced to the setting behind it.
-- **Next:** the in-game experiments V00 to V02 on device A and the baseline of device B. They are
-  waiting for the owner.
+- **Done (2026-11-04):** experiment V00. The game rewrites the logged-in character's files on
+  every login, most with identical content; HUD layout, a UI save file, the item order and the
+  `cfgcopy` file change by themselves. See `file-matrix.md`.
 
 - **Done (2026-11-04):** `Watch-CloudState.ps1` records the cloud sync state of a folder's files
   without opening them.
