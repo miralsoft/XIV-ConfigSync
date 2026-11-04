@@ -22,8 +22,9 @@ Feasibility analysis (gate 1) in progress since 2026-11-03. No product code.
 - **Measured on device A (2026-11-04):** the OneDrive client reports, readable without signing
   in, whether a file is still waiting for upload or in sync. New file waiting: shell property
   `System.StorageProviderState` 4, no reparse point yet. Changed file waiting: 10. In sync: 2,
-  with reparse point. 30 MB were up after about eight seconds.
-- **Open:** offline behaviour (needs the owner to disconnect), two devices (needs device B).
+  with reparse point. 30 MB were up after about eight seconds. The owner confirmed that the test
+  files arrived on device B.
+- **Open:** offline behaviour (needs the owner to disconnect), two devices writing the same file.
 
 ## File matrix
 

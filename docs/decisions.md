@@ -46,5 +46,9 @@ Append-only. Never edit or delete past entries; a later entry may supersede an e
 - (2026-11-04) `dalamudConfig.json` is device-specific in release 0.1. Rationale: Dalamud's source
   code refers to plugins in profiles by an ID made per installation, so a copied profile does not
   match the other device's plugins, and a plugin in no profile is added to the default one.
+- (2026-11-04) The Steam edition is supported only as experimental, with a warning shown to the
+  user. Rationale: the owner cannot test it. The configuration folder is the same as for the
+  standard edition (launcher source code), so support costs little, but it is unverified.
+  This narrows the earlier entry that Steam "follows later".
 - (2026-11-04) The file matrix is kept as a public draft in `docs/file-matrix.md`, with how well
   each row is known. Device names, character IDs and values from real files stay out of it.
