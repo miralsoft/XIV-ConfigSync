@@ -80,3 +80,16 @@ Append-only. Never edit or delete past entries; a later entry may supersede an e
   a retry: it covers one known error text only. Rejected: pinning 1.24.0, which departs from the
   language profile without ending the failures; retrying on any analyzer error, which would hide a
   crashed rule.
+- (2026-11-04) Supersedes the entry on the one-time retry in the same process, which did not help:
+  in CI the "Get-Command is not recognized" fault, once it appears, spoils every later analysis in
+  the same process. PSScriptAnalyzer now runs through `Invoke-ProjectAnalyzer.ps1`, used by both
+  `build.ps1` and the CI workflow. It analyses in a separate Windows PowerShell process that
+  reports one result per file as it goes. On that one fault, the affected file and every file
+  after it are analysed again in a fresh process, while the results before it are kept. A process
+  that crashes or exceeds its time limit is handled the same way. Any other analyzer error, an
+  analyzer that cannot be loaded, or a file that needs more than three processes fails the gate at
+  once. Tests play each of these cases with a fake worker and run the real analyzer twice. The CI
+  job and the analyzer step also carry a time limit. Chosen by the owner, who asked for reliable
+  runs that catch every failure clearly. Rejected: a process per file from the start, which would
+  load the analyzer eleven times on every run; letting the analyzer step only warn in CI, which
+  would give up the check there.

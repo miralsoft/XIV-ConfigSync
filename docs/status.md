@@ -16,6 +16,8 @@ Feasibility analysis (gate 1) in progress since 2026-11-03. No product code.
 
 - **Done (2026-11-04):** `Watch-CloudState.ps1` records the cloud sync state of a folder's files
   without opening them.
+- **Done (2026-11-04):** PSScriptAnalyzer runs through `Invoke-ProjectAnalyzer.ps1` in a separate
+  process that is replaced when the analyzer breaks it; `build.ps1` and CI share the script.
 
 ## OneDrive (MA-09)
 

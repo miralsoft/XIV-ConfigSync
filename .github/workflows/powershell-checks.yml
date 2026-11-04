@@ -39,6 +39,7 @@ jobs:
     # A named image, not windows-latest, which GitHub moves to newer versions over one to two
     # months and recommends naming a version to avoid.
     runs-on: windows-2025
+    timeout-minutes: 30
     defaults:
       run:
         shell: powershell
@@ -82,64 +83,26 @@ jobs:
           & .\Restore-PinnedModules.ps1 -ManifestPath .\PinnedModules.psd1 -Destination .\.modules -Verbose
 
       - name: PSScriptAnalyzer
+        # Project change to the copied template: the analysis runs in Invoke-ProjectAnalyzer.ps1,
+        # the same script build.ps1 uses. It analyses in a separate process and starts a fresh one
+        # when PSScriptAnalyzer breaks its own with "The term 'Get-Command' is not recognized",
+        # which happens here intermittently (docs/decisions.md, 2026-11-04). Any other analyzer
+        # error still fails at once (R-23).
+        timeout-minutes: 20
         run: |
           Set-StrictMode -Version Latest
           $ErrorActionPreference = 'Stop'
           $manifest = Import-PowerShellDataFile -LiteralPath .\PinnedModules.psd1
           $pin = $manifest.Modules | Where-Object { $_.Name -eq 'PSScriptAnalyzer' }
-          Import-Module -Name (Join-Path -Path (Get-Location).Path -ChildPath ('.modules\PSScriptAnalyzer\{0}\PSScriptAnalyzer.psd1' -f $pin.Version))
           $files = @(git ls-files -- '*.ps1' '*.psm1' '*.psd1')
           if ($files.Count -eq 0) { throw 'No PowerShell files tracked, so nothing was analysed (R-23).' }
-          # Project change to the copied template: a warm-up pass, results discarded. UseCorrectCasing
-          # in 1.25.0 intermittently throws a NullReferenceException on the first analyses in a fresh
-          # process (docs/decisions.md, 2026-11-03). It also runs the -SuppressedOnly analysis, which
-          # failed once with a RULE_ERROR after the plain warm-up (2026-11-04). The strict pass below
-          # still fails on any analyzer error.
-          foreach ($file in $files) {
-              $null = Invoke-ScriptAnalyzer -Path $file -Settings .\PSScriptAnalyzerSettings.psd1 -ErrorAction SilentlyContinue
-              $null = Invoke-ScriptAnalyzer -Path $file -Settings .\PSScriptAnalyzerSettings.psd1 -SuppressedOnly -ErrorAction SilentlyContinue
+          $analyzer = @{
+              Path           = $files
+              SettingsPath   = '.\PSScriptAnalyzerSettings.psd1'
+              ModulePath     = '.\.modules\PSScriptAnalyzer\{0}\PSScriptAnalyzer.psd1' -f $pin.Version
+              TimeoutSeconds = 300
           }
-          # A suppression is an exception and carries its reason. PSScriptAnalyzer accepts a
-          # SuppressMessageAttribute without a Justification and hides the finding all the same,
-          # measured with 1.25.0, so the reason is required here instead.
-          function Invoke-ProjectAnalysis([string] $Path) {
-              $mainErrors = $null
-              $found = @(Invoke-ScriptAnalyzer -Path $Path -Settings .\PSScriptAnalyzerSettings.psd1 -ErrorVariable mainErrors -ErrorAction SilentlyContinue)
-              $suppressedErrors = $null
-              $unexplained = @(Invoke-ScriptAnalyzer -Path $Path -Settings .\PSScriptAnalyzerSettings.psd1 -SuppressedOnly -ErrorVariable suppressedErrors -ErrorAction SilentlyContinue |
-                      Where-Object { [string]::IsNullOrWhiteSpace($_.Justification) })
-              @{ Found = $found; Unexplained = $unexplained; Errors = @(@($mainErrors) + @($suppressedErrors) | Where-Object { $_ }) }
-          }
-          # Project change to the copied template: a rule intermittently fails here with "The term
-          # 'Get-Command' is not recognized", in 1.24.0 and 1.25.0 alike (docs/decisions.md,
-          # 2026-11-04). A file whose only analyzer errors are that one is analysed once more and the
-          # second result counts. Any other analyzer error, or the same one again, still fails.
-          $transient = "The term 'Get-Command' is not recognized"
-          $failed = $false
-          foreach ($file in $files) {
-              $analysis = Invoke-ProjectAnalysis $file
-              $otherErrors = @($analysis.Errors | Where-Object { -not ([string]$_).StartsWith($transient, [System.StringComparison]::Ordinal) })
-              $onlyTransient = $analysis.Errors.Count -gt 0 -and $otherErrors.Count -eq 0
-              if ($onlyTransient) {
-                  'Analyzer error "{0}" in {1}, analysing it once more.' -f $transient, $file
-                  $analysis = Invoke-ProjectAnalysis $file
-              }
-              $found = $analysis.Found
-              $unexplained = $analysis.Unexplained
-              $analyzerErrors = $analysis.Errors
-              $found | ForEach-Object { '{0}:{1} {2} [{3}] {4}' -f $file, $_.Line, $_.RuleName, $_.Severity, $_.Message }
-              if ($found | Where-Object { $_.Severity -in 'Error', 'Warning', 'ParseError' }) { $failed = $true }
-              $unexplained | ForEach-Object { '{0}:{1} {2} suppressed without a Justification' -f $file, $_.Line, $_.RuleName }
-              if ($unexplained.Count -gt 0) { $failed = $true }
-              # A crashed rule is a non-terminating RULE_ERROR. Counting findings alone would pass
-              # over it, so any analyzer error fails the step (R-23).
-              if (@($analyzerErrors).Count -gt 0) {
-                  $analyzerErrors | ForEach-Object { 'analyzer error in {0}: {1}' -f $file, $_ }
-                  $failed = $true
-              }
-          }
-          if ($failed) { throw 'PSScriptAnalyzer reported issues (C-03).' }
-          'PSScriptAnalyzer {0}: {1} file(s), no issue.' -f $pin.Version, $files.Count
+          & .\Invoke-ProjectAnalyzer.ps1 @analyzer
 
       - name: Pester
         run: |

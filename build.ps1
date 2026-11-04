@@ -57,67 +57,14 @@ $unmarked = @($powershellFiles | Where-Object { -not (Test-Bom -Bytes ([System.I
 if ($unmarked.Count -gt 0) { throw ('Not UTF-8 with BOM: {0}' -f ($unmarked -join ', ')) }
 
 Write-Information -MessageData 'Gate: PSScriptAnalyzer' -InformationAction Continue
+# In a separate process, with a fresh one when the analyzer breaks its own; see the script.
 $analyzerPin = $manifest.Modules | Where-Object { $_.Name -eq 'PSScriptAnalyzer' }
-Import-Module -Name (Join-Path -Path $root -ChildPath ('.modules\PSScriptAnalyzer\{0}\PSScriptAnalyzer.psd1' -f $analyzerPin.Version))
-$settings = Join-Path -Path $root -ChildPath 'PSScriptAnalyzerSettings.psd1'
-# Warm-up pass, results discarded. On the first analyses in a fresh process, UseCorrectCasing in
-# PSScriptAnalyzer 1.25.0 intermittently throws a NullReferenceException from
-# CommandInfo.Parameters (observed 2026-11-03, docs/decisions.md). After one pass over the files
-# it did not recur in 162 analyses. The strict pass below still fails on any analyzer error.
-# The warm-up also runs the -SuppressedOnly analysis, which failed once in CI with a RULE_ERROR
-# ("Get-Command is not recognized") after the plain warm-up (observed 2026-11-04).
-foreach ($file in $powershellFiles) {
-    $null = Invoke-ScriptAnalyzer -Path (Join-Path -Path $root -ChildPath $file) -Settings $settings -ErrorAction SilentlyContinue
-    $null = Invoke-ScriptAnalyzer -Path (Join-Path -Path $root -ChildPath $file) -Settings $settings -SuppressedOnly -ErrorAction SilentlyContinue
+$analyzer = @{
+    Path         = @($powershellFiles | ForEach-Object { Join-Path -Path $root -ChildPath $_ })
+    SettingsPath = Join-Path -Path $root -ChildPath 'PSScriptAnalyzerSettings.psd1'
+    ModulePath   = Join-Path -Path $root -ChildPath ('.modules\PSScriptAnalyzer\{0}\PSScriptAnalyzer.psd1' -f $analyzerPin.Version)
 }
-function Invoke-ProjectAnalysis {
-    [CmdletBinding()]
-    [OutputType([hashtable])]
-    param (
-        [Parameter(Mandatory = $true)]
-        [string] $Path
-    )
-
-    $mainErrors = $null
-    $found = @(Invoke-ScriptAnalyzer -Path $Path -Settings $settings -ErrorVariable mainErrors -ErrorAction SilentlyContinue)
-    $suppressedErrors = $null
-    $unexplained = @(Invoke-ScriptAnalyzer -Path $Path -Settings $settings -SuppressedOnly -ErrorVariable suppressedErrors -ErrorAction SilentlyContinue |
-            Where-Object { [string]::IsNullOrWhiteSpace($_.Justification) })
-    @{
-        Found       = $found
-        Unexplained = $unexplained
-        Errors      = @(@($mainErrors) + @($suppressedErrors) | Where-Object { $_ })
-    }
-}
-
-# In CI a rule intermittently fails with "The term 'Get-Command' is not recognized", in 1.24.0 and
-# 1.25.0 alike (measured 2026-11-04, docs/decisions.md). A file whose only analyzer errors are that
-# one is analysed once more, and the second result counts. Any other analyzer error, or the same
-# error again, still fails the gate.
-$transient = "The term 'Get-Command' is not recognized"
-$failed = $false
-foreach ($file in $powershellFiles) {
-    $full = Join-Path -Path $root -ChildPath $file
-    $analysis = Invoke-ProjectAnalysis -Path $full
-    $otherErrors = @($analysis.Errors | Where-Object { -not ([string]$_).StartsWith($transient, [System.StringComparison]::Ordinal) })
-    $onlyTransient = $analysis.Errors.Count -gt 0 -and $otherErrors.Count -eq 0
-    if ($onlyTransient) {
-        Write-Information -MessageData ('Analyzer error "{0}" in {1}, analysing it once more.' -f $transient, $file) -InformationAction Continue
-        $analysis = Invoke-ProjectAnalysis -Path $full
-    }
-    $found = $analysis.Found
-    $unexplained = $analysis.Unexplained
-    $analyzerErrors = $analysis.Errors
-    $found | ForEach-Object { '{0}:{1} {2} [{3}] {4}' -f $file, $_.Line, $_.RuleName, $_.Severity, $_.Message }
-    if ($found | Where-Object { $_.Severity -in 'Error', 'Warning', 'ParseError' }) { $failed = $true }
-    $unexplained | ForEach-Object { '{0}:{1} {2} suppressed without a Justification' -f $file, $_.Line, $_.RuleName }
-    if ($unexplained.Count -gt 0) { $failed = $true }
-    if (@($analyzerErrors).Count -gt 0) {
-        $analyzerErrors | ForEach-Object { 'analyzer error in {0}: {1} [{2}] {3}' -f $file, $_, $_.FullyQualifiedErrorId, $_.TargetObject }
-        $failed = $true
-    }
-}
-if ($failed) { throw 'PSScriptAnalyzer reported issues (C-03).' }
+& (Join-Path -Path $root -ChildPath 'Invoke-ProjectAnalyzer.ps1') @analyzer
 
 Write-Information -MessageData 'Gate: Pester' -InformationAction Continue
 $pesterPin = $manifest.Modules | Where-Object { $_.Name -eq 'Pester' }

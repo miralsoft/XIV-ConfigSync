@@ -50,4 +50,7 @@
 - The retry does not help (measured 2026-11-04, eight sequential CI runs on `main`): 3 of 8 failed.
   In each failed run the error, once it appeared, came back on the second analysis and in every
   file analysed after it. The fault is a state of the PowerShell process, not of one analysis, so
-  analysing again in the same process cannot clear it. A second analysis in a new process might.
+  analysing again in the same process cannot clear it. Answered by running the analysis in a
+  separate process that is replaced on this fault (see `decisions.md`); whether that ends the
+  failures in CI is seen in the next runs. A process that ends before reporting every file, as in
+  the run with exit code 5, is now replaced the same way.
