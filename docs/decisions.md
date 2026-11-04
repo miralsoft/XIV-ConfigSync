@@ -99,3 +99,12 @@ Append-only. Never edit or delete past entries; a later entry may supersede an e
   software, so a tool that uses none of them stays outside it; the disclaimer in the README stays.
   The name "XIV ConfigSync" is kept for now; none of the terms read forbids it, and whether the
   owner wants a neutral name before the first release is decided in gate 2.
+- (2026-11-04) Every analyzer worker gets a module analysis cache of its own
+  (`PSModuleAnalysisCachePath`, honoured by Windows PowerShell 5.1, measured). Rationale: in the
+  first CI run that met the "Get-Command is not recognized" fault after the change to separate
+  workers, the fault came back in all four fresh workers of that job, always on the same file. So
+  it lives in state the processes of one job share, not in one process, and the module analysis
+  cache under `%LOCALAPPDATA%` is the shared state that command discovery reads. Whether it is the
+  cause is not proven; the next runs show it. The same run showed that the attempts were counted
+  from the first worker, so a file could get one worker more than the limit; they are now counted
+  per file.

@@ -127,6 +127,7 @@ function Invoke-FakeWorker {
     $attempt = 0
     if (Test-Path -LiteralPath $counter) { $attempt = @([System.IO.File]::ReadAllLines($counter, $utf8)).Count }
     [System.IO.File]::AppendAllText($counter, ((@($File | ForEach-Object { Split-Path -Path $_ -Leaf }) -join ',') + "`n"), $utf8)
+    [System.IO.File]::AppendAllText($env:XIVCS_ANALYZER_FAKE + '.cache', ([string]$env:PSModuleAnalysisCachePath + "`n"), $utf8)
     $step = $plan[[System.Math]::Min($attempt, $plan.Count - 1)]
     $at = 0
     if ($step.PSObject.Properties['At']) { $at = [int]$step.At }
@@ -248,7 +249,17 @@ function Invoke-WorkerProcess {
         RedirectStandardOutput = $stdout
         RedirectStandardError  = $stderr
     }
-    $process = Start-Process @start
+    # Every worker gets a module analysis cache of its own. In CI the fault stayed in every fresh
+    # worker of one job (2026-11-04), so it lives in state the processes share, and the module
+    # analysis cache under %LOCALAPPDATA% is the one such state command discovery reads. The
+    # worker inherits the variable from this process, so it is set only around the start.
+    $savedCache = $env:PSModuleAnalysisCachePath
+    $env:PSModuleAnalysisCachePath = Join-Path -Path $WorkDirectory -ChildPath ('worker{0}.analysiscache' -f $Number)
+    try {
+        $process = Start-Process @start
+    } finally {
+        $env:PSModuleAnalysisCachePath = $savedCache
+    }
     # Windows PowerShell 5.1 reports no exit code unless the handle was taken while the process
     # ran.
     $null = $process.Handle
@@ -332,11 +343,6 @@ function Invoke-Analysis {
     $number = 0
     try {
         while ($pending.Count -gt 0) {
-            $first = $pending[0]
-            $attempts[$first] = 1 + [int]$attempts[$first]
-            if ($attempts[$first] -gt $MaxAttempts) {
-                throw ('{0} could not be analysed in {1} worker(s); see the reasons above.' -f $display[$first], $MaxAttempts)
-            }
             $number++
             $run = Invoke-WorkerProcess -File $pending.ToArray() -WorkDirectory $workDirectory -Number $number -SettingsPath $SettingsPath -ModulePath $ModulePath -TimeoutSeconds $TimeoutSeconds
             if ($null -ne $run.Fatal) {
@@ -372,7 +378,14 @@ function Invoke-Analysis {
                     }
                     if ($run.ErrorText) { $reason += (': {0}' -f $run.ErrorText) }
                 }
-                Write-Information -MessageData ('{0}: {1}; analysing it and the {2} file(s) after it in a fresh worker.' -f $display[$pending[0]], $reason, ($pending.Count - 1)) -InformationAction Continue
+                # Counted for the file the worker stopped at, so MaxAttempts is the number of
+                # workers that tried that file.
+                $stuck = $pending[0]
+                $attempts[$stuck] = 1 + [int]$attempts[$stuck]
+                if ($attempts[$stuck] -ge $MaxAttempts) {
+                    throw ('{0}: {1}. It could not be analysed in {2} worker(s).' -f $display[$stuck], $reason, $attempts[$stuck])
+                }
+                Write-Information -MessageData ('{0}: {1}; analysing it and the {2} file(s) after it in a fresh worker.' -f $display[$stuck], $reason, ($pending.Count - 1)) -InformationAction Continue
             }
         }
     } finally {

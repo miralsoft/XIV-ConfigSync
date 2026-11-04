@@ -34,7 +34,7 @@ BeforeAll {
             [switch] $InCi
         )
         $planPath = Join-Path -Path $TestDrive -ChildPath 'plan.json'
-        Remove-Item -LiteralPath ($planPath + '.count') -ErrorAction SilentlyContinue
+        Remove-Item -LiteralPath ($planPath + '.count'), ($planPath + '.cache') -ErrorAction SilentlyContinue
         [System.IO.File]::WriteAllText($planPath, (ConvertTo-Json -InputObject @($Plan) -Depth 3))
         # The tests run in CI too, where the script refuses the fake unless told otherwise here.
         $savedCi = $env:GITHUB_ACTIONS
@@ -75,8 +75,23 @@ Describe 'Invoke-ProjectAnalyzer.ps1 with a fake worker' {
     }
 
     It 'fails when the known fault persists for one file' {
-        { Invoke-Fake -Plan @(@{ Mode = 'transient'; At = 0 }) } | Should -Throw '*a.ps1 could not be analysed in 3 worker(s)*'
+        { Invoke-Fake -Plan @(@{ Mode = 'transient'; At = 0 }) } | Should -Throw '*a.ps1*could not be analysed in 3 worker(s)*'
         @(Get-WorkerList).Count | Should -Be 3
+    }
+
+    It 'counts the workers per file, not from the first worker' {
+        # At counts within each worker's own list: b.ps1 is second in the first, first after that.
+        { Invoke-Fake -Plan @(@{ Mode = 'transient'; At = 1 }, @{ Mode = 'transient'; At = 0 }) } | Should -Throw '*b.ps1*could not be analysed in 3 worker(s)*'
+        Get-WorkerList | Should -Be @('a.ps1,b.ps1,c.ps1', 'b.ps1,c.ps1', 'b.ps1,c.ps1')
+    }
+
+    It 'gives every worker a module analysis cache of its own' {
+        { Invoke-Fake -Plan @(@{ Mode = 'transient'; At = 1 }, @{ Mode = 'ok' }) } | Should -Not -Throw
+        $caches = @(Get-Content -LiteralPath (Join-Path -Path $TestDrive -ChildPath 'plan.json.cache'))
+        $caches.Count | Should -Be 2
+        $caches | ForEach-Object { $_ | Should -Match 'worker\d+\.analysiscache$' }
+        $caches[0] | Should -Not -Be $caches[1]
+        $env:PSModuleAnalysisCachePath | Should -Not -Match 'analysiscache$'
     }
 
     It 'analyses again what a crashed worker did not report' {
@@ -86,7 +101,7 @@ Describe 'Invoke-ProjectAnalyzer.ps1 with a fake worker' {
     }
 
     It 'fails when a worker keeps crashing' {
-        { Invoke-Fake -Plan @(@{ Mode = 'crash'; At = 0 }) } | Should -Throw '*a.ps1 could not be analysed in 3 worker(s)*'
+        { Invoke-Fake -Plan @(@{ Mode = 'crash'; At = 0 }) } | Should -Throw '*a.ps1*could not be analysed in 3 worker(s)*'
     }
 
     It 'stops a worker that hangs and analyses again in a fresh one' {

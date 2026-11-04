@@ -53,3 +53,6 @@
   separate process that is replaced on this fault (see `decisions.md`); whether that ends the
   failures in CI is seen in the next runs. A process that ends before reporting every file, as in
   the run with exit code 5, is now replaced the same way.
+- First real case (2026-11-04): the fault came back in four fresh workers of one CI job, always on
+  `tests/XivInventory.Tests.ps1`, so its state is shared between the processes of a job. Every
+  worker now gets its own module analysis cache; whether that ends it is open.
