@@ -122,22 +122,32 @@ attempts the backup stops without publishing anything.
    | different | neither, or unknown (first transfer) | conflict | conflict |
    | missing locally | any | apply | offer |
 
-   "What both last shared" comes from the base table and, where it has no entry, from the history
-   of both devices' revisions: a local file equal to an older state of the source means only the
-   source changed; a source file equal to an older local state means only the local copy changed.
+   "What both last shared" comes from the base table when it has an entry, and only then from the
+   history of both devices' revisions: a local file equal to an older state of the source means
+   only the source changed; a source file equal to an older local state means only the local copy
+   changed. Base table and history count only within the source device's current epoch (a device
+   set up again starts a new one) and, for an older chosen revision, only revisions before it. A
+   file this device does not back up (a local exclusion, too large, a link) is only offered.
    "Never" files are not offered from another device. A conflict keeps both versions: the local
    file stays, the source version stays in the store, and the user chooses. Only "apply" is ever
    done without the user ticking it. No last-writer-wins.
 3. Checks that refuse the whole apply: the game runs (the apply waits instead), the game version
    differs, a source object fails its hash, the source revision is incomplete.
 4. Preview: every file with its action and reason. The preview writes nothing.
-5. Snapshot: copy every file that will be replaced into a new local snapshot, verify the hashes.
-6. Journal: record the plan, then replace file by file through a temporary file in the same
-   folder and an atomic rename; mark each file done in the journal.
-7. Verify the applied hashes, close the journal, back up the new local state.
+5. Check that every target still has the hash the plan saw; anything changed since (the user
+   played in between) refuses the apply.
+6. Snapshot: copy every file that will be replaced into a new local snapshot, verify the hashes.
+7. Journal: record the plan, then replace file by file through a temporary file in the same
+   folder and an atomic rename, checking before each that the game has not started; mark each
+   file done in the journal. Any failure rolls back from the snapshot at once.
+8. Verify the applied hashes, close the journal, back up the new local state. A failing backup
+   at this point does not fail the apply; it follows later.
 
-At start, an open journal means an interrupted apply: the application finishes it or rolls it
-back from the snapshot, after asking. "Undo last apply" restores the snapshot the same way.
+An open journal at start (power cut) means an interrupted apply: the application finishes it or
+rolls it back from the snapshot, after asking, and asks again before the next operation if the
+user postponed it. No backup is made while it is open. "Undo last transfer", finishing and rolling
+back all save the current state in a "safety" snapshot first; finishing leaves files that changed
+since the interruption alone.
 
 ### Upload and receipt state
 

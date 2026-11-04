@@ -34,11 +34,12 @@ file in the folder is written by more than one device.
 ### device.json
 
 ```json
-{ "schema": 1, "deviceId": "3f2a...", "displayName": "Laptop", "created": "...", "lastSeen": "..." }
+{ "schema": 1, "deviceId": "3f2a...", "displayName": "Laptop", "created": "...", "lastSeen": "...", "epoch": "9c1d..." }
 ```
 
 `deviceId` is a random 128-bit value made at first start and kept in the local settings. It says
-nothing about the hardware.
+nothing about the hardware. `epoch` is a new random value at every set-up, also when a device is
+set up again under its old ID; other devices do not carry a common state across epochs.
 
 ### Revision manifest (`revisions\<revisionId>.json`)
 
@@ -51,6 +52,7 @@ nothing about the hardware.
   "parent": "20261104T180300Z-3f2a",
   "origin": "game-exit",
   "appVersion": "0.1.0",
+  "epoch": "9c1d...",
   "gameVersion": "...",
   "display": { "width": 2560, "height": 1600, "scalePercent": 150 },
   "roots": {
@@ -136,7 +138,7 @@ and the most specific pattern wins among overrides.
 ### Base table (`bases\<sourceDeviceId>.json`)
 
 ```json
-{ "schema": 1, "files": { "game/FFXIV_CHR.../HOTBAR.DAT": "...hash..." } }
+{ "schema": 1, "sourceEpoch": "9c1d...", "files": { "game/FFXIV_CHR.../HOTBAR.DAT": "...hash..." } }
 ```
 
 Updated per file when an apply from that device succeeds and when a backup shows both sides equal.
@@ -149,13 +151,15 @@ It is what makes a three-way comparison possible without trusting write times.
   "schema": 1,
   "snapshotId": "20261104T210000Z",
   "reason": "apply",
-  "files": [ { "root": "game", "path": "...", "hash": "...", "existed": true } ],
+  "files": [ { "root": "game", "path": "...", "hash": "...", "existed": true, "appliedHash": "..." } ],
   "complete": true
 }
 ```
 
 The copied files lie next to it under their relative paths. `existed: false` records a file the
-apply will create, so an undo removes it. Snapshots are kept for the last 20 applies and at least
+apply will create, so an undo removes it. `appliedHash` is what the apply wrote, so an undo can say
+which files changed since. `reason` is `apply` for an apply and `safety` for the state saved before
+an undo or a recovery; only `apply` snapshots are offered for undo. Snapshots are kept for the last 20 applies and at least
 30 days.
 
 ### Journal (`journal.json`)
@@ -188,5 +192,6 @@ Written before the first file is replaced, updated after each, deleted after the
 ## 4. Retention
 
 A device keeps its last 50 revisions and every revision another device has marked as received
-last. Objects no kept revision refers to are deleted by the owning device only. Protected
+last. Objects no kept revision refers to are deleted by the owning device only, and only when they are
+older than two days. Protected
 revisions (0.2) are never removed.

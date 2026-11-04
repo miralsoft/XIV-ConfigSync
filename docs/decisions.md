@@ -225,3 +225,29 @@ Append-only. Never edit or delete past entries; a later entry may supersede an e
   build with warnings as errors, tests, XAML format and the dependency audit. `actions/setup-dotnet`
   is pinned by commit to v6.0.0, the newest release older than three weeks. `build.ps1` runs the
   same checks locally.
+- (2026-11-05) An independent review of the gate 3 and 4 code found 16 defects; all are fixed,
+  each with a test that fails without its fix (`tests/.../ReviewTests.cs`). The decisions behind
+  the fixes:
+  - A known common state (the base table) decides alone; the revision histories only fill in
+    where it is unknown. Rejected: using both together, which let an old source state that equals
+    a new local one look like "only the source changed" and overwrite the local change.
+  - A file of the source that this device's scan did not cover (left out by a rule, too large, a
+    link) is hashed where it is and only offered, never applied on its own.
+  - Every set-up gives the device a new epoch, also when it is set up again under its old
+    identity; other devices ignore their common state and the history of an earlier epoch, so a
+    fresh installation's default files are a conflict, not an update. Rejected: no automatic
+    backup after setting up again, which would still let the first manual backup through.
+  - An apply checks, right before it writes, that every target still has the hash the plan saw,
+    and the game state before every single write; a failure in between rolls back at once.
+  - Undo, finishing and rolling back an interrupted apply save the current state first ("safety"
+    snapshot). Finishing skips steps already done and leaves files that changed since the
+    interruption alone.
+  - No backup while an interrupted apply is open; the recovery question comes back at the next
+    operation.
+  - A revision ID is never earlier than the device's last one, instead of refusing backups when
+    the clock went back.
+  - Objects are deleted by retention only when older than two days, so an object whose manifest
+    has not arrived (or a second PC wrongly using the same identity) is not taken away. Setting a
+    PC up again as a device that was active within a day asks first.
+  - Symbolic links and junctions in the configuration folders are not followed; other reparse
+    points, such as OneDrive placeholders, are read as files.

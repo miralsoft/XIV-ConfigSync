@@ -180,13 +180,12 @@ public sealed partial class SettingsViewModel : ObservableObject
             main.Engine.UpdateDeviceInfo();
         }).ConfigureAwait(true);
 
+        Load();
+        await main.RefreshAsync().ConfigureAwait(true);
         if (saved)
         {
             main.StatusText = languageChanged ? Strings.Settings_LanguageRestart : Strings.Settings_Saved;
         }
-
-        Load();
-        await main.RefreshAsync().ConfigureAwait(true);
     }
     [RelayCommand]
     public void BrowseGameFolder()
