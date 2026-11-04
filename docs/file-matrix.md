@@ -24,9 +24,19 @@ V03 turn rows into confirmed ones or move them. Release 0.1 syncs only rows conf
 |---|---|---|---|
 | `FFXIV.cfg` | Mixed | confirmed | Text, 213 keys in 15 sections. See the next section |
 | `FFXIV_BOOT.cfg` | Device | confirmed (content), unconfirmed (class) | Launcher state: licence agreement flags, browser, region, data centre |
-| `FFXIV_CHARA_nn.dat` | unknown | confirmed (existence) | 212 bytes each, one per character slot; likely the character creation presets |
+| `FFXIV_CHARA_nn.dat` | Shared, not in 0.1 | unconfirmed (third-party source code) | Character creation appearance presets, 212 bytes each |
 | `cfgcopy\FFXIV_CFGCPY<id>.dat` | Device | confirmed (existence), unknown (purpose) | Device until its purpose is known |
 | `FFXIV_CHR<id>\*.DAT` | Shared | unconfirmed | Per character: HUD, hotbars, macros, gear sets, key bindings, item order. V02 confirms file by file |
+| `FFXIV_CHR<id>\COMMON.DAT`, `CONTROL0.DAT`, `CONTROL1.DAT` | Shared | confirmed (format), unconfirmed (class) | Plain text like `FFXIV.cfg`: character, game pad and keyboard settings, no window positions |
+| `FFXIV_CHR<id>\ADDON.DAT` | Shared or per aspect ratio | confirmed (format), unknown (class) | HUD layout. Own format, not masked. Whether it carries over to another aspect ratio is what V03 answers |
+
+### Binary character files
+
+A 17-byte header, the content, a 15-byte footer; most files mask the content with a single XOR
+byte (confirmed on real files, layout as published by the libxivdat project). The upper half of the
+header's type field changes with game patches, so it acts as a format version. The sync never
+applies a file whose format version differs from the one on the target device; reading the field
+is enough, nothing in the file is changed.
 | `*.old` next to a file | Ignore | confirmed | The game's own previous generation; left in place on apply |
 | `<name>-<COMPUTERNAME>[-n].<ext>` | Ignore | confirmed | Conflict copies a cloud client left behind; reported, never synced |
 | `screenshots\`, `log\`, `downloads\` | Ignore | confirmed | Not configuration |
@@ -66,9 +76,10 @@ mean editing a binary file by field position.
 | Plugin logs (`*.ahlog`), lock files (`*.lock`), `*.bak`, `*_backup.json` | Ignore | confirmed (existence) | |
 | Plugin data exports (`*.csv`) | unknown | confirmed (existence) | Inventory and market data; possibly per character, not per device |
 | A plugin configuration holding an API key | Sensitive | confirmed | Found on device A. A synced copy puts the key into the cloud folder |
-| `dalamudConfig.json` | Mixed | confirmed | Plugin repositories and profiles next to device paths, UI scale and fonts |
+| `dalamudConfig.json` | Device in 0.1 | confirmed (mixed), source code (profiles) | Plugin profiles refer to plugins by an ID made per installation, so copied profiles do not match the other device's plugins. Also holds device paths, UI scale and fonts |
 | `dalamudUI.ini` | Device | unconfirmed (launcher FAQ) | Window layout; valid only at the same resolution |
-| `dalamudVfs.db` | unknown | unconfirmed (launcher FAQ says copyable) | About 12 MB |
+| `dalamudVfs.db` | Device | source code | Shadow copy of the Dalamud and plugin settings. A missing or unreadable settings file is silently restored from it, so an applied file must always be complete and valid |
+| `dalamudUserData\` | location | source code | Newer launch mode moves all of the above here; the sync has to detect which location is live |
 | `launcherConfigV3.json` | Device | confirmed (keys) | Game path, patch path, window placement |
 | `accountsList.json`, `uidCache.json` | Sensitive | confirmed (existence) | Account names; passwords are in the Windows credential store |
 | `installedPlugins\` | Ignore | unconfirmed (launcher FAQ) | Must not be copied; the launcher installs plugins itself |

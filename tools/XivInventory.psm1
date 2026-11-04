@@ -11,6 +11,8 @@ Set-StrictMode -Version Latest
 # File attributes of the Windows cloud files API that .NET Framework does not name.
 $script:RecallOnOpen = 0x00040000
 $script:RecallOnDataAccess = 0x00400000
+$script:Pinned = 0x00080000
+$script:Unpinned = 0x00100000
 $script:InventorySchema = 1
 
 function ConvertTo-XivPseudonym {
@@ -650,6 +652,66 @@ function Save-XivConfigSnapshot {
     }
 }
 
+function Get-XivCloudState {
+    <#
+    .SYNOPSIS
+        Reports, for every file in a folder, what Windows says about its cloud sync state.
+
+    .DESCRIPTION
+        Read-only, for the OneDrive experiment. No file is opened, so no download is triggered.
+        Two sources are recorded raw, because what their values mean for OneDrive is exactly what
+        the experiment has to find out: the file attributes of the cloud files API (pinned,
+        unpinned, recall on open, recall on data access, offline) and two shell properties,
+        System.StorageProviderState and System.FilePlaceholderStatus. Outside a cloud folder the
+        shell properties are empty.
+
+    .PARAMETER Path
+        The folder to examine. Only its top level is examined.
+
+    .EXAMPLE
+        Get-XivCloudState -Path "$env:OneDriveCommercial\Games\ConfigSync-MA09"
+    #>
+    [CmdletBinding()]
+    [OutputType([pscustomobject])]
+    param (
+        [Parameter(Mandatory = $true)]
+        [string] $Path
+    )
+
+    $root = (Get-Item -LiteralPath $Path -ErrorAction Stop).FullName
+    $shellFolder = $null
+    try {
+        $shell = New-Object -ComObject Shell.Application
+        $shellFolder = $shell.Namespace($root)
+    } catch {
+        $shellFolder = $null
+    }
+
+    foreach ($item in @(Get-ChildItem -LiteralPath $root -Force -File)) {
+        $attributes = [long] $item.Attributes
+        $providerState = $null
+        $placeholderStatus = $null
+        if ($shellFolder) {
+            $shellItem = $shellFolder.ParseName($item.Name)
+            if ($shellItem) {
+                $providerState = $shellItem.ExtendedProperty('System.StorageProviderState')
+                $placeholderStatus = $shellItem.ExtendedProperty('System.FilePlaceholderStatus')
+            }
+        }
+        [pscustomobject] @{
+            Name              = $item.Name
+            Length            = $item.Length
+            LastWriteTimeUtc  = $item.LastWriteTimeUtc.ToString('o')
+            Attributes        = '0x{0:X}' -f $attributes
+            Pinned            = ($attributes -band $script:Pinned) -ne 0
+            Unpinned          = ($attributes -band $script:Unpinned) -ne 0
+            Placeholder       = Test-XivCloudPlaceholder -Attributes $attributes
+            ProviderState     = if ($null -ne $providerState -and "$providerState" -ne '') { [long] $providerState } else { $null }
+            PlaceholderStatus = if ($null -ne $placeholderStatus -and "$placeholderStatus" -ne '') { [long] $placeholderStatus } else { $null }
+        }
+    }
+}
+
 Export-ModuleMember -Function @(
     'ConvertTo-XivPseudonym'
     'Test-XivCloudPlaceholder'
@@ -662,4 +724,5 @@ Export-ModuleMember -Function @(
     'Read-XivConfigText'
     'Compare-XivConfigText'
     'Save-XivConfigSnapshot'
+    'Get-XivCloudState'
 )

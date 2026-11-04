@@ -11,5 +11,6 @@
 - [x] Draft file matrix from existing files (`docs/file-matrix.md`)
 - [ ] File matrix confirmed by experiments: shared, device-specific, cache, sensitive
 - [ ] Cross test V03 (prepared only after V00 to V02, needs explicit consent)
-- [ ] OneDrive behaviour in a separate test folder, without game data
+- [x] Cloud-state recorder and OneDrive single-device test in a separate folder
+- [ ] OneDrive offline test and two-device conflict test
 - [ ] Feasibility report and framework decision

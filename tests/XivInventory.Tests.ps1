@@ -257,3 +257,18 @@ Describe 'Save-XivConfigSnapshot' {
         Get-TreeState -Root $root | Should -Be $before
     }
 }
+
+Describe 'Get-XivCloudState' {
+    It 'reports every file without opening it, and no shell state outside a cloud folder' {
+        $root = Join-Path -Path $TestDrive -ChildPath ([guid]::NewGuid().ToString('N'))
+        Initialize-SampleTree -Root $root
+        $before = Get-TreeState -Root $root
+        $state = @(Get-XivCloudState -Path $root)
+        $state.Count | Should -Be 1
+        $state[0].Name | Should -Be 'FFXIV.cfg'
+        $state[0].Attributes | Should -Match '^0x[0-9A-F]+$'
+        $state[0].Placeholder | Should -BeFalse
+        $state[0].Pinned | Should -BeFalse
+        Get-TreeState -Root $root | Should -Be $before
+    }
+}

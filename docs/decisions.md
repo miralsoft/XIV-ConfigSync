@@ -40,5 +40,11 @@ Append-only. Never edit or delete past entries; a later entry may supersede an e
   ignored `out/` folder and never committed. Rejected: storing the values inside the inventory
   JSON, which would have changed its schema for one file; asking the owner to copy the file by
   hand at every step, which is easy to forget mid-experiment.
+- (2026-11-04) The OneDrive experiment runs in a folder of its own inside the owner's OneDrive for
+  Business, in its `Games` folder, as the owner offered. No game data goes there. Rejected: waiting
+  for a personal OneDrive, which device A does not have configured.
+- (2026-11-04) `dalamudConfig.json` is device-specific in release 0.1. Rationale: Dalamud's source
+  code refers to plugins in profiles by an ID made per installation, so a copied profile does not
+  match the other device's plugins, and a plugin in no profile is added to the default one.
 - (2026-11-04) The file matrix is kept as a public draft in `docs/file-matrix.md`, with how well
   each row is known. Device names, character IDs and values from real files stay out of it.
