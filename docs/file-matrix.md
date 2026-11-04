@@ -25,7 +25,7 @@ V03 turn rows into confirmed ones or move them. Release 0.1 syncs only rows conf
 | `FFXIV.cfg` | Mixed | confirmed | Text, 213 keys in 15 sections. See the next section |
 | `FFXIV_BOOT.cfg` | Device | confirmed (content), unconfirmed (class) | Launcher state: licence agreement flags, browser, region, data centre |
 | `FFXIV_CHARA_nn.dat` | Shared, not in 0.1 | unconfirmed (third-party source code) | Character creation appearance presets, 212 bytes each |
-| `cfgcopy\FFXIV_CFGCPY<id>.dat` | Device | confirmed (existence), unknown (purpose) | Device until its purpose is known |
+| `cfgcopy\FFXIV_CFGCPY<id>.dat` | Device, Sensitive | confirmed (content), unknown (purpose) | Section format masked with 0x73, like `MACRO.DAT`: a character's name, world and content ID, plus two values that change on every write. Rewritten together with `FFXIV.cfg` and `UISAVE.DAT` |
 | `FFXIV_CHR<id>\*.DAT` | Shared | unconfirmed | Per character: HUD, hotbars, macros, gear sets, key bindings, item order. V02 confirms file by file |
 | `FFXIV_CHR<id>\COMMON.DAT`, `CONTROL0.DAT`, `CONTROL1.DAT` | Shared | confirmed (format), unconfirmed (class) | Plain text like `FFXIV.cfg`: character, game pad and keyboard settings, no window positions |
 | `FFXIV_CHR<id>\ADDON.DAT` | Shared or per aspect ratio | confirmed (format), unknown (class) | HUD layout. Own format, not masked. Whether it carries over to another aspect ratio is what V03 answers |
