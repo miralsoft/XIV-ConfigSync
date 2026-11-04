@@ -81,6 +81,11 @@ change on the other PC with a change the game made on its own.
 
 - **"Some files of this backup are missing or damaged":** OneDrive has not finished downloading
   the other PC's backup. Wait, then compare again.
+- **"An interrupted transfer":** a transfer or an undo was stopped, by a power cut or because the
+  game was started. Close the game; the application asks whether to finish it or go back to the
+  state before. Until then it makes no backup and no transfer.
+- **"The game settings folder cannot be found":** the folder in the settings no longer exists.
+  Nothing is transferred into a missing folder; choose the right one in the settings.
 - **"The game version differs":** update the game on both PCs first; files are only exchanged
   between the same game version.
 - **"The sync folder cannot be found":** the drive or OneDrive is not available. Connect it and
@@ -96,6 +101,7 @@ change on the other PC with a change the game made on its own.
 | What | Where |
 |---|---|
 | Settings, rules, snapshots before a transfer, log | `%LOCALAPPDATA%\XIVConfigSync` |
+| Files saved before an undo or a recovery ("safety" snapshots) | `%LOCALAPPDATA%\XIVConfigSync\snapshots`, each in a folder with a `snapshot.json` and the files under `files\` |
 | Backups of all PCs | your sync folder |
 
 To remove the application: turn off "Start with Windows" and "Open .xivsync files" in the

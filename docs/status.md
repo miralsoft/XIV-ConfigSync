@@ -22,11 +22,12 @@
 - **App** (`XivConfigSync.App`, WPF): set-up wizard, overview, transfer, rules, settings, log,
   about; tray icon; one instance per user with hand-over of `.xivsync` files; portable single
   executable of 67 MB that starts in about 1.5 s.
-- **Tests:** 91 xUnit tests (unit, two- and three-device flows, a simulated crash at every step
+- **Tests:** 96 xUnit tests (unit, two- and three-device flows, a simulated crash at every step
   of an apply, damaged and incomplete revisions, localisation completeness, one test per finding
   of the independent review), 40 Pester tests for the analysis tools. Deliberately planted
   defects were caught by the tests, twice before and three times after the review fixes.
-- **Independent review (2026-11-05):** 16 findings, all fixed with tests; see `decisions.md`.
+- **Independent reviews (2026-11-05):** a first review with 16 findings and a second review of the
+  fixes with 12 more; all fixed with tests; see `decisions.md`.
 - **Manual test on device A (2026-11-04, on copies of the real game and plugin folders):** set-up
   of a new sync folder; first backup of 160 files in 1.5 s, with 345 navigation cache files of a
   plugin and 45 old conflict copies left out; second device joined by opening the `.xivsync`

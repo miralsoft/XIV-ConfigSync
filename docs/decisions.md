@@ -251,3 +251,21 @@ Append-only. Never edit or delete past entries; a later entry may supersede an e
     PC up again as a device that was active within a day asks first.
   - Symbolic links and junctions in the configuration folders are not followed; other reparse
     points, such as OneDrive placeholders, are read as files.
+- (2026-11-05) A second independent review, of the fixes, found 12 more points; all are fixed and
+  tested. The decisions:
+  - When the game is started during an apply or an undo, nothing more is written, not even a
+    rollback; the journal stays and the user finishes or rolls back once the game is closed.
+    Rejected: rolling back at once, which wrote game files while the game was starting.
+  - An undo is journalled like an apply (journal kind `restore`), so a power cut during an undo
+    is recovered the same way. No undo and no change of the folders while a journal is open.
+  - Journals and snapshots record the absolute folder of each root; recovery and undo refuse
+    another folder.
+  - An apply that failed or was rolled back is removed from the list of undoable transfers; a
+    finished one records what it wrote, and a file whose written state is unknown counts as
+    changed in the undo warning.
+  - A configured game folder that does not exist refuses planning; nothing is ever written into
+    a folder that is not there. A plugin folder that does not exist is treated as not backed up.
+  - A file that exists but cannot be read is only offered; links and unreadable folders are listed
+    as left out of the backup instead of disappearing silently.
+  - Applying an older revision from an earlier epoch of the source does not reset the common
+    state with that device.
