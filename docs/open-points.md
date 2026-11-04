@@ -40,6 +40,10 @@
 - The extended warm-up (see `decisions.md`, 2026-11-04) did not end the intermittent analyzer
   failures in CI: two of the next four CI attempts failed with `RULE_ERROR` "Get-Command is not
   recognized", ten times each, always in `tests/XivInventory.Tests.ps1`; a rerun passed both
-  times. It has not been reproduced locally (every local build passed). Open for the owner: retry a
-  file once on an analyzer error and fail only if it persists, or try a newer PSScriptAnalyzer
-  release (a new pinned dependency).
+  times. It has not been reproduced locally (every local build passed).
+- A changed release does not end it either (measured 2026-11-04, eight sequential CI runs each, on
+  a test branch): PSScriptAnalyzer 1.24.0 failed 3 of 8 runs, all with the same "Get-Command is not
+  recognized" error; 1.25.0 failed 6 of 8, five with that error and one where the analyzer step
+  ended with exit code 5 and no output. The error therefore also exists in 1.24.0, and staying on
+  the pinned 1.25.0 costs nothing. Open for the owner: retry a file once when this specific error
+  appears and fail only if it persists.
