@@ -79,6 +79,34 @@ $result = Invoke-Pester -Configuration $configuration
 if ($result.TotalCount -eq 0) { throw 'No tests ran, so nothing was tested (R-23).' }
 if ($result.FailedCount -gt 0) { throw ('{0} test(s) failed.' -f $result.FailedCount) }
 
+Write-Information -MessageData 'Gate: .NET (format, build, tests, XAML, vulnerable packages)' -InformationAction Continue
+# The two halves of the C# check (C# profile), the XAML check (WPF profile), the tests and the
+# dependency audit. Every native call is checked by its exit code.
+function Invoke-Native {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [string] $Description,
+
+        [Parameter(Mandatory = $true)]
+        [string[]] $Arguments
+    )
+
+    & dotnet @Arguments
+    if ($LASTEXITCODE -ne 0) { throw ('{0} failed with exit code {1}.' -f $Description, $LASTEXITCODE) }
+}
+
+$solution = Join-Path -Path $root -ChildPath 'XivConfigSync.slnx'
+Invoke-Native -Description 'dotnet tool restore' -Arguments 'tool', 'restore', '--tool-manifest', (Join-Path -Path $root -ChildPath '.config\dotnet-tools.json')
+Invoke-Native -Description 'dotnet restore' -Arguments 'restore', $solution, '--locked-mode'
+Invoke-Native -Description 'dotnet format whitespace' -Arguments 'format', 'whitespace', $solution, '--verify-no-changes', '--no-restore'
+Invoke-Native -Description 'dotnet build' -Arguments 'build', $solution, '--no-restore', '--configuration', 'Release', '-nologo'
+Invoke-Native -Description 'dotnet test' -Arguments 'test', '--project', (Join-Path -Path $root -ChildPath 'tests\XivConfigSync.Core.Tests\XivConfigSync.Core.Tests.csproj'), '--no-build', '--configuration', 'Release'
+Invoke-Native -Description 'XamlStyler' -Arguments 'xstyler', '--passive', '-d', (Join-Path -Path $root -ChildPath 'src'), '-r', '--config', (Join-Path -Path $root -ChildPath 'Settings.XamlStyler')
+$vulnerable = & dotnet list $solution package --vulnerable --include-transitive 2>&1
+if ($LASTEXITCODE -ne 0) { throw 'dotnet list package --vulnerable failed.' }
+if (($vulnerable | Out-String) -match 'has the following vulnerable packages') { throw ('Vulnerable packages: {0}' -f ($vulnerable | Out-String)) }
+
 Write-Information -MessageData 'Gate: no em-dash in content files' -InformationAction Continue
 $config = Get-Content -LiteralPath (Join-Path -Path $root -ChildPath '.miralsoft-enforcement') -Encoding UTF8
 $globs = @((($config | Where-Object { $_ -like 'CONTENT_GLOBS=*' }) -replace '^CONTENT_GLOBS=', '') -split '\s+' | Where-Object { $_ })

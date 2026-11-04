@@ -236,6 +236,16 @@ public sealed class Applier
         return list.OrderByDescending(s => s.Created).ToList();
     }
 
+    /// <summary>Removes one snapshot.</summary>
+    public void DeleteSnapshot(string snapshotId)
+    {
+        var folder = SnapshotFolder(snapshotId);
+        if (Directory.Exists(folder))
+        {
+            Directory.Delete(folder, recursive: true);
+        }
+    }
+
     /// <summary>Removes snapshots beyond the newest <paramref name="keep"/> that are older than <paramref name="minAge"/>.</summary>
     public int PruneSnapshots(int keep, TimeSpan minAge, DateTimeOffset now)
     {

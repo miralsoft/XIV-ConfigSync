@@ -44,6 +44,9 @@ public sealed class AppSettings
 
     public bool? FileAssociation { get; set; }
 
+    /// <summary>Whether files with the rule "always" are applied from other devices without asking.</summary>
+    public bool? AutoApplyAlways { get; set; }
+
     public bool BackUpPlugins { get; set; } = true;
 
     public int KeepRevisions { get; set; } = 50;

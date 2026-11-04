@@ -79,6 +79,7 @@ public sealed class FlowTests
         Assert.Equal(PlanAction.Apply, Item(plan, Hotbar).Action);
         Assert.True(Item(plan, Hotbar).Selected);
         Assert.Equal(PlanAction.Skip, Item(plan, Keybind).Action);
+        Assert.Equal(PlanReason.UpToDate, Item(plan, Keybind).Reason);
         b.Engine.Apply(plan);
         Assert.Equal(changed, b.ReadGame(Hotbar));
 
@@ -143,7 +144,9 @@ public sealed class FlowTests
         b.WriteGame(Hotbar, Device.Random());
         b.Engine.Backup(RevisionOrigin.GameExit);
         var plan = b.Engine.Plan(a.Settings.DeviceId, null);
-        Assert.Equal(PlanAction.Skip, Item(plan, Hotbar).Action);
+        Assert.Equal(PlanAction.Offer, Item(plan, Hotbar).Action);
+        Assert.Equal(PlanReason.LocalChangedOnly, Item(plan, Hotbar).Reason);
+        Assert.False(Item(plan, Hotbar).Selected);
     }
 
     [Fact]
@@ -212,6 +215,13 @@ public sealed class FlowTests
         b.Engine.Undo(result.SnapshotId);
         Assert.Equal(before, Snapshot(b));
         Assert.False(b.ExistsGame(Device.Chr + "/NEW.DAT"));
+
+        // The undone apply is gone from the list, and its files are offered again for a decision.
+        Assert.DoesNotContain(b.Engine.ListSnapshots(), s => s.SnapshotId == result.SnapshotId);
+        var again = b.Engine.Plan(a.Settings.DeviceId, null);
+        Assert.Equal(PlanAction.Offer, Item(again, Hotbar).Action);
+        Assert.False(Item(again, Hotbar).Selected);
+        Assert.Throws<RefusedException>(() => b.Engine.Undo(result.SnapshotId));
     }
 
     [Fact]

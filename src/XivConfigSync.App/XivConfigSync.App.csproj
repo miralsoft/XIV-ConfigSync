@@ -1,0 +1,44 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <!-- Only for the tray icon (NotifyIcon); part of the Windows Desktop runtime, no package. -->
+    <UseWindowsForms>true</UseWindowsForms>
+    <RootNamespace>XivConfigSync.App</RootNamespace>
+    <AssemblyName>XIVConfigSync</AssemblyName>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>Assets\XIVConfigSync.ico</ApplicationIcon>
+    <!-- WFO0003 asks Windows Forms applications to set DPI through its API. This is a WPF
+         application that only borrows the tray icon; the WPF profile requires the DPI awareness in
+         app.manifest, so the Windows Forms advice does not apply here. -->
+    <NoWarn>$(NoWarn);WFO0003</NoWarn>
+  </PropertyGroup>
+
+  <!-- Publishing as one portable file (WPF profile). Trimming is not available for WPF. -->
+  <PropertyGroup Condition="'$(PublishSingleFile)' == 'true'">
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <SelfContained>true</SelfContained>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+    <DebugType>embedded</DebugType>
+    <PublishDocumentationFile>false</PublishDocumentationFile>
+    <PublishReferencesDocumentationFiles>false</PublishReferencesDocumentationFiles>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Using Remove="System.Windows.Forms" />
+    <Using Remove="System.Drawing" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Assets\XIVConfigSync.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\XivConfigSync.Core\XivConfigSync.Core.csproj" />
+    <ProjectReference Include="..\XivConfigSync.Platform\XivConfigSync.Platform.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,244 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <data name="About_Disclaimer" xml:space="preserve"><value>FINAL FANTASY is a registered trademark of Square Enix Holdings Co., Ltd. XIV ConfigSync is an independent, non-commercial open-source project. It is not affiliated with, endorsed or supported by Square Enix or the Dalamud project. It contains no material from the game.</value></data>
+  <data name="About_Text" xml:space="preserve"><value>XIV ConfigSync backs up the client settings of the game and the settings of Dalamud plugins into a folder you sync with OneDrive, and applies them on your other PCs. It only copies whole files while the game is closed. It never reads game memory, never talks to game servers and never changes the game. Licence: GPL-3.0-or-later.</value></data>
+  <data name="Action_Apply" xml:space="preserve"><value>Apply</value></data>
+  <data name="Action_Conflict" xml:space="preserve"><value>Conflict</value></data>
+  <data name="Action_Offer" xml:space="preserve"><value>Offered</value></data>
+  <data name="Action_Skip" xml:space="preserve"><value>Nothing to do</value></data>
+  <data name="App_Title" xml:space="preserve"><value>XIV ConfigSync</value></data>
+  <data name="Backup_Done" xml:space="preserve"><value>Backup created: {0} files, {1} new.</value></data>
+  <data name="Backup_Unchanged" xml:space="preserve"><value>Nothing changed since the last backup.</value></data>
+  <data name="Character_Any" xml:space="preserve"><value>Character</value></data>
+  <data name="Character_Number" xml:space="preserve"><value>Character {0}</value></data>
+  <data name="Character_Path" xml:space="preserve"><value>{0}: {1}</value></data>
+  <data name="Character_Unnamed" xml:space="preserve"><value>Character</value></data>
+  <data name="Close_AskText" xml:space="preserve"><value>Should XIV ConfigSync keep running in the notification area when you close the window? Yes: keep running, so backups after playing still happen. No: quit. You can change this in the settings.</value></data>
+  <data name="Close_AskTitle" xml:space="preserve"><value>Close window</value></data>
+  <data name="Close_Busy" xml:space="preserve"><value>An operation is still running. Please wait until it has finished.</value></data>
+  <data name="Col_Action" xml:space="preserve"><value>Proposal</value></data>
+  <data name="Col_Area" xml:space="preserve"><value>Area</value></data>
+  <data name="Col_Default" xml:space="preserve"><value>Default</value></data>
+  <data name="Col_Device" xml:space="preserve"><value>Device</value></data>
+  <data name="Col_Evidence" xml:space="preserve"><value>Known</value></data>
+  <data name="Col_File" xml:space="preserve"><value>File</value></data>
+  <data name="Col_Level" xml:space="preserve"><value>Level</value></data>
+  <data name="Col_Message" xml:space="preserve"><value>Message</value></data>
+  <data name="Col_Notes" xml:space="preserve"><value>Notes</value></data>
+  <data name="Col_Reason" xml:space="preserve"><value>Reason</value></data>
+  <data name="Col_Receipt" xml:space="preserve"><value>Confirmed by</value></data>
+  <data name="Col_Rule" xml:space="preserve"><value>Rule</value></data>
+  <data name="Col_Take" xml:space="preserve"><value>Take</value></data>
+  <data name="Col_Time" xml:space="preserve"><value>Time</value></data>
+  <data name="Common_Browse" xml:space="preserve"><value>Browse...</value></data>
+  <data name="Common_Never" xml:space="preserve"><value>never</value></data>
+  <data name="Common_Unknown" xml:space="preserve"><value>unknown</value></data>
+  <data name="Error_Generic" xml:space="preserve"><value>{0}</value></data>
+  <data name="Error_Settings" xml:space="preserve"><value>The settings in {0} could not be read. Rename or remove the file to start with new settings.</value></data>
+  <data name="Error_SyncFolderMissing" xml:space="preserve"><value>The sync folder {0} cannot be found. If it is on a drive that is not connected, connect it and start again. Otherwise choose the sync folder again.</value></data>
+  <data name="Error_Unexpected" xml:space="preserve"><value>An unexpected error occurred. The details are in the log. The application stays open.</value></data>
+  <data name="Evidence_Confirmed" xml:space="preserve"><value>confirmed</value></data>
+  <data name="Evidence_Unconfirmed" xml:space="preserve"><value>not yet confirmed</value></data>
+  <data name="Evidence_Unknown" xml:space="preserve"><value>unknown</value></data>
+  <data name="Exclude_Backup" xml:space="preserve"><value>backup file</value></data>
+  <data name="Exclude_Cache" xml:space="preserve"><value>cache</value></data>
+  <data name="Exclude_ConflictCopy" xml:space="preserve"><value>conflict copy of a cloud client</value></data>
+  <data name="Exclude_Lock" xml:space="preserve"><value>lock or journal file</value></data>
+  <data name="Exclude_Log" xml:space="preserve"><value>log file</value></data>
+  <data name="Exclude_NotConfig" xml:space="preserve"><value>not configuration</value></data>
+  <data name="Exclude_Old" xml:space="preserve"><value>the game&apos;s own previous copy</value></data>
+  <data name="Exclude_Temp" xml:space="preserve"><value>temporary file</value></data>
+  <data name="Exclude_TooLarge" xml:space="preserve"><value>larger than 64 MB</value></data>
+  <data name="Exclude_User" xml:space="preserve"><value>excluded by you</value></data>
+  <data name="Flag_Credential" xml:space="preserve"><value>Contains credentials.</value></data>
+  <data name="Flag_Large" xml:space="preserve"><value>Large file.</value></data>
+  <data name="Flag_Path" xml:space="preserve"><value>Contains paths of the other device.</value></data>
+  <data name="Language_System" xml:space="preserve"><value>System language</value></data>
+  <data name="Level_Debug" xml:space="preserve"><value>Debug</value></data>
+  <data name="Level_Error" xml:space="preserve"><value>Error</value></data>
+  <data name="Level_Info" xml:space="preserve"><value>Info</value></data>
+  <data name="Level_Warning" xml:space="preserve"><value>Warning</value></data>
+  <data name="Log_OpenFolder" xml:space="preserve"><value>Open log folder</value></data>
+  <data name="Matrix_Acq" xml:space="preserve"><value>Acquaintance list and related character data.</value></data>
+  <data name="Matrix_Addon" xml:space="preserve"><value>HUD layout. The game changes this file by itself on every login, so it is only applied on request.</value></data>
+  <data name="Matrix_BootCfg" xml:space="preserve"><value>Launcher settings of this device.</value></data>
+  <data name="Matrix_Cfgcopy" xml:space="preserve"><value>Holds the character&apos;s name and IDs; belongs to this device.</value></data>
+  <data name="Matrix_CharaPreset" xml:space="preserve"><value>Appearance presets from character creation.</value></data>
+  <data name="Matrix_Common" xml:space="preserve"><value>Character settings (chat, name plates, camera). Not yet confirmed by a transfer.</value></data>
+  <data name="Matrix_Control0" xml:space="preserve"><value>Mouse and keyboard mode settings, including HUD info display. Confirmed by a transfer.</value></data>
+  <data name="Matrix_Control1" xml:space="preserve"><value>Game pad mode settings. Not yet confirmed by a transfer.</value></data>
+  <data name="Matrix_FfxivCfg" xml:space="preserve"><value>Graphics, resolution, UI scale and sound of this device. Never applied from another device as a whole.</value></data>
+  <data name="Matrix_Gearset" xml:space="preserve"><value>Gear sets. Not yet confirmed by a transfer.</value></data>
+  <data name="Matrix_Gs" xml:space="preserve"><value>Further character data. Not yet confirmed by a transfer.</value></data>
+  <data name="Matrix_Hotbar" xml:space="preserve"><value>Hotbars and cross hotbars. Confirmed by a transfer.</value></data>
+  <data name="Matrix_ItemFinder" xml:space="preserve"><value>Item finder data. Not yet confirmed by a transfer.</value></data>
+  <data name="Matrix_ItemOrder" xml:space="preserve"><value>Inventory order. The game changes it by itself; only on request.</value></data>
+  <data name="Matrix_Keybind" xml:space="preserve"><value>Key bindings. Confirmed by a transfer.</value></data>
+  <data name="Matrix_LogFilter" xml:space="preserve"><value>Chat log filters. Not yet confirmed by a transfer.</value></data>
+  <data name="Matrix_Macro" xml:space="preserve"><value>Character macros. Not yet confirmed by a transfer.</value></data>
+  <data name="Matrix_MacroSys" xml:space="preserve"><value>Macros shared by all characters. Confirmed by a transfer.</value></data>
+  <data name="Matrix_Plugin" xml:space="preserve"><value>Plugin settings. Applied only on request.</value></data>
+  <data name="Matrix_UiSave" xml:space="preserve"><value>UI state. The game changes it by itself; only on request.</value></data>
+  <data name="Matrix_Unknown" xml:space="preserve"><value>Unknown file; backed up, applied only on request.</value></data>
+  <data name="Nav_About" xml:space="preserve"><value>About</value></data>
+  <data name="Nav_Log" xml:space="preserve"><value>Log</value></data>
+  <data name="Nav_Overview" xml:space="preserve"><value>Overview</value></data>
+  <data name="Nav_Rules" xml:space="preserve"><value>Rules</value></data>
+  <data name="Nav_Settings" xml:space="preserve"><value>Settings</value></data>
+  <data name="Nav_Transfer" xml:space="preserve"><value>Transfer</value></data>
+  <data name="Notify_Applied" xml:space="preserve"><value>{0} files taken over from {1}.</value></data>
+  <data name="Notify_Conflicts" xml:space="preserve"><value>{0} files from {1} were also changed here. Please decide on the Transfer page.</value></data>
+  <data name="Origin_AfterApply" xml:space="preserve"><value>after a transfer</value></data>
+  <data name="Origin_AppStart" xml:space="preserve"><value>at start</value></data>
+  <data name="Origin_GameExit" xml:space="preserve"><value>after playing</value></data>
+  <data name="Origin_Manual" xml:space="preserve"><value>manual</value></data>
+  <data name="Overview_BackupNow" xml:space="preserve"><value>Back up now</value></data>
+  <data name="Overview_ConflictCopies" xml:space="preserve"><value>{0} old conflict copies were found in the game folder. They are neither backed up nor deleted; you can remove them by hand.</value></data>
+  <data name="Overview_DeviceName" xml:space="preserve"><value>Name</value></data>
+  <data name="Overview_Devices" xml:space="preserve"><value>Devices in the sync folder</value></data>
+  <data name="Overview_GameNotRunning" xml:space="preserve"><value>Game is not running</value></data>
+  <data name="Overview_GameRunning" xml:space="preserve"><value>Game is running: nothing is written</value></data>
+  <data name="Overview_Intro" xml:space="preserve"><value>This device backs up its settings into its own part of the sync folder. On the Transfer page you take settings from another device or from an older backup.</value></data>
+  <data name="Overview_LastBackup" xml:space="preserve"><value>Last backup</value></data>
+  <data name="Overview_NewFrom" xml:space="preserve"><value>New settings from {0} are available.</value></data>
+  <data name="Overview_NotReceived" xml:space="preserve"><value>not confirmed by another device yet</value></data>
+  <data name="Overview_Open" xml:space="preserve"><value>Transfer...</value></data>
+  <data name="Overview_Receipt" xml:space="preserve"><value>Received</value></data>
+  <data name="Overview_ReceivedBy" xml:space="preserve"><value>received by {0}</value></data>
+  <data name="Overview_Refresh" xml:space="preserve"><value>Refresh</value></data>
+  <data name="Overview_SyncFolder" xml:space="preserve"><value>Sync folder</value></data>
+  <data name="Overview_ThisDevice" xml:space="preserve"><value>This device</value></data>
+  <data name="Overview_Upload" xml:space="preserve"><value>Upload</value></data>
+  <data name="Reason_BothChanged" xml:space="preserve"><value>Changed on both devices since they last matched. Both versions are kept; you decide.</value></data>
+  <data name="Reason_LocalChangedOnly" xml:space="preserve"><value>Only changed here; the source still has the common state.</value></data>
+  <data name="Reason_MissingLocally" xml:space="preserve"><value>Does not exist on this device yet.</value></data>
+  <data name="Reason_NeverRule" xml:space="preserve"><value>Belongs to the source device (rule &quot;never&quot;).</value></data>
+  <data name="Reason_NoCommonState" xml:space="preserve"><value>Different on both devices and no common state is known yet (first transfer). You decide.</value></data>
+  <data name="Reason_OnRequestRule" xml:space="preserve"><value>Newer on the source; applied only on request.</value></data>
+  <data name="Reason_Restore" xml:space="preserve"><value>Differs from the chosen older backup.</value></data>
+  <data name="Reason_SourceNewer" xml:space="preserve"><value>Newer on the source.</value></data>
+  <data name="Reason_SourceOutdated" xml:space="preserve"><value>The source has an older state of this file.</value></data>
+  <data name="Reason_UpToDate" xml:space="preserve"><value>Same on both devices.</value></data>
+  <data name="Recovery_Text" xml:space="preserve"><value>A transfer was interrupted, for example by a power cut. Yes: finish it. No: go back to the state before it. Cancel: decide later.</value></data>
+  <data name="Recovery_Title" xml:space="preserve"><value>Interrupted transfer</value></data>
+  <data name="Refuse_Busy" xml:space="preserve"><value>Another operation is running. Please try again in a moment.</value></data>
+  <data name="Refuse_ClockBehind" xml:space="preserve"><value>The clock of this PC is behind the last backup. Please check the date and time.</value></data>
+  <data name="Refuse_Damaged" xml:space="preserve"><value>Some files of this backup are missing or damaged, possibly because OneDrive has not finished downloading them. Nothing was applied. Try again later.</value></data>
+  <data name="Refuse_GameRunning" xml:space="preserve"><value>The game is running. Nothing is written to its files while it runs; this happens after you close it.</value></data>
+  <data name="Refuse_GameVersion" xml:space="preserve"><value>The game version differs between the two devices. Please update the game on both devices first.</value></data>
+  <data name="Refuse_NoRevision" xml:space="preserve"><value>This device has no backup yet.</value></data>
+  <data name="Refuse_NoSnapshot" xml:space="preserve"><value>This transfer can no longer be undone.</value></data>
+  <data name="Refuse_NoSyncFolder" xml:space="preserve"><value>No sync folder is set up.</value></data>
+  <data name="Refuse_NothingSelected" xml:space="preserve"><value>No file is selected.</value></data>
+  <data name="Refuse_OpenJournal" xml:space="preserve"><value>An interrupted transfer must be finished or rolled back first. Restart the application.</value></data>
+  <data name="Refuse_UnknownDevice" xml:space="preserve"><value>This device is not in the sync folder.</value></data>
+  <data name="Root_Game" xml:space="preserve"><value>Game</value></data>
+  <data name="Root_Plugins" xml:space="preserve"><value>Plugins</value></data>
+  <data name="Rule_Always" xml:space="preserve"><value>Always</value></data>
+  <data name="Rule_Never" xml:space="preserve"><value>Never</value></data>
+  <data name="Rule_OnRequest" xml:space="preserve"><value>On request</value></data>
+  <data name="Rules_Add" xml:space="preserve"><value>Add</value></data>
+  <data name="Rules_Exclusions" xml:space="preserve"><value>Leave out of the backup</value></data>
+  <data name="Rules_ExclusionsIntro" xml:space="preserve"><value>Files matching these patterns are not backed up. * matches within a folder, ** across folders. Caches, logs and lock files are always left out.</value></data>
+  <data name="Rules_Intro" xml:space="preserve"><value>Everything is backed up. These rules decide what is taken from another device. Always: without asking, when only the other device changed it. On request: you choose. Never: belongs to one device.</value></data>
+  <data name="Rules_NeverWarning" xml:space="preserve"><value>Careful: this file holds settings of one device. Taking it from another device can change resolution, graphics or UI scale.</value></data>
+  <data name="Rules_PatternHint" xml:space="preserve"><value>Pattern, for example SomePlugin/*.json</value></data>
+  <data name="Rules_Remove" xml:space="preserve"><value>Remove</value></data>
+  <data name="Rules_Reset" xml:space="preserve"><value>Reset all rules</value></data>
+  <data name="Rules_Title" xml:space="preserve"><value>Rules</value></data>
+  <data name="Settings_AutoApply" xml:space="preserve"><value>Take files with the rule &quot;always&quot; from other devices automatically</value></data>
+  <data name="Settings_Autostart" xml:space="preserve"><value>Start with Windows (in the notification area)</value></data>
+  <data name="Settings_BackupOnGameExit" xml:space="preserve"><value>Back up automatically after playing</value></data>
+  <data name="Settings_BackUpPlugins" xml:space="preserve"><value>Back up plugin settings</value></data>
+  <data name="Settings_Behaviour" xml:space="preserve"><value>Behaviour</value></data>
+  <data name="Settings_ChangeFolder" xml:space="preserve"><value>Change sync folder...</value></data>
+  <data name="Settings_ChangeFolderConfirm" xml:space="preserve"><value>The set-up runs again. Nothing in the current sync folder is deleted. Continue?</value></data>
+  <data name="Settings_Characters" xml:space="preserve"><value>Characters</value></data>
+  <data name="Settings_CharactersIntro" xml:space="preserve"><value>Give each character folder a name. The application never shows the IDs in the folder names.</value></data>
+  <data name="Settings_Detect" xml:space="preserve"><value>Detect automatically</value></data>
+  <data name="Settings_Device" xml:space="preserve"><value>This device</value></data>
+  <data name="Settings_DeviceName" xml:space="preserve"><value>Device name</value></data>
+  <data name="Settings_FileAssociation" xml:space="preserve"><value>Open .xivsync files with XIV ConfigSync</value></data>
+  <data name="Settings_Folders" xml:space="preserve"><value>Folders on this device</value></data>
+  <data name="Settings_GameFolder" xml:space="preserve"><value>Game settings folder</value></data>
+  <data name="Settings_GameVersion" xml:space="preserve"><value>Game version</value></data>
+  <data name="Settings_InstallFolder" xml:space="preserve"><value>Game installation folder</value></data>
+  <data name="Settings_KeepRevisions" xml:space="preserve"><value>Backups to keep</value></data>
+  <data name="Settings_Language" xml:space="preserve"><value>Language</value></data>
+  <data name="Settings_LanguageRestart" xml:space="preserve"><value>Saved. The new language applies after a restart.</value></data>
+  <data name="Settings_MinimizeOnClose" xml:space="preserve"><value>Keep running in the notification area when the window is closed</value></data>
+  <data name="Settings_OpenFolder" xml:space="preserve"><value>Open in Explorer</value></data>
+  <data name="Settings_PluginFolder" xml:space="preserve"><value>Plugin settings folder</value></data>
+  <data name="Settings_Save" xml:space="preserve"><value>Save</value></data>
+  <data name="Settings_Saved" xml:space="preserve"><value>Settings saved.</value></data>
+  <data name="Settings_SyncFolder" xml:space="preserve"><value>Sync folder</value></data>
+  <data name="Settings_Title" xml:space="preserve"><value>Settings</value></data>
+  <data name="Setup_AgainDevice" xml:space="preserve"><value>This PC is already in the sync folder and was set up again:</value></data>
+  <data name="Setup_Back" xml:space="preserve"><value>Back</value></data>
+  <data name="Setup_ChooseFolder" xml:space="preserve"><value>Sync folder</value></data>
+  <data name="Setup_DeviceHint" xml:space="preserve"><value>The name is shown on your other devices.</value></data>
+  <data name="Setup_DeviceName" xml:space="preserve"><value>Name of this device</value></data>
+  <data name="Setup_DeviceTitle" xml:space="preserve"><value>This device</value></data>
+  <data name="Setup_DoneJoined" xml:space="preserve"><value>This device is set up and backed up. On the Transfer page you can now take the settings of your other device.</value></data>
+  <data name="Setup_DoneNew" xml:space="preserve"><value>The sync folder is set up and this device is backed up. On your next PC, choose the same folder or double-click the .xivsync file in it.</value></data>
+  <data name="Setup_Finish" xml:space="preserve"><value>Finish</value></data>
+  <data name="Setup_Folder_Empty" xml:space="preserve"><value>A new sync folder will be created here.</value></data>
+  <data name="Setup_Folder_Foreign" xml:space="preserve"><value>This folder contains other files. Please choose an empty folder or an existing sync folder.</value></data>
+  <data name="Setup_Folder_Invalid" xml:space="preserve"><value>This folder contains more than one or a damaged .xivsync file and cannot be used.</value></data>
+  <data name="Setup_Folder_Sync" xml:space="preserve"><value>Existing sync folder. Devices in it: {1}. This device joins them.</value></data>
+  <data name="Setup_FolderIntro" xml:space="preserve"><value>Choose one folder inside your OneDrive. Use the same folder on every PC; the application organises everything inside it.</value></data>
+  <data name="Setup_FoldersIntro" xml:space="preserve"><value>These folders were found on this PC. Change them only if the game or Dalamud is installed elsewhere.</value></data>
+  <data name="Setup_FoldersTitle" xml:space="preserve"><value>Folders on this device</value></data>
+  <data name="Setup_GameFolderFound" xml:space="preserve"><value>Game settings found.</value></data>
+  <data name="Setup_GameFolderMissing" xml:space="preserve"><value>No game settings found in this folder. It is usually Documents\My Games\FINAL FANTASY XIV - A Realm Reborn.</value></data>
+  <data name="Setup_GameVersion" xml:space="preserve"><value>Game version {0} found.</value></data>
+  <data name="Setup_GameVersionUnknown" xml:space="preserve"><value>Game version not found. Transfers still work, but versions cannot be compared.</value></data>
+  <data name="Setup_NewDevice" xml:space="preserve"><value>Add this PC as a new device</value></data>
+  <data name="Setup_Next" xml:space="preserve"><value>Next</value></data>
+  <data name="Setup_OptionsHint" xml:space="preserve"><value>All of this can be changed later in the settings.</value></data>
+  <data name="Setup_OptionsIntro" xml:space="preserve"><value>What should happen without you asking?</value></data>
+  <data name="Setup_OptionsTitle" xml:space="preserve"><value>Automatic actions</value></data>
+  <data name="Setup_Running" xml:space="preserve"><value>Setting up and creating the first backup...</value></data>
+  <data name="Setup_Title" xml:space="preserve"><value>Set up XIV ConfigSync</value></data>
+  <data name="Setup_Welcome" xml:space="preserve"><value>Welcome. XIV ConfigSync keeps the settings of the game and your Dalamud plugins the same on all your PCs, without overwriting what belongs to one PC, such as resolution or UI scale.</value></data>
+  <data name="Status_Applying" xml:space="preserve"><value>Applying...</value></data>
+  <data name="Status_BackingUp" xml:space="preserve"><value>Backing up...</value></data>
+  <data name="Status_Comparing" xml:space="preserve"><value>Comparing...</value></data>
+  <data name="Status_Ready" xml:space="preserve"><value>Ready.</value></data>
+  <data name="Status_Recovering" xml:space="preserve"><value>Recovering an interrupted transfer...</value></data>
+  <data name="Status_Refreshing" xml:space="preserve"><value>Checking the sync folder...</value></data>
+  <data name="SyncFile_OtherFolder" xml:space="preserve"><value>This sync file belongs to {0}, but this device uses {1}. To use the other folder, choose &quot;Change sync folder&quot; in the settings.</value></data>
+  <data name="SyncFile_TypeName" xml:space="preserve"><value>XIV ConfigSync sync folder</value></data>
+  <data name="Transfer_AllConflicts" xml:space="preserve"><value>Take all conflicts from the source</value></data>
+  <data name="Transfer_Apply" xml:space="preserve"><value>Take selected</value></data>
+  <data name="Transfer_Compare" xml:space="preserve"><value>Compare</value></data>
+  <data name="Transfer_ConfirmOwn" xml:space="preserve"><value>An older state of this device is restored. Afterwards it is backed up as the current state, which your other devices then see.</value></data>
+  <data name="Transfer_ConfirmSensitive" xml:space="preserve"><value>The selection contains device files or files with credentials. Please make sure you want them here.</value></data>
+  <data name="Transfer_ConfirmText" xml:space="preserve"><value>{0} files will be replaced. Before that, the current files are saved, so the transfer can be undone.</value></data>
+  <data name="Transfer_Done" xml:space="preserve"><value>{0} files taken over. You can undo this with &quot;Undo last transfer&quot;.</value></data>
+  <data name="Transfer_Intro" xml:space="preserve"><value>Choose a device and a backup, then compare. Files with a check mark are taken over. Nothing is written until you confirm, and every transfer can be undone.</value></data>
+  <data name="Transfer_Latest" xml:space="preserve"><value>Latest backup</value></data>
+  <data name="Transfer_NothingToUndo" xml:space="preserve"><value>There is no transfer to undo.</value></data>
+  <data name="Transfer_NotInSource" xml:space="preserve"><value>{0} files on this device do not exist in the source. They are not deleted.</value></data>
+  <data name="Transfer_Revision" xml:space="preserve"><value>Backup</value></data>
+  <data name="Transfer_RevisionLabel" xml:space="preserve"><value>{0} ({1}, {2} files)</value></data>
+  <data name="Transfer_SelectNone" xml:space="preserve"><value>Select none</value></data>
+  <data name="Transfer_ShowSkipped" xml:space="preserve"><value>Also show unchanged files</value></data>
+  <data name="Transfer_Source" xml:space="preserve"><value>Device</value></data>
+  <data name="Transfer_Summary" xml:space="preserve"><value>{0} selected, {1} conflicts, {2} offered, {3} without change.</value></data>
+  <data name="Transfer_ThisDevice" xml:space="preserve"><value>(this device)</value></data>
+  <data name="Transfer_Title" xml:space="preserve"><value>Transfer</value></data>
+  <data name="Transfer_Undo" xml:space="preserve"><value>Undo last transfer</value></data>
+  <data name="Transfer_UndoConfirm" xml:space="preserve"><value>Undo the transfer of {0}? {1} files are set back to the state before it.</value></data>
+  <data name="Transfer_Undone" xml:space="preserve"><value>The transfer was undone.</value></data>
+  <data name="Tray_BackupNow" xml:space="preserve"><value>Back up now</value></data>
+  <data name="Tray_Exit" xml:space="preserve"><value>Quit</value></data>
+  <data name="Tray_Open" xml:space="preserve"><value>Open</value></data>
+  <data name="Upload_InSync" xml:space="preserve"><value>Uploaded (OneDrive reports it in sync)</value></data>
+  <data name="Upload_Pending" xml:space="preserve"><value>Handed to OneDrive, upload pending</value></data>
+  <data name="Upload_Unknown" xml:space="preserve"><value>Handed to the sync folder; cloud state unknown</value></data>
+  <data name="Warn_GameVersionUnknown" xml:space="preserve"><value>The game version of one device is unknown, so it cannot be compared.</value></data>
+  <data name="Warn_PluginsOff" xml:space="preserve"><value>The source also has plugin settings. They are not offered because this device does not back up plugin settings (see Settings).</value></data>
+</root>

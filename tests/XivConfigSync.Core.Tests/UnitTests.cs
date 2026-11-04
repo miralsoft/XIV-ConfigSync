@@ -153,6 +153,9 @@ public sealed class SyncStoreTests
         Assert.Equal("FFXIV Sync.xivsync", Path.GetFileName(store.SyncFilePath));
         Assert.Equal(store.Root, SyncStore.Open(store.SyncFilePath).Root);
 
+        Assert.Equal(SyncStore.FolderKind.Invalid, SyncStore.Inspect(store.SyncFilePath));
+        Assert.Equal(store.Root, SyncStore.FolderOf(store.SyncFilePath));
+
         File.WriteAllText(Path.Combine(sync, "second.xivsync"), "{}");
         Assert.Equal(SyncStore.FolderKind.Invalid, SyncStore.Inspect(sync));
     }

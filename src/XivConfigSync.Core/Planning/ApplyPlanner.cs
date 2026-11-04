@@ -186,8 +186,9 @@ public static class ApplyPlanner
         }
         else if (baseHash == file.Hash || (localHistory?.Contains(file.Hash) ?? false))
         {
-            // The source still has a state this device already had or shared: the local change is newer.
-            (action, reason) = (PlanAction.Skip, baseHash == file.Hash ? PlanReason.LocalChangedOnly : PlanReason.SourceOutdated);
+            // The source still has a state this device already had or shared: the local change is
+            // newer. Never applied on its own, but offered, so the user can still take any file.
+            (action, reason) = (PlanAction.Offer, baseHash == file.Hash ? PlanReason.LocalChangedOnly : PlanReason.SourceOutdated);
         }
         else if (baseHash == localHash || (sourceHistory?.Contains(localHash) ?? false))
         {

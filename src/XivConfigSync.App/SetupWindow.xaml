@@ -1,0 +1,206 @@
+﻿<Window
+    Background="{StaticResource WindowBrush}"
+    Foreground="{StaticResource TextBrush}"
+    Height="600"
+    Icon="/Assets/XIVConfigSync.ico"
+    MinHeight="520"
+    MinWidth="600"
+    Title="{x:Static core:Strings.Setup_Title}"
+    Width="720"
+    WindowStartupLocation="CenterScreen"
+    d:DataContext="{d:DesignInstance Type=vm:SetupViewModel}"
+    mc:Ignorable="d"
+    x:Class="XivConfigSync.App.SetupWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:core="clr-namespace:XivConfigSync.Core;assembly=XivConfigSync.Core"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:XivConfigSync.App"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:vm="clr-namespace:XivConfigSync.Core.ViewModels;assembly=XivConfigSync.Core"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Window.Resources>
+        <local:TextToVisibilityConverter x:Key="TextToVisibility" />
+        <local:NotConverter x:Key="Not" />
+    </Window.Resources>
+    <DockPanel Margin="28,24">
+        <StackPanel DockPanel.Dock="Top">
+            <StackPanel Margin="0,0,0,8" Orientation="Horizontal">
+                <Image
+                    Height="36"
+                    Source="/Assets/XIVConfigSync.ico"
+                    Width="36" />
+                <TextBlock
+                    Margin="12,0,0,0"
+                    Style="{StaticResource PageTitle}"
+                    Text="{x:Static core:Strings.Setup_Title}"
+                    VerticalAlignment="Center" />
+            </StackPanel>
+        </StackPanel>
+
+        <StackPanel
+            DockPanel.Dock="Bottom"
+            HorizontalAlignment="Right"
+            Orientation="Horizontal">
+            <TextBlock
+                Margin="0,0,16,0"
+                Style="{StaticResource Muted}"
+                Text="{Binding Progress}"
+                VerticalAlignment="Center" />
+            <Button
+                AutomationProperties.AutomationId="SetupBack"
+                Command="{Binding BackCommand}"
+                Content="{x:Static core:Strings.Setup_Back}"
+                IsCancel="False"
+                IsEnabled="{Binding CanGoBack}" />
+            <Button
+                AutomationProperties.AutomationId="SetupNext"
+                Command="{Binding NextCommand}"
+                Content="{Binding NextText}"
+                IsDefault="True"
+                IsEnabled="{Binding Working, Converter={StaticResource Not}}"
+                Margin="0"
+                Style="{StaticResource PrimaryButton}" />
+        </StackPanel>
+
+        <Grid Margin="0,8,0,16">
+            <!--  Step 1: the sync folder  -->
+            <StackPanel Visibility="{Binding IsFolderStep, Converter={StaticResource BoolToVisibility}}">
+                <TextBlock Margin="0,0,0,12" Text="{x:Static core:Strings.Setup_Welcome}" />
+                <Border Style="{StaticResource Card}">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource SectionTitle}" Text="{x:Static core:Strings.Setup_ChooseFolder}" />
+                        <TextBlock
+                            Margin="0,0,0,10"
+                            Style="{StaticResource Muted}"
+                            Text="{x:Static core:Strings.Setup_FolderIntro}" />
+                        <DockPanel>
+                            <Button
+                                Command="{Binding BrowseFolderCommand}"
+                                Content="{x:Static core:Strings.Common_Browse}"
+                                DockPanel.Dock="Right"
+                                Margin="8,0,0,0" />
+                            <TextBox
+                                AutomationProperties.AutomationId="SetupFolder"
+                                AutomationProperties.Name="{x:Static core:Strings.Setup_ChooseFolder}"
+                                Text="{Binding Folder, UpdateSourceTrigger=PropertyChanged, Delay=400}" />
+                        </DockPanel>
+                        <TextBlock
+                            AutomationProperties.AutomationId="SetupFolderState"
+                            FontWeight="SemiBold"
+                            Margin="0,10,0,0"
+                            Text="{Binding FolderState}" />
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+
+            <!--  Step 2: this device  -->
+            <StackPanel Visibility="{Binding IsDeviceStep, Converter={StaticResource BoolToVisibility}}">
+                <Border Style="{StaticResource Card}">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource SectionTitle}" Text="{x:Static core:Strings.Setup_DeviceTitle}" />
+                        <StackPanel Visibility="{Binding JoinsExisting, Converter={StaticResource BoolToVisibility}}">
+                            <RadioButton
+                                Content="{x:Static core:Strings.Setup_NewDevice}"
+                                IsChecked="{Binding SetUpAgain, Converter={StaticResource Not}}"
+                                Margin="0,4" />
+                            <RadioButton
+                                Content="{x:Static core:Strings.Setup_AgainDevice}"
+                                IsChecked="{Binding SetUpAgain}"
+                                Margin="0,4" />
+                            <ComboBox
+                                AutomationProperties.Name="{x:Static core:Strings.Setup_AgainDevice}"
+                                DisplayMemberPath="Name"
+                                HorizontalAlignment="Left"
+                                IsEnabled="{Binding SetUpAgain}"
+                                ItemsSource="{Binding ExistingDevices}"
+                                Margin="24,4,0,10"
+                                SelectedItem="{Binding AgainAs}"
+                                Width="300" />
+                        </StackPanel>
+                        <TextBlock Margin="0,6,0,4" Text="{x:Static core:Strings.Setup_DeviceName}" />
+                        <TextBox
+                            AutomationProperties.AutomationId="SetupDeviceName"
+                            AutomationProperties.Name="{x:Static core:Strings.Setup_DeviceName}"
+                            HorizontalAlignment="Left"
+                            Text="{Binding DeviceName, UpdateSourceTrigger=PropertyChanged}"
+                            Width="300" />
+                        <TextBlock
+                            Margin="0,8,0,0"
+                            Style="{StaticResource Muted}"
+                            Text="{x:Static core:Strings.Setup_DeviceHint}" />
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+
+            <!--  Step 3: the folders on this device  -->
+            <StackPanel Visibility="{Binding IsFoldersStep, Converter={StaticResource BoolToVisibility}}">
+                <Border Style="{StaticResource Card}">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource SectionTitle}" Text="{x:Static core:Strings.Setup_FoldersTitle}" />
+                        <TextBlock
+                            Margin="0,0,0,10"
+                            Style="{StaticResource Muted}"
+                            Text="{x:Static core:Strings.Setup_FoldersIntro}" />
+                        <TextBlock Margin="0,0,0,4" Text="{x:Static core:Strings.Settings_GameFolder}" />
+                        <DockPanel Margin="0,0,0,2">
+                            <Button
+                                Command="{Binding BrowseGameFolderCommand}"
+                                Content="{x:Static core:Strings.Common_Browse}"
+                                DockPanel.Dock="Right"
+                                Margin="8,0,0,0" />
+                            <TextBox AutomationProperties.Name="{x:Static core:Strings.Settings_GameFolder}" Text="{Binding GameFolder, UpdateSourceTrigger=PropertyChanged}" />
+                        </DockPanel>
+                        <TextBlock
+                            Margin="0,0,0,10"
+                            Style="{StaticResource Muted}"
+                            Text="{Binding GameFolderState}" />
+                        <TextBlock Margin="0,0,0,4" Text="{x:Static core:Strings.Settings_PluginFolder}" />
+                        <DockPanel Margin="0,0,0,2">
+                            <Button
+                                Command="{Binding BrowsePluginFolderCommand}"
+                                Content="{x:Static core:Strings.Common_Browse}"
+                                DockPanel.Dock="Right"
+                                Margin="8,0,0,0" />
+                            <TextBox AutomationProperties.Name="{x:Static core:Strings.Settings_PluginFolder}" Text="{Binding PluginFolder, UpdateSourceTrigger=PropertyChanged}" />
+                        </DockPanel>
+                        <CheckBox
+                            Content="{x:Static core:Strings.Settings_BackUpPlugins}"
+                            IsChecked="{Binding BackUpPlugins}"
+                            Margin="0,4,0,10" />
+                        <TextBlock Margin="0,0,0,4" Text="{x:Static core:Strings.Settings_InstallFolder}" />
+                        <DockPanel Margin="0,0,0,2">
+                            <Button
+                                Command="{Binding BrowseInstallFolderCommand}"
+                                Content="{x:Static core:Strings.Common_Browse}"
+                                DockPanel.Dock="Right"
+                                Margin="8,0,0,0" />
+                            <TextBox AutomationProperties.Name="{x:Static core:Strings.Settings_InstallFolder}" Text="{Binding InstallFolder, UpdateSourceTrigger=PropertyChanged}" />
+                        </DockPanel>
+                        <TextBlock Style="{StaticResource Muted}" Text="{Binding GameVersionText}" />
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+
+            <!--  Step 4: options, asked once (X-08)  -->
+            <StackPanel Visibility="{Binding IsOptionsStep, Converter={StaticResource BoolToVisibility}}">
+                <Border Style="{StaticResource Card}">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource SectionTitle}" Text="{x:Static core:Strings.Setup_OptionsTitle}" />
+                        <TextBlock
+                            Margin="0,0,0,10"
+                            Style="{StaticResource Muted}"
+                            Text="{x:Static core:Strings.Setup_OptionsIntro}" />
+                        <CheckBox Content="{x:Static core:Strings.Settings_BackupOnGameExit}" IsChecked="{Binding BackupOnGameExit}" />
+                        <CheckBox Content="{x:Static core:Strings.Settings_AutoApply}" IsChecked="{Binding AutoApply}" />
+                        <CheckBox Content="{x:Static core:Strings.Settings_FileAssociation}" IsChecked="{Binding FileAssociation}" />
+                        <CheckBox Content="{x:Static core:Strings.Settings_Autostart}" IsChecked="{Binding Autostart}" />
+                        <TextBlock
+                            Margin="0,12,0,0"
+                            Style="{StaticResource Muted}"
+                            Text="{x:Static core:Strings.Setup_OptionsHint}" />
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </Grid>
+    </DockPanel>
+</Window>

@@ -92,6 +92,22 @@ public sealed class SyncEngine
     /// <summary>The game version on this device, if it can be read.</summary>
     public string? LocalGameVersion => GameFolders.ReadGameVersion(Settings.GameInstallFolder);
 
+    /// <summary>Saves the settings.</summary>
+    public void SaveSettings() => Settings.Save(local.SettingsPath);
+
+    /// <summary>Writes this device's display name into its part of the sync folder.</summary>
+    public void UpdateDeviceInfo()
+    {
+        var store = OpenStore();
+        var info = store.ListDevices().FirstOrDefault(d => d.DeviceId == Settings.DeviceId);
+        if (info is not null && info.DisplayName != Settings.DisplayName)
+        {
+            info.DisplayName = Settings.DisplayName;
+            info.LastSeen = DateTimeOffset.UtcNow;
+            store.WriteDeviceInfo(info);
+        }
+    }
+
     /// <summary>Replaces the rules and saves them.</summary>
     public void UpdateRules(RuleSet rules)
     {
@@ -243,9 +259,18 @@ public sealed class SyncEngine
             return CloudFileState.Unknown;
         }
 
+        // Reading the state costs about 11 ms per file (gate 3), so only the files this revision
+        // added are checked; the others were checked with an earlier revision.
         var folder = store.DeviceFolder(Settings.DeviceId);
+        var manifest = store.ReadRevision(Settings.DeviceId, head);
+        var earlier = new HashSet<string>(StringComparer.Ordinal);
+        if (manifest.Parent is not null && store.ListRevisions(Settings.DeviceId).Contains(manifest.Parent))
+        {
+            earlier.UnionWith(store.ReadRevision(Settings.DeviceId, manifest.Parent).AllFiles().Select(f => f.File.Hash));
+        }
+
         var paths = new List<string> { Path.Combine(folder, "HEAD"), Path.Combine(folder, "revisions", head + ".json") };
-        paths.AddRange(store.ReadRevision(Settings.DeviceId, head).AllFiles().Select(f => store.ObjectPath(Settings.DeviceId, f.File.Hash)).Distinct());
+        paths.AddRange(manifest.AllFiles().Select(f => f.File.Hash).Where(h => !earlier.Contains(h)).Distinct().Select(h => store.ObjectPath(Settings.DeviceId, h)));
         var states = paths.Select(cloud.GetState).ToList();
         if (states.Any(s => s == CloudFileState.Unknown))
         {
@@ -283,6 +308,55 @@ public sealed class SyncEngine
         return confirmed;
     }
 
+    /// <summary>
+    /// Finds other devices whose latest revision this device has not received yet, confirms the
+    /// intact ones, and returns their names and IDs.
+    /// </summary>
+    public IReadOnlyList<DeviceInfo> FindNewRevisions()
+    {
+        var store = OpenStore();
+        var fresh = new List<DeviceInfo>();
+        foreach (var device in store.ListDevices().Where(d => d.DeviceId != Settings.DeviceId))
+        {
+            var head = store.ReadHead(device.DeviceId);
+            if (head is not null && store.ReadReceived(Settings.DeviceId, device.DeviceId)?.RevisionId != head)
+            {
+                fresh.Add(device);
+            }
+        }
+
+        if (fresh.Count > 0)
+        {
+            ConfirmReceived();
+        }
+
+        return fresh;
+    }
+
+    /// <summary>
+    /// Applies from another device only what the rules allow without asking: files planned as
+    /// <see cref="PlanAction.Apply"/>. Returns how many were applied and how many wait for the user.
+    /// </summary>
+    public (int Applied, int Waiting) AutoApply(string sourceDeviceId)
+    {
+        var plan = Plan(sourceDeviceId, null);
+        // Offers are not counted: the game changes some of them on every login (V00), so a
+        // notification for them would come every time. They wait on the transfer page.
+        var waiting = plan.Items.Count(i => i.Action == PlanAction.Conflict && i.Rule == ApplyRule.Always);
+        if (plan.Refusals.Count > 0 || !plan.Items.Any(i => i.Selected))
+        {
+            return (0, waiting);
+        }
+
+        foreach (var item in plan.Items)
+        {
+            item.Selected = item.Action == PlanAction.Apply;
+        }
+
+        var result = Apply(plan);
+        return (result.Applied, waiting);
+    }
+
     /// <summary>Plans applying a revision of any device (the latest when <paramref name="revisionId"/> is null).</summary>
     public ApplyPlan Plan(string sourceDeviceId, string? revisionId)
     {
@@ -306,9 +380,12 @@ public sealed class SyncEngine
             plan.Refusals.Add("Refuse_Damaged");
         }
 
-        foreach (var item in plan.Items.Where(i => i.Root == Model.Roots.Plugins && Roots[Model.Roots.Plugins] is null))
+        // A root this device does not back up (plugins turned off, or no Dalamud) is not offered.
+        var unknownRoots = plan.Items.Select(i => i.Root).Distinct().Where(root => !Roots.TryGetValue(root, out var folder) || folder is null).ToList();
+        if (unknownRoots.Count > 0)
         {
-            item.Selected = false;
+            plan.Items.RemoveAll(i => unknownRoots.Contains(i.Root));
+            plan.Warnings.Add("Warn_PluginsOff");
         }
 
         return plan;
@@ -380,7 +457,25 @@ public sealed class SyncEngine
         using (TakeLock())
         {
             var applier = NewApplier(OpenStore());
+            var snapshot = applier.ListSnapshots().FirstOrDefault(s => s.SnapshotId == snapshotId)
+                ?? throw new RefusedException("Refuse_NoSnapshot");
             applier.Restore(snapshotId);
+
+            // The files are no longer in the state both devices shared: forget that state, so the
+            // next comparison offers them again for a decision instead of skipping them.
+            if (snapshot.SourceDeviceId is not null && snapshot.SourceDeviceId != Settings.DeviceId && SyncStore.IsDeviceId(snapshot.SourceDeviceId))
+            {
+                var bases = BaseTable.Load(local.BasePath(snapshot.SourceDeviceId));
+                foreach (var file in snapshot.Files)
+                {
+                    bases.Files.Remove(BaseTable.Key(file.Root, file.Path));
+                }
+
+                bases.Save(local.BasePath(snapshot.SourceDeviceId));
+            }
+
+            // An undone apply is not offered for undo again; the next "undo" takes the one before.
+            applier.DeleteSnapshot(snapshotId);
             log.Info(Correlation(), $"Snapshot {snapshotId} restored.");
         }
 

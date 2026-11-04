@@ -1,0 +1,794 @@
+﻿<Window
+    Background="{StaticResource WindowBrush}"
+    Foreground="{StaticResource TextBrush}"
+    Height="720"
+    Icon="/Assets/XIVConfigSync.ico"
+    MinHeight="540"
+    MinWidth="820"
+    Title="{x:Static core:Strings.App_Title}"
+    Width="1080"
+    WindowStartupLocation="CenterScreen"
+    d:DataContext="{d:DesignInstance Type=vm:MainViewModel}"
+    mc:Ignorable="d"
+    x:Class="XivConfigSync.App.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:core="clr-namespace:XivConfigSync.Core;assembly=XivConfigSync.Core"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:XivConfigSync.App"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:vm="clr-namespace:XivConfigSync.Core.ViewModels;assembly=XivConfigSync.Core"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Window.Resources>
+        <local:IndexToBoolConverter x:Key="IndexToBool" />
+        <local:IndexToVisibilityConverter x:Key="IndexToVisibility" />
+        <local:TextToVisibilityConverter x:Key="TextToVisibility" />
+        <local:NotConverter x:Key="Not" />
+    </Window.Resources>
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="220" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!--  Navigation  -->
+        <DockPanel Background="{StaticResource NavBrush}" Grid.RowSpan="2">
+            <StackPanel DockPanel.Dock="Top" Margin="0,20,0,16">
+                <StackPanel Margin="20,0,0,20" Orientation="Horizontal">
+                    <Image
+                        Height="32"
+                        Source="/Assets/XIVConfigSync.ico"
+                        Width="32" />
+                    <TextBlock
+                        FontSize="16"
+                        FontWeight="SemiBold"
+                        Foreground="White"
+                        Margin="10,0,0,0"
+                        Text="{x:Static core:Strings.App_Title}"
+                        VerticalAlignment="Center" />
+                </StackPanel>
+                <RadioButton
+                    AutomationProperties.AutomationId="NavOverview"
+                    Content="{x:Static core:Strings.Nav_Overview}"
+                    IsChecked="{Binding SelectedPage, Converter={StaticResource IndexToBool}, ConverterParameter=0}"
+                    Style="{StaticResource NavButton}" />
+                <RadioButton
+                    AutomationProperties.AutomationId="NavTransfer"
+                    Content="{x:Static core:Strings.Nav_Transfer}"
+                    IsChecked="{Binding SelectedPage, Converter={StaticResource IndexToBool}, ConverterParameter=1}"
+                    Style="{StaticResource NavButton}" />
+                <RadioButton
+                    AutomationProperties.AutomationId="NavRules"
+                    Content="{x:Static core:Strings.Nav_Rules}"
+                    IsChecked="{Binding SelectedPage, Converter={StaticResource IndexToBool}, ConverterParameter=2}"
+                    Style="{StaticResource NavButton}" />
+                <RadioButton
+                    AutomationProperties.AutomationId="NavSettings"
+                    Content="{x:Static core:Strings.Nav_Settings}"
+                    IsChecked="{Binding SelectedPage, Converter={StaticResource IndexToBool}, ConverterParameter=3}"
+                    Style="{StaticResource NavButton}" />
+                <RadioButton
+                    AutomationProperties.AutomationId="NavLog"
+                    Content="{x:Static core:Strings.Nav_Log}"
+                    IsChecked="{Binding SelectedPage, Converter={StaticResource IndexToBool}, ConverterParameter=4}"
+                    Style="{StaticResource NavButton}" />
+                <RadioButton
+                    AutomationProperties.AutomationId="NavAbout"
+                    Content="{x:Static core:Strings.Nav_About}"
+                    IsChecked="{Binding SelectedPage, Converter={StaticResource IndexToBool}, ConverterParameter=5}"
+                    Style="{StaticResource NavButton}" />
+            </StackPanel>
+            <TextBlock
+                DockPanel.Dock="Bottom"
+                FontSize="12"
+                Foreground="#8D9AB8"
+                Margin="20,0,20,16"
+                Text="{Binding GameStateText}"
+                VerticalAlignment="Bottom" />
+        </DockPanel>
+
+        <!--  Overview  -->
+        <ScrollViewer
+            Grid.Column="1"
+            Padding="28,24"
+            VerticalScrollBarVisibility="Auto"
+            Visibility="{Binding SelectedPage, Converter={StaticResource IndexToVisibility}, ConverterParameter=0}">
+            <StackPanel>
+                <TextBlock Style="{StaticResource PageTitle}" Text="{x:Static core:Strings.Nav_Overview}" />
+                <TextBlock
+                    Margin="0,0,0,16"
+                    Style="{StaticResource Muted}"
+                    Text="{x:Static core:Strings.Overview_Intro}" />
+                <Border Style="{StaticResource Notice}" Visibility="{Binding Notice, Converter={StaticResource TextToVisibility}}">
+                    <TextBlock Foreground="{StaticResource WarningBrush}" Text="{Binding Notice}" />
+                </Border>
+                <Border Style="{StaticResource Card}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <TextBlock
+                            Grid.ColumnSpan="2"
+                            Style="{StaticResource SectionTitle}"
+                            Text="{x:Static core:Strings.Overview_ThisDevice}" />
+                        <TextBlock
+                            Grid.Row="1"
+                            Style="{StaticResource Label}"
+                            Text="{x:Static core:Strings.Overview_DeviceName}" />
+                        <TextBlock
+                            FontWeight="SemiBold"
+                            Grid.Column="1"
+                            Grid.Row="1"
+                            Margin="0,0,0,6"
+                            Text="{Binding ThisDeviceName}" />
+                        <TextBlock
+                            Grid.Row="2"
+                            Style="{StaticResource Label}"
+                            Text="{x:Static core:Strings.Overview_LastBackup}" />
+                        <TextBlock
+                            Grid.Column="1"
+                            Grid.Row="2"
+                            Margin="0,0,0,6"
+                            Text="{Binding LastBackupText}" />
+                        <TextBlock
+                            Grid.Row="3"
+                            Style="{StaticResource Label}"
+                            Text="{x:Static core:Strings.Overview_Upload}" />
+                        <TextBlock
+                            Grid.Column="1"
+                            Grid.Row="3"
+                            Margin="0,0,0,6"
+                            Text="{Binding UploadText}" />
+                        <TextBlock
+                            Grid.Row="4"
+                            Style="{StaticResource Label}"
+                            Text="{x:Static core:Strings.Overview_Receipt}" />
+                        <TextBlock
+                            Grid.Column="1"
+                            Grid.Row="4"
+                            Margin="0,0,0,6"
+                            Text="{Binding ReceiptText}" />
+                        <TextBlock
+                            Grid.Row="5"
+                            Style="{StaticResource Label}"
+                            Text="{x:Static core:Strings.Overview_SyncFolder}" />
+                        <TextBlock
+                            Grid.Column="1"
+                            Grid.Row="5"
+                            Margin="0,0,0,6"
+                            Text="{Binding SyncFolderText}" />
+                        <StackPanel
+                            Grid.ColumnSpan="2"
+                            Grid.Row="6"
+                            Margin="0,10,0,0"
+                            Orientation="Horizontal">
+                            <Button
+                                AutomationProperties.AutomationId="BackupNow"
+                                Command="{Binding BackupNowCommand}"
+                                Content="{x:Static core:Strings.Overview_BackupNow}"
+                                IsEnabled="{Binding Busy, Converter={StaticResource Not}}"
+                                Style="{StaticResource PrimaryButton}" />
+                            <Button
+                                AutomationProperties.AutomationId="Refresh"
+                                Command="{Binding RefreshCommand}"
+                                Content="{x:Static core:Strings.Overview_Refresh}"
+                                IsEnabled="{Binding Busy, Converter={StaticResource Not}}" />
+                        </StackPanel>
+                    </Grid>
+                </Border>
+                <Border Style="{StaticResource Card}">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource SectionTitle}" Text="{x:Static core:Strings.Overview_Devices}" />
+                        <DataGrid
+                            AutomationProperties.AutomationId="Devices"
+                            AutomationProperties.Name="{x:Static core:Strings.Overview_Devices}"
+                            IsReadOnly="True"
+                            ItemsSource="{Binding Devices}">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn
+                                    Binding="{Binding Name}"
+                                    Header="{x:Static core:Strings.Col_Device}"
+                                    Width="2*" />
+                                <DataGridTextColumn
+                                    Binding="{Binding LastBackup}"
+                                    Header="{x:Static core:Strings.Overview_LastBackup}"
+                                    Width="1.3*" />
+                                <DataGridTextColumn
+                                    Binding="{Binding Receipt}"
+                                    Header="{x:Static core:Strings.Col_Receipt}"
+                                    Width="2*" />
+                                <DataGridTemplateColumn Width="140">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Button
+                                                Command="{Binding DataContext.ShowTransferCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                CommandParameter="{Binding}"
+                                                Content="{x:Static core:Strings.Overview_Open}"
+                                                Margin="0"
+                                                MinWidth="0"
+                                                Padding="10,3" />
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!--  Transfer  -->
+        <DockPanel
+            DataContext="{Binding Transfer}"
+            Grid.Column="1"
+            Margin="28,24"
+            Visibility="{Binding DataContext.SelectedPage, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource IndexToVisibility}, ConverterParameter=1}">
+            <StackPanel DockPanel.Dock="Top">
+                <TextBlock Style="{StaticResource PageTitle}" Text="{x:Static core:Strings.Transfer_Title}" />
+                <TextBlock
+                    Margin="0,0,0,14"
+                    Style="{StaticResource Muted}"
+                    Text="{x:Static core:Strings.Transfer_Intro}" />
+                <WrapPanel Margin="0,0,0,10">
+                    <TextBlock Style="{StaticResource Label}" Text="{x:Static core:Strings.Transfer_Source}" />
+                    <ComboBox
+                        AutomationProperties.AutomationId="Source"
+                        AutomationProperties.Name="{x:Static core:Strings.Transfer_Source}"
+                        DisplayMemberPath="Name"
+                        ItemsSource="{Binding Sources}"
+                        Margin="0,0,16,6"
+                        MinWidth="220"
+                        SelectedItem="{Binding Source}" />
+                    <TextBlock Style="{StaticResource Label}" Text="{x:Static core:Strings.Transfer_Revision}" />
+                    <ComboBox
+                        AutomationProperties.AutomationId="Revision"
+                        AutomationProperties.Name="{x:Static core:Strings.Transfer_Revision}"
+                        DisplayMemberPath="Label"
+                        ItemsSource="{Binding Revisions}"
+                        Margin="0,0,16,6"
+                        MinWidth="260"
+                        SelectedItem="{Binding Revision}" />
+                    <Button
+                        AutomationProperties.AutomationId="Compare"
+                        Command="{Binding CompareCommand}"
+                        Content="{x:Static core:Strings.Transfer_Compare}"
+                        Margin="0,0,8,6"
+                        Style="{StaticResource PrimaryButton}" />
+                </WrapPanel>
+                <Border Style="{StaticResource Notice}" Visibility="{Binding Messages, Converter={StaticResource TextToVisibility}}">
+                    <TextBlock Foreground="{StaticResource WarningBrush}" Text="{Binding Messages}" />
+                </Border>
+            </StackPanel>
+            <StackPanel
+                DockPanel.Dock="Bottom"
+                Margin="0,10,0,0"
+                Orientation="Vertical">
+                <TextBlock
+                    Margin="0,0,0,8"
+                    Style="{StaticResource Muted}"
+                    Text="{Binding Summary}" />
+                <WrapPanel>
+                    <Button
+                        AutomationProperties.AutomationId="Apply"
+                        Command="{Binding ApplyCommand}"
+                        Content="{x:Static core:Strings.Transfer_Apply}"
+                        IsEnabled="{Binding HasPlan}"
+                        Margin="0,0,8,6"
+                        Style="{StaticResource PrimaryButton}" />
+                    <Button
+                        AutomationProperties.AutomationId="AllConflicts"
+                        Command="{Binding SelectAllConflictsCommand}"
+                        Content="{x:Static core:Strings.Transfer_AllConflicts}"
+                        IsEnabled="{Binding HasPlan}"
+                        Margin="0,0,8,6" />
+                    <Button
+                        Command="{Binding SelectNoneCommand}"
+                        Content="{x:Static core:Strings.Transfer_SelectNone}"
+                        IsEnabled="{Binding HasPlan}"
+                        Margin="0,0,8,6" />
+                    <Button
+                        AutomationProperties.AutomationId="Undo"
+                        Command="{Binding UndoLastCommand}"
+                        Content="{x:Static core:Strings.Transfer_Undo}"
+                        Margin="0,0,8,6" />
+                    <CheckBox
+                        Content="{x:Static core:Strings.Transfer_ShowSkipped}"
+                        IsChecked="{Binding ShowSkipped}"
+                        Margin="8,0,0,6"
+                        VerticalAlignment="Center" />
+                </WrapPanel>
+            </StackPanel>
+            <DataGrid
+                AutomationProperties.AutomationId="PlanRows"
+                AutomationProperties.Name="{x:Static core:Strings.Transfer_Title}"
+                ItemsSource="{Binding Rows}">
+                <DataGrid.Columns>
+                    <DataGridTemplateColumn Header="{x:Static core:Strings.Col_Take}" Width="Auto">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <CheckBox
+                                    AutomationProperties.Name="{Binding DisplayPath}"
+                                    HorizontalAlignment="Center"
+                                    IsChecked="{Binding IsSelected, UpdateSourceTrigger=PropertyChanged}"
+                                    IsEnabled="{Binding Selectable}" />
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    <DataGridTextColumn
+                        Binding="{Binding DisplayPath}"
+                        Header="{x:Static core:Strings.Col_File}"
+                        IsReadOnly="True"
+                        Width="2.2*" />
+                    <DataGridTextColumn
+                        Binding="{Binding Root}"
+                        Header="{x:Static core:Strings.Col_Area}"
+                        IsReadOnly="True"
+                        Width="0.8*" />
+                    <DataGridTextColumn
+                        Binding="{Binding ActionText}"
+                        Header="{x:Static core:Strings.Col_Action}"
+                        IsReadOnly="True"
+                        Width="Auto" />
+                    <DataGridTextColumn
+                        Binding="{Binding ReasonText}"
+                        Header="{x:Static core:Strings.Col_Reason}"
+                        IsReadOnly="True"
+                        Width="2*">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="TextWrapping" Value="Wrap" />
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
+                    <DataGridTextColumn
+                        Binding="{Binding RuleText}"
+                        Header="{x:Static core:Strings.Col_Rule}"
+                        IsReadOnly="True"
+                        Width="Auto" />
+                    <DataGridTextColumn
+                        Binding="{Binding Warnings}"
+                        Header="{x:Static core:Strings.Col_Notes}"
+                        IsReadOnly="True"
+                        Width="1.6*">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="TextWrapping" Value="Wrap" />
+                                <Setter Property="Foreground" Value="{StaticResource WarningBrush}" />
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
+                </DataGrid.Columns>
+            </DataGrid>
+        </DockPanel>
+
+        <!--  Rules  -->
+        <DockPanel
+            DataContext="{Binding Rules}"
+            Grid.Column="1"
+            Margin="28,24"
+            Visibility="{Binding DataContext.SelectedPage, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource IndexToVisibility}, ConverterParameter=2}">
+            <StackPanel DockPanel.Dock="Top">
+                <TextBlock Style="{StaticResource PageTitle}" Text="{x:Static core:Strings.Rules_Title}" />
+                <TextBlock
+                    Margin="0,0,0,14"
+                    Style="{StaticResource Muted}"
+                    Text="{x:Static core:Strings.Rules_Intro}" />
+            </StackPanel>
+            <Border DockPanel.Dock="Bottom" Style="{StaticResource Card}">
+                <StackPanel>
+                    <TextBlock Style="{StaticResource SectionTitle}" Text="{x:Static core:Strings.Rules_Exclusions}" />
+                    <TextBlock
+                        Margin="0,0,0,8"
+                        Style="{StaticResource Muted}"
+                        Text="{x:Static core:Strings.Rules_ExclusionsIntro}" />
+                    <ItemsControl ItemsSource="{Binding Exclusions}" Margin="0,0,0,8">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Margin="0,2" Orientation="Horizontal">
+                                    <TextBlock
+                                        Text="{Binding RootText}"
+                                        VerticalAlignment="Center"
+                                        Width="80" />
+                                    <TextBlock
+                                        FontFamily="Consolas"
+                                        MinWidth="240"
+                                        Text="{Binding Pattern}"
+                                        VerticalAlignment="Center" />
+                                    <Button
+                                        Command="{Binding DataContext.RemoveExclusionCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                        CommandParameter="{Binding}"
+                                        Content="{x:Static core:Strings.Rules_Remove}"
+                                        Padding="8,2" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <WrapPanel>
+                        <ComboBox
+                            AutomationProperties.Name="{x:Static core:Strings.Col_Area}"
+                            ItemsSource="{Binding RootChoices}"
+                            Margin="0,0,8,0"
+                            SelectedIndex="{Binding NewExclusionRoot}"
+                            Width="110" />
+                        <TextBox
+                            AutomationProperties.Name="{x:Static core:Strings.Rules_PatternHint}"
+                            FontFamily="Consolas"
+                            Margin="0,0,8,0"
+                            Text="{Binding NewExclusionPattern, UpdateSourceTrigger=PropertyChanged}"
+                            ToolTip="{x:Static core:Strings.Rules_PatternHint}"
+                            Width="280" />
+                        <Button Command="{Binding AddExclusionCommand}" Content="{x:Static core:Strings.Rules_Add}" />
+                    </WrapPanel>
+                </StackPanel>
+            </Border>
+            <StackPanel
+                DockPanel.Dock="Bottom"
+                Margin="0,0,0,10"
+                Orientation="Horizontal">
+                <Button
+                    Command="{Binding ResetAllCommand}"
+                    Content="{x:Static core:Strings.Rules_Reset}"
+                    Margin="0,10,0,0" />
+            </StackPanel>
+            <DataGrid
+                AutomationProperties.AutomationId="RuleRows"
+                AutomationProperties.Name="{x:Static core:Strings.Rules_Title}"
+                ItemsSource="{Binding Rows}">
+                <DataGrid.Columns>
+                    <DataGridTextColumn
+                        Binding="{Binding Root}"
+                        Header="{x:Static core:Strings.Col_Area}"
+                        IsReadOnly="True"
+                        Width="0.7*" />
+                    <DataGridTextColumn
+                        Binding="{Binding Pattern}"
+                        Header="{x:Static core:Strings.Col_File}"
+                        IsReadOnly="True"
+                        Width="1.4*" />
+                    <DataGridTextColumn
+                        Binding="{Binding Note}"
+                        Header="{x:Static core:Strings.Col_Notes}"
+                        IsReadOnly="True"
+                        Width="2.4*">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="TextWrapping" Value="Wrap" />
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
+                    <DataGridTextColumn
+                        Binding="{Binding EvidenceText}"
+                        Header="{x:Static core:Strings.Col_Evidence}"
+                        IsReadOnly="True"
+                        Width="Auto" />
+                    <DataGridTextColumn
+                        Binding="{Binding DefaultText}"
+                        Header="{x:Static core:Strings.Col_Default}"
+                        IsReadOnly="True"
+                        Width="Auto" />
+                    <DataGridTemplateColumn Header="{x:Static core:Strings.Col_Rule}" Width="170">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <ComboBox
+                                    AutomationProperties.Name="{Binding Pattern}"
+                                    DisplayMemberPath="Name"
+                                    ItemsSource="{Binding DataContext.RuleChoices, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                    SelectedItem="{Binding Choice, UpdateSourceTrigger=PropertyChanged}" />
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                </DataGrid.Columns>
+            </DataGrid>
+        </DockPanel>
+
+        <!--  Settings  -->
+        <ScrollViewer
+            DataContext="{Binding Settings}"
+            Grid.Column="1"
+            Padding="28,24"
+            VerticalScrollBarVisibility="Auto"
+            Visibility="{Binding DataContext.SelectedPage, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource IndexToVisibility}, ConverterParameter=3}">
+            <StackPanel>
+                <TextBlock Style="{StaticResource PageTitle}" Text="{x:Static core:Strings.Settings_Title}" />
+                <Border Style="{StaticResource Card}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <TextBlock
+                            Grid.ColumnSpan="3"
+                            Style="{StaticResource SectionTitle}"
+                            Text="{x:Static core:Strings.Settings_Device}" />
+                        <TextBlock
+                            Grid.Row="1"
+                            Style="{StaticResource Label}"
+                            Text="{x:Static core:Strings.Settings_DeviceName}" />
+                        <TextBox
+                            AutomationProperties.AutomationId="DeviceName"
+                            AutomationProperties.Name="{x:Static core:Strings.Settings_DeviceName}"
+                            Grid.Column="1"
+                            Grid.Row="1"
+                            Margin="0,0,0,6"
+                            Text="{Binding DeviceName, UpdateSourceTrigger=PropertyChanged}" />
+                        <TextBlock
+                            Grid.Row="2"
+                            Style="{StaticResource Label}"
+                            Text="{x:Static core:Strings.Settings_SyncFolder}" />
+                        <TextBlock
+                            Grid.Column="1"
+                            Grid.Row="2"
+                            Margin="0,0,8,6"
+                            Text="{Binding SyncFolder}"
+                            VerticalAlignment="Center" />
+                        <Button
+                            Command="{Binding OpenSyncFolderCommand}"
+                            Content="{x:Static core:Strings.Settings_OpenFolder}"
+                            Grid.Column="2"
+                            Grid.Row="2"
+                            Margin="0,0,0,6" />
+                        <Button
+                            Command="{Binding ChangeSyncFolderCommand}"
+                            Content="{x:Static core:Strings.Settings_ChangeFolder}"
+                            Grid.Column="1"
+                            Grid.Row="3"
+                            HorizontalAlignment="Left"
+                            Margin="0,6,0,0" />
+                    </Grid>
+                </Border>
+                <Border Style="{StaticResource Card}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <TextBlock
+                            Grid.ColumnSpan="3"
+                            Style="{StaticResource SectionTitle}"
+                            Text="{x:Static core:Strings.Settings_Folders}" />
+                        <TextBlock
+                            Grid.Row="1"
+                            Style="{StaticResource Label}"
+                            Text="{x:Static core:Strings.Settings_GameFolder}" />
+                        <TextBox
+                            AutomationProperties.Name="{x:Static core:Strings.Settings_GameFolder}"
+                            Grid.Column="1"
+                            Grid.Row="1"
+                            Margin="0,0,8,6"
+                            Text="{Binding GameFolder, UpdateSourceTrigger=PropertyChanged}" />
+                        <Button
+                            Command="{Binding BrowseGameFolderCommand}"
+                            Content="{x:Static core:Strings.Common_Browse}"
+                            Grid.Column="2"
+                            Grid.Row="1"
+                            Margin="0,0,0,6" />
+                        <TextBlock
+                            Grid.Row="2"
+                            Style="{StaticResource Label}"
+                            Text="{x:Static core:Strings.Settings_PluginFolder}" />
+                        <TextBox
+                            AutomationProperties.Name="{x:Static core:Strings.Settings_PluginFolder}"
+                            Grid.Column="1"
+                            Grid.Row="2"
+                            Margin="0,0,8,6"
+                            Text="{Binding PluginFolder, UpdateSourceTrigger=PropertyChanged}" />
+                        <Button
+                            Command="{Binding BrowsePluginFolderCommand}"
+                            Content="{x:Static core:Strings.Common_Browse}"
+                            Grid.Column="2"
+                            Grid.Row="2"
+                            Margin="0,0,0,6" />
+                        <CheckBox
+                            Content="{x:Static core:Strings.Settings_BackUpPlugins}"
+                            Grid.Column="1"
+                            Grid.Row="3"
+                            IsChecked="{Binding BackUpPlugins}" />
+                        <TextBlock
+                            Grid.Row="4"
+                            Style="{StaticResource Label}"
+                            Text="{x:Static core:Strings.Settings_InstallFolder}" />
+                        <TextBox
+                            AutomationProperties.Name="{x:Static core:Strings.Settings_InstallFolder}"
+                            Grid.Column="1"
+                            Grid.Row="4"
+                            Margin="0,0,8,6"
+                            Text="{Binding InstallFolder, UpdateSourceTrigger=PropertyChanged}" />
+                        <Button
+                            Command="{Binding BrowseInstallFolderCommand}"
+                            Content="{x:Static core:Strings.Common_Browse}"
+                            Grid.Column="2"
+                            Grid.Row="4"
+                            Margin="0,0,0,6" />
+                        <TextBlock
+                            Grid.Row="5"
+                            Style="{StaticResource Label}"
+                            Text="{x:Static core:Strings.Settings_GameVersion}" />
+                        <TextBlock
+                            Grid.Column="1"
+                            Grid.Row="5"
+                            Margin="0,0,0,6"
+                            Text="{Binding GameVersion}" />
+                        <Button
+                            Command="{Binding DetectFoldersCommand}"
+                            Content="{x:Static core:Strings.Settings_Detect}"
+                            Grid.Column="1"
+                            Grid.Row="6"
+                            HorizontalAlignment="Left"
+                            Margin="0,6,0,0" />
+                    </Grid>
+                </Border>
+                <Border Style="{StaticResource Card}">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource SectionTitle}" Text="{x:Static core:Strings.Settings_Characters}" />
+                        <TextBlock
+                            Margin="0,0,0,8"
+                            Style="{StaticResource Muted}"
+                            Text="{x:Static core:Strings.Settings_CharactersIntro}" />
+                        <ItemsControl ItemsSource="{Binding Characters}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Margin="0,2" Orientation="Horizontal">
+                                        <TextBlock
+                                            Style="{StaticResource Muted}"
+                                            Text="{Binding Label}"
+                                            VerticalAlignment="Center"
+                                            Width="110" />
+                                        <TextBox
+                                            AutomationProperties.Name="{Binding Label}"
+                                            Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}"
+                                            Width="260" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource Card}">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource SectionTitle}" Text="{x:Static core:Strings.Settings_Behaviour}" />
+                        <CheckBox Content="{x:Static core:Strings.Settings_BackupOnGameExit}" IsChecked="{Binding BackupOnGameExit}" />
+                        <CheckBox Content="{x:Static core:Strings.Settings_AutoApply}" IsChecked="{Binding AutoApply}" />
+                        <CheckBox Content="{x:Static core:Strings.Settings_Autostart}" IsChecked="{Binding Autostart}" />
+                        <CheckBox Content="{x:Static core:Strings.Settings_FileAssociation}" IsChecked="{Binding FileAssociation}" />
+                        <CheckBox Content="{x:Static core:Strings.Settings_MinimizeOnClose}" IsChecked="{Binding MinimizeOnClose}" />
+                        <StackPanel Margin="0,10,0,0" Orientation="Horizontal">
+                            <TextBlock Style="{StaticResource Label}" Text="{x:Static core:Strings.Settings_Language}" />
+                            <ComboBox
+                                AutomationProperties.Name="{x:Static core:Strings.Settings_Language}"
+                                DisplayMemberPath="Name"
+                                ItemsSource="{Binding Languages}"
+                                MinWidth="160"
+                                SelectedItem="{Binding Language}" />
+                        </StackPanel>
+                        <StackPanel Margin="0,10,0,0" Orientation="Horizontal">
+                            <TextBlock Style="{StaticResource Label}" Text="{x:Static core:Strings.Settings_KeepRevisions}" />
+                            <TextBox
+                                AutomationProperties.Name="{x:Static core:Strings.Settings_KeepRevisions}"
+                                Text="{Binding KeepRevisions, UpdateSourceTrigger=PropertyChanged}"
+                                Width="70" />
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+                <StackPanel Orientation="Horizontal">
+                    <Button
+                        AutomationProperties.AutomationId="SaveSettings"
+                        Command="{Binding SaveCommand}"
+                        Content="{x:Static core:Strings.Settings_Save}"
+                        Style="{StaticResource PrimaryButton}" />
+                </StackPanel>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!--  Log  -->
+        <DockPanel
+            DataContext="{Binding LogPage}"
+            Grid.Column="1"
+            Margin="28,24"
+            Visibility="{Binding DataContext.SelectedPage, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource IndexToVisibility}, ConverterParameter=4}">
+            <StackPanel DockPanel.Dock="Top">
+                <TextBlock Style="{StaticResource PageTitle}" Text="{x:Static core:Strings.Nav_Log}" />
+                <Button
+                    Command="{Binding OpenFolderCommand}"
+                    Content="{x:Static core:Strings.Log_OpenFolder}"
+                    HorizontalAlignment="Left"
+                    Margin="0,0,0,12" />
+            </StackPanel>
+            <DataGrid
+                AutomationProperties.AutomationId="LogRows"
+                AutomationProperties.Name="{x:Static core:Strings.Nav_Log}"
+                IsReadOnly="True"
+                ItemsSource="{Binding Rows}">
+                <DataGrid.Columns>
+                    <DataGridTextColumn
+                        Binding="{Binding Time}"
+                        Header="{x:Static core:Strings.Col_Time}"
+                        Width="Auto" />
+                    <DataGridTextColumn
+                        Binding="{Binding Level}"
+                        Header="{x:Static core:Strings.Col_Level}"
+                        Width="Auto" />
+                    <DataGridTextColumn
+                        Binding="{Binding Message}"
+                        Header="{x:Static core:Strings.Col_Message}"
+                        Width="*">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="TextWrapping" Value="Wrap" />
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
+                </DataGrid.Columns>
+            </DataGrid>
+        </DockPanel>
+
+        <!--  About  -->
+        <ScrollViewer
+            Grid.Column="1"
+            Padding="28,24"
+            VerticalScrollBarVisibility="Auto"
+            Visibility="{Binding SelectedPage, Converter={StaticResource IndexToVisibility}, ConverterParameter=5}">
+            <StackPanel HorizontalAlignment="Left" MaxWidth="760">
+                <TextBlock Style="{StaticResource PageTitle}" Text="{x:Static core:Strings.Nav_About}" />
+                <TextBlock Margin="0,0,0,12" Text="{Binding Settings.Version, StringFormat='XIV ConfigSync {0}'}" />
+                <TextBlock Margin="0,0,0,12" Text="{x:Static core:Strings.About_Text}" />
+                <TextBlock Style="{StaticResource Muted}" Text="{x:Static core:Strings.About_Disclaimer}" />
+            </StackPanel>
+        </ScrollViewer>
+
+        <!--  Status  -->
+        <Border
+            Background="{StaticResource CardBrush}"
+            BorderBrush="{StaticResource BorderBrush}"
+            BorderThickness="0,1,0,0"
+            Grid.Column="1"
+            Grid.Row="1"
+            Padding="28,6">
+            <DockPanel>
+                <ProgressBar
+                    DockPanel.Dock="Right"
+                    Height="6"
+                    IsIndeterminate="True"
+                    Margin="12,0,0,0"
+                    Visibility="{Binding Busy, Converter={StaticResource BoolToVisibility}}"
+                    Width="120" />
+                <TextBlock
+                    AutomationProperties.AutomationId="Status"
+                    AutomationProperties.LiveSetting="Polite"
+                    Style="{StaticResource Muted}"
+                    Text="{Binding StatusText}"
+                    TextTrimming="CharacterEllipsis"
+                    TextWrapping="NoWrap" />
+            </DockPanel>
+        </Border>
+    </Grid>
+</Window>

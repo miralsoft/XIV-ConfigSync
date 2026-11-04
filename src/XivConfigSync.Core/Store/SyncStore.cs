@@ -57,6 +57,12 @@ public sealed partial class SyncStore
     /// <summary>Tells what a chosen folder is, without changing anything.</summary>
     public static FolderKind Inspect(string folder)
     {
+        if (File.Exists(folder))
+        {
+            // A file is never a folder; FolderOf turns a sync file into its folder first.
+            return FolderKind.Invalid;
+        }
+
         if (!Directory.Exists(folder))
         {
             return FolderKind.Empty;
