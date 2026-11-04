@@ -29,8 +29,6 @@
 
 - Whether a personal OneDrive reports the same states as OneDrive for Business, where it was
   measured.
-- Whether the owner wants to sync through the work OneDrive at all. Tests run in its `Games`
-  folder with the owner's consent.
 
 ## Tooling
 
