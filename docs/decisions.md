@@ -93,3 +93,9 @@ Append-only. Never edit or delete past entries; a later entry may supersede an e
   runs that catch every failure clearly. Rejected: a process per file from the start, which would
   load the analyzer eleven times on every run; letting the analyzer step only warn in CI, which
   would give up the check there.
+- (2026-11-04) Rule X-09: no material from the game in the product or the repository, and no
+  "FINAL FANTASY" in the product name. Rationale: Square Enix's materials usage policy for the game
+  covers the non-commercial use of its texts, images, video and music and does not mention
+  software, so a tool that uses none of them stays outside it; the disclaimer in the README stays.
+  The name "XIV ConfigSync" is kept for now; none of the terms read forbids it, and whether the
+  owner wants a neutral name before the first release is decided in gate 2.

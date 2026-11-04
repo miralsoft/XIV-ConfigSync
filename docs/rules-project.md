@@ -22,3 +22,6 @@ Rules that only add to or tighten the global rules.
   committed.
 - **X-08** Features that run on their own (autostart, background sync, update checks) ship off or
   ask once.
+- **X-09** Neither the product nor this repository contains material from the game: no logos,
+  icons, artwork, screenshots, music or game text. "FINAL FANTASY" is not part of the product's
+  name.

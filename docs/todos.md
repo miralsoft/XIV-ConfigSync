@@ -13,4 +13,4 @@
 - [ ] Cross test V03 (prepared only after V00 to V02, needs explicit consent)
 - [x] Cloud-state recorder and OneDrive single-device test in a separate folder
 - [ ] OneDrive offline test and two-device conflict test
-- [ ] Feasibility report and framework decision
+- [ ] Feasibility report and framework decision (draft written; waits for the experiments)
