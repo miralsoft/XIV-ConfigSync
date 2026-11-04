@@ -159,3 +159,13 @@ Append-only. Never edit or delete past entries; a later entry may supersede an e
   automatically; the game version must match for an apply; a portable executable in 0.1 and a
   per-user installer in 0.3. Open for the owner: credentials in backed-up files
   (`specification.md` 6.1) and whether applying plugin settings ships in 0.1 (6.2).
+- (2026-11-04) One sync folder for all devices, as the owner asked: the user chooses a single
+  folder on every device, and the application recognises it by a marker file (`store.json`),
+  lists the devices already in it and creates the part for a new device by itself, or takes over
+  an existing device's part when a device is set up again. The user never chooses a folder per
+  device. The per-device parts inside it stay, because they keep every file written by one device
+  only. Rejected: a configuration file in the sync folder that lists the devices and is updated by
+  each of them, which OneDrive would turn into conflict copies when two devices write it; the list
+  is read from each device's own `device.json` instead. Also confirmed by the owner: everything is
+  backed up, device settings included, so that a finer choice of what to apply can come later
+  without a new backup.

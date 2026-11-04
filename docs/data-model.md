@@ -7,8 +7,8 @@ byte-order mark. Times are UTC in ISO 8601. Hashes are lower-case hexadecimal SH
 ## 1. Shared folder
 
 ```
-<chosen folder>\XIV ConfigSync\
-  store.json                          created once; schema of the layout
+<sync folder chosen by the user>\
+  store.json                          marks the folder; written once
   devices\
     <deviceId>\
       device.json                     display name, created, last seen
@@ -24,8 +24,12 @@ hex digits of the hash, to keep folders small.
 ### store.json
 
 ```json
-{ "schema": 1, "created": "2026-11-04T20:00:00Z" }
+{ "schema": 1, "kind": "xiv-configsync-store", "created": "2026-11-04T20:00:00Z", "createdBy": "3f2a..." }
 ```
+
+Marks the folder as a sync folder of this application. Written once by the first device, never
+changed afterwards. The device list is not kept here but read from `devices\*\device.json`, so no
+file in the folder is written by more than one device.
 
 ### device.json
 

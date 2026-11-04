@@ -39,8 +39,13 @@ All confirmed in gate 1 unless marked otherwise; details in `file-matrix.md`.
 
 ## 3. Core concept: back up everything, apply by rule
 
-- **Back up.** Each device records the whole state of its configuration folders as a revision in
-  its own folder inside the shared folder. Only the files whose content changed are uploaded
+- **One sync folder.** The user chooses a single folder for all devices. On a further device the
+  user chooses the same folder; the application recognises it, lists the devices already in it and
+  creates this device's part by itself (`architecture.md`, "Setting up a device"). The user never
+  chooses a folder per device.
+- **Back up.** Each device records the whole state of its configuration folders, device settings
+  included, as a revision in its own part of the sync folder. Configuration means everything
+  except caches, logs and lock files, which are left out by default and can be included. Only the files whose content changed are uploaded
   again. Every file is stored whole; nothing inside a file is changed or picked apart (rule X-03).
 - **Apply.** A revision, from another device or an older one of the same device, is applied file
   by file according to the file's rule:
@@ -54,6 +59,11 @@ All confirmed in gate 1 unless marked otherwise; details in `file-matrix.md`.
 - The user can change any rule, per file pattern, per character and per plugin. Changing a
   "never" rule shows a warning that names what the file holds.
 - A file the matrix does not know is backed up and gets "on request".
+- Because everything is backed up, a finer choice can come later without a new backup format: for
+  the plain text files (`FFXIV.cfg`, `COMMON.DAT`, `CONTROL0.DAT`, `CONTROL1.DAT`) single settings
+  can be picked, as planned for `FFXIV.cfg` in 0.2. Picking single entries inside a binary file
+  (one hotbar, one macro) needs a verified description of that file's format first (X-03) and is
+  not planned before one exists.
 
 ## 4. Requirements
 
@@ -66,7 +76,7 @@ specification makes of it and in which release. "0.1" is the first public releas
 |---|---|---|
 | FR-001 | Main window with the status of the game (running or not), the shared folder, the last backup, the last apply, warnings and conflicts. Compact view first; an extended view later | 0.1 |
 | FR-002 | Run now, pause and history; in 0.1 for the one sync job, later per job | 0.1 / 0.2 |
-| FR-003 | First-start wizard: choose the shared folder, name the device, confirm the folders found, choose the first backup. Job templates for local and USB targets | 0.1 / 0.2 |
+| FR-003 | First-start wizard: choose the one sync folder (new or existing), name the device or recognise it as a device set up again, confirm the folders found, run the first backup. Job templates for local and USB targets | 0.1 / 0.2 |
 | FR-004 | Tray icon; closing the window minimises or quits, asked once and remembered | 0.1 |
 | FR-005 | Start with Windows (off by default, asked once, rule X-08); a headless command line mode | 0.1 (autostart), 0.3 (Task Scheduler, headless) |
 | FR-006 | Notifications for errors, conflicts and a missing shared folder; success optional | 0.1 |

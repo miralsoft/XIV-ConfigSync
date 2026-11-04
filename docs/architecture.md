@@ -7,8 +7,8 @@ formats are in `data-model.md`.
 ## Overview
 
 ```
- Game and plugin folders           Shared folder (OneDrive)
- on this device                    <root>\XIV ConfigSync\
+ Game and plugin folders           Sync folder (OneDrive), chosen once
+ on this device                    store.json
  +-------------------+  back up    +-------------------------------+
  | FFXIV config      | ----------> | devices\<this device>\        |  written only by this device
  | pluginConfigs     |             |   objects, revisions, HEAD    |
@@ -56,6 +56,31 @@ Rules (matrix, user rules), Planner (apply plan and conflicts), Applier (snapsho
 replace, undo), State (upload and receipt status), Settings.
 
 ## Flows
+
+### Setting up a device
+
+The user chooses one folder, the sync folder, and nothing else. Everything inside it is managed
+by the application; the user never picks a device folder.
+
+1. **First device:** the user chooses or creates a folder, for example `OneDrive\FFXIV Sync`. The
+   application writes `store.json` there, which marks the folder as a sync folder of this
+   application, then creates its own device folder and makes the first backup.
+2. **Every further device:** the user chooses the same folder. The application finds
+   `store.json`, lists the devices it finds below `devices\` with their display names and last
+   backups, and asks one question: is this a new device, or one of the listed devices set up
+   again (for example after Windows was reinstalled)?
+   - New device: the application creates its device folder, backs up this device first, then
+     shows the preview of what the other devices offer (FR-045).
+   - Set up again: the application takes over that device's identity and folder, backs up the
+     current state as a new revision of it, and offers to restore an older one.
+3. A folder that holds files but no `store.json` is refused, so the application never writes into
+   an unrelated folder.
+
+No file in the sync folder lists the devices. The device list is the set of `device.json` files,
+each written by its own device. A single list that every device updates would be written by two
+devices at the same time sooner or later, and OneDrive would answer with a conflict copy; this is
+the problem the layout exists to avoid. `store.json` is written once, by the first device, and
+never changed.
 
 ### Back up
 
