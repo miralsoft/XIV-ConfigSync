@@ -12,11 +12,9 @@
 - Which files the game rewrites on every start even when nothing changed (V00).
 - When the game writes: at logout, at exit, or continuously.
 - The game keeps a `.old` copy next to several files. Whether a sync must carry it or leave it.
-- `FFXIV.cfg` mixes device settings (display, graphics, adapter, game pad GUIDs, screenshot
-  folder) with settings a player may want everywhere (sound, mouse, camera, cut scenes, game pad
-  buttons, accessibility). Open for gate 2: treat the whole file as device-specific in 0.1, or sync
-  an allow-list of keys. The file is text, so an allow-list is not field editing of a binary file,
-  but it does mean writing into a file the game owns.
+- In which release the advanced mode for `FFXIV.cfg` comes (compare key by key, show the
+  differences, let the user pick keys to take over); see `decisions.md`. Until then the file is
+  device-specific as a whole.
 
 ## Plugins
 

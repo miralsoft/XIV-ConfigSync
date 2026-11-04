@@ -65,9 +65,13 @@ and a 16:9 screen, a `FFXIV.cfg` taken over from a 16:10 device kept the first d
 name, resolution and graphics quality after play (confirmed). The file must therefore never be
 sent as a whole; the game will not repair it.
 
-Whether 0.1 treats `FFXIV.cfg` as Device as a whole, or syncs an allow-list of keys, is open
-(see `open-points.md`). It is a text file of key and tab and value, so an allow-list does not
-mean editing a binary file by field position.
+`UiHighScale` is confirmed device-specific: the owner had to set it by hand on the 16:9 device to
+make the game playable.
+
+The file is Device as a whole. An advanced mode, off by default, may later show the key-by-key
+differences to the other device and take over single keys the user picks (see `decisions.md`). It
+is a text file of key and tab and value, so this does not mean editing a binary file by field
+position.
 
 ## Launcher and plugin folder
 

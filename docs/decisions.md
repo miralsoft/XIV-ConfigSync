@@ -50,5 +50,13 @@ Append-only. Never edit or delete past entries; a later entry may supersede an e
   user. Rationale: the owner cannot test it. The configuration folder is the same as for the
   standard edition (launcher source code), so support costs little, but it is unverified.
   This narrows the earlier entry that Steam "follows later".
+- (2026-11-04) `FFXIV.cfg` is never synced as a whole. An advanced mode, off by default, may compare
+  it key by key with the other device's copy, show the differences, and let the user pick single
+  keys to take over. Rationale: the file mixes device settings with settings a player wants
+  everywhere, and the owner had to set `UiHighScale` by hand on the second device to make the game
+  playable, so a silent transfer of any display key would break it. The release is decided in
+  gate 2. A picked key is written into a text file the game owns, so the pre-apply snapshot covers
+  it like any other apply. Rejected: syncing a fixed allow-list without asking, because which keys a
+  player wants shared differs from player to player.
 - (2026-11-04) The file matrix is kept as a public draft in `docs/file-matrix.md`, with how well
   each row is known. Device names, character IDs and values from real files stay out of it.
