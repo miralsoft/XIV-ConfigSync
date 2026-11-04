@@ -17,3 +17,12 @@
 - [x] Cloud-state recorder and OneDrive single-device test in a separate folder
 - [x] ~~OneDrive offline test and two-device conflict test~~ dropped (owner's decision, see `decisions.md`)
 - [x] Feasibility report and framework recommendation (2026-11-04); waiting for the owner's decision on gate 2
+
+## Gate 2: specification and architecture
+
+- [x] Revised specification with releases and priorities (`specification.md`)
+- [x] Architecture with the decisions taken (`architecture.md`)
+- [x] Data model of the shared folder and the local data (`data-model.md`)
+- [x] Test strategy, gate 3 prototype scope, mapping of T01 to T21 and A01 to A08 (`test-strategy.md`)
+- [ ] Owner's review and decisions on credentials (6.1) and plugin apply in 0.1 (6.2)
+- [ ] Gate 3 approval

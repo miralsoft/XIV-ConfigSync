@@ -2,7 +2,7 @@
 
 ## Overall
 
-Feasibility analysis (gate 1) done on 2026-11-04: feasible. The report is finished and waits for the owner's decision on gate 2. No product code.
+Gate 1 (feasibility) done on 2026-11-04: feasible. Gate 2 approved the same day; its documents are drafted (`specification.md`, `architecture.md`, `data-model.md`, `test-strategy.md`) and wait for the owner's review and two decisions. No product code.
 
 ## Analysis tools (`tools/`)
 

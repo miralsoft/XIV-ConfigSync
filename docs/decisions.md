@@ -148,3 +148,14 @@ Append-only. Never edit or delete past entries; a later entry may supersede an e
   gate 2.
 - (2026-11-04) The owner accepts the framework recommendation (C# on .NET 10 with WPF) and keeps
   the name "XIV ConfigSync"; this settles the name question left for gate 2 above.
+- (2026-11-04) The owner approves gate 2: the revised specification, architecture, data model,
+  test strategy and priorities. Gate 2 produces documents only; product code starts with the
+  gate 3 prototype after a further approval.
+- (2026-11-04) Gate 2 draft: `specification.md`, `architecture.md`, `data-model.md` and
+  `test-strategy.md`. The decisions in them, each with what was rejected: metadata as JSON files,
+  not SQLite (a database file in a synced folder breaks when two devices touch it); objects stored
+  uncompressed and named by their hash; a three-way comparison against the last common hash per
+  file decides between apply, offer and conflict; deletions are never carried to another device
+  automatically; the game version must match for an apply; a portable executable in 0.1 and a
+  per-user installer in 0.3. Open for the owner: credentials in backed-up files
+  (`specification.md` 6.1) and whether applying plugin settings ships in 0.1 (6.2).

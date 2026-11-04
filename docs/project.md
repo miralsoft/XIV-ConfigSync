@@ -22,8 +22,7 @@ The identity card of the project.
   analysis tools under `tools/`.
 - Markdown for documentation.
 
-The product's own language and UI framework are not declared yet. They are decided at the end of
-the feasibility analysis; the recommendation is C# on .NET 10 with WPF.
+The product will be written in C# on .NET 10 with WPF (decided 2026-11-04). The profiles`nrules/languages/csharp.md` and `rules/frameworks/wpf.md` are declared and adopted with the first`nproduct code in gate 3, when there is something for their checks to run on.
 
 ## Targeted foundation version
 
@@ -39,6 +38,7 @@ No server. Releases are Windows executables published on GitHub. Not released ye
 
 ## High-level architecture summary
 
-See `architecture.md`. In short: every device writes only into its own folder inside the shared
-OneDrive folder, as immutable, content-addressed revisions. No file in the shared folder is ever
-written by two devices, so the sync client has nothing to merge and no conflict copies arise.
+See `architecture.md`. In short: every device backs up all of its configuration files into its own
+folder inside the shared OneDrive folder, as immutable, content-addressed revisions, and applies
+another device's files by a rule per file. No file in the shared folder is ever written by two
+devices, so the sync client has nothing to merge and no conflict copies arise.
