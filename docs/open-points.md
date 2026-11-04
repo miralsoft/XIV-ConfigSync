@@ -5,7 +5,7 @@
 - Where the UI scale lives. `FFXIV.cfg` holds `UiBaseScale` and `UiHighScale`; whether that is the
   whole story is what experiment V01 answers.
 - The HUD layout (`ADDON.DAT`) carries over from a 16:9 device to a 16:10 device (transfer test,
-  2026-11-04). Open: the other direction, and why the game rewrote a few hundred bytes of the
+  2026-11-04). Open: why the game rewrote a few hundred bytes of the
   applied file after play.
 - What the `cfgcopy` folder (`FFXIV_CFGCPY<id>.dat`) is for. No source describes it.
 - Which files the game rewrites on every start even when nothing changed (V00).
@@ -27,8 +27,6 @@
 
 ## OneDrive
 
-- What the sync state shows while the device is offline (expected: stays at "upload pending").
-- How OneDrive behaves when two devices write the same file; needs device B.
 - Whether a personal OneDrive reports the same states as OneDrive for Business, where it was
   measured.
 - Whether the owner wants to sync through the work OneDrive at all. Tests run in its `Games`

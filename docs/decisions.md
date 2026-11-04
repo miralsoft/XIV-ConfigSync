@@ -117,3 +117,8 @@ Append-only. Never edit or delete past entries; a later entry may supersede an e
   PowerShell by path before anything else, so its own commands need no command discovery; measured
   locally against 300 large modules with an empty cache, a worker started in 0.3 s instead of
   1.2 s. The hang test allows 10 s instead of 3 s.
+- (2026-11-04) The owner drops two feasibility tests: the transfer in the other direction (A to B)
+  and the OneDrive tests offline and with two writing devices. Rationale, the owner's: the transfer
+  copies whole files, so a direction that works works the other way too; and offline behaviour and
+  concurrent writes are OneDrive's job, a cloud made for this, not the program's. Conflicts between
+  two devices are handled in gate 2 by design (each device writes only its own folder), not by test.

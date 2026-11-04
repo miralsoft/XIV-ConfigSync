@@ -13,7 +13,7 @@
 - [x] Key-by-key comparison and settings snapshot for text configuration files
 - [x] Draft file matrix from existing files (`docs/file-matrix.md`)
 - [ ] File matrix confirmed by experiments: shared, device-specific, cache, sensitive
-- [ ] Cross test V03: one direction done by the transfer test; the other direction is open
+- [x] Cross test V03: done by the transfer test; the other direction is not tested (owner's decision, see `decisions.md`)
 - [x] Cloud-state recorder and OneDrive single-device test in a separate folder
-- [ ] OneDrive offline test and two-device conflict test
+- [x] ~~OneDrive offline test and two-device conflict test~~ dropped (owner's decision, see `decisions.md`)
 - [ ] Feasibility report and framework decision (draft written; waits for the experiments)
