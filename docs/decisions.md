@@ -132,3 +132,19 @@ Append-only. Never edit or delete past entries; a later entry may supersede an e
   and plugin settings stay out of 0.1. Rejected: syncing on a changed write time, since the game
   rewrites unchanged files on every login (experiment V00); syncing the HUD automatically, since a
   change the game made by itself would overwrite a deliberate change from the other device.
+- (2026-11-04) Replaces the proposed scope for 0.1 in the entry before. Backing up and applying
+  are separate. Every device backs up all of its configuration files, game and plugins, as whole
+  files, into its own folder in the cloud. Applying a backup, on the same device or from the other
+  one, follows a rule per file that the user can change: "always" (the shared files confirmed by
+  the transfer test; further character files once they are confirmed), "on request" (HUD layout,
+  `UISAVE.DAT`, item order, plugin settings) and "never" (device files such as `FFXIV.cfg` as a
+  whole, `FFXIV_BOOT.cfg`, `cfgcopy`, `dalamudConfig.json`, launcher files). Rationale, the
+  owner's: a backup of everything costs nothing and keeps every option; what is safe to carry
+  across devices is a question for applying, and the user should be able to define it. Rejected:
+  leaving files out of the backup because they may not be applied. Open for gate 2: how the
+  backup handles credentials found in files, and which plugin caches are excluded by size.
+- (2026-11-04) Both a work and a personal OneDrive are supported; the sync only needs a folder.
+  The upload state was measured only on OneDrive for Business and is checked on a personal one in
+  gate 2.
+- (2026-11-04) The owner accepts the framework recommendation (C# on .NET 10 with WPF) and keeps
+  the name "XIV ConfigSync"; this settles the name question left for gate 2 above.
