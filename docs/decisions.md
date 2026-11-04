@@ -269,3 +269,27 @@ Append-only. Never edit or delete past entries; a later entry may supersede an e
     as left out of the backup instead of disappearing silently.
   - Applying an older revision from an earlier epoch of the source does not reset the common
     state with that device.
+- (2026-11-05) A third independent review, of the application in daily use, found 12 points; all
+  are fixed. The decisions:
+  - "Handled" is kept apart from "received" (`handled.json`): a revision of another device counts
+    as handled only when it was applied as far as the rules allow, or announced when automatic
+    apply is off. A refused automatic apply (another game version, the folder away) is tried again
+    and announced once per revision and reason. Rejected: marking it handled with the receipt,
+    which lost the update for good on a patch day.
+  - A device that is set up always starts normally, also when its sync folder is not reachable;
+    the overview says so and the application tries again. The set-up never runs on its own after
+    the first one. "Change sync folder" keeps the current folder until the new set-up is complete,
+    and cancelling returns to it; it is refused while an interrupted write is open.
+  - The set-up can be repeated after a partial failure without adding the PC twice; a failed first
+    backup does not fail the set-up. Closing the window while it writes is not possible.
+  - The question whether closing the window keeps the application in the notification area is
+    asked at the first close, not preset; the first hide shows a short hint.
+  - Rule changes go through the same operation queue as backups and transfers, and are saved
+    before they are used. Settings: the registry first, and the settings are put back when saving
+    fails.
+  - The game's own launcher and configuration tool count as "the game runs", since they edit
+    `FFXIV.cfg` and `FFXIV_BOOT.cfg`.
+  - The transfer page keeps the comparison and the ticks across refreshes; the status line is
+    announced to screen readers.
+  - Known limitation for the release check (gate 5): the colours are fixed and do not follow the
+    Windows high-contrast themes.

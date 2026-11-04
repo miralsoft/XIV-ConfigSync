@@ -70,6 +70,7 @@ public sealed partial class TransferViewModel : ObservableObject
     private readonly MainViewModel main;
     private readonly IUiServices ui;
     private ApplyPlan? plan;
+    private bool reloading;
 
     public TransferViewModel(MainViewModel main, IUiServices ui)
     {
@@ -104,14 +105,38 @@ public sealed partial class TransferViewModel : ObservableObject
     /// <summary>Fills the list of devices.</summary>
     public void LoadSources()
     {
-        var current = Source?.DeviceId;
-        Sources.Clear();
-        foreach (var device in main.Devices)
+        // Updated in place: a refresh (after a game exit, a backup, a save) must not clear the
+        // comparison, the ticks or the chosen backup the user is working with (review 3, finding 2).
+        var wanted = main.Devices.Select(d => new SourceOption(d.DeviceId, d.Name)).ToList();
+        if (wanted.SequenceEqual(Sources))
         {
-            Sources.Add(new SourceOption(device.DeviceId, device.Name));
+            return;
         }
 
-        Source = Sources.FirstOrDefault(s => s.DeviceId == current) ?? Sources.FirstOrDefault(s => !main.Devices.First(d => d.DeviceId == s.DeviceId).IsThisDevice) ?? Sources.FirstOrDefault();
+        var current = Source?.DeviceId;
+        reloading = true;
+        try
+        {
+            Sources.Clear();
+            foreach (var option in wanted)
+            {
+                Sources.Add(option);
+            }
+
+            var keep = Sources.FirstOrDefault(s => s.DeviceId == current);
+            Source = keep
+                ?? Sources.FirstOrDefault(s => !main.Devices.First(d => d.DeviceId == s.DeviceId).IsThisDevice)
+                ?? Sources.FirstOrDefault();
+        }
+        finally
+        {
+            reloading = false;
+        }
+
+        if (Source?.DeviceId != current)
+        {
+            ResetForSource(Source);
+        }
     }
 
     /// <summary>Selects a source device by ID.</summary>
@@ -143,7 +168,9 @@ public sealed partial class TransferViewModel : ObservableObject
             return;
         }
 
-        var selected = plan.Selected.ToList();
+        // The plan shown when the user clicked; a refresh while the dialog is open must not swap it.
+        var current = plan;
+        var selected = current.Selected.ToList();
         if (selected.Count == 0)
         {
             ui.Inform(Strings.Transfer_Title, Strings.Refuse_NothingSelected);
@@ -151,7 +178,7 @@ public sealed partial class TransferViewModel : ObservableObject
         }
 
         var message = Text.Format(Strings.Transfer_ConfirmText, selected.Count);
-        if (plan.IsOwnDevice)
+        if (current.IsOwnDevice)
         {
             message += Environment.NewLine + Environment.NewLine + Strings.Transfer_ConfirmOwn;
         }
@@ -167,7 +194,6 @@ public sealed partial class TransferViewModel : ObservableObject
         }
 
         ApplyResult? result = null;
-        var current = plan;
         if (await main.RunAsync(Strings.Status_Applying, () => result = main.Engine.Apply(current)).ConfigureAwait(true))
         {
             ui.Inform(Strings.Transfer_Title, Text.Format(Strings.Transfer_Done, result!.Applied));
@@ -260,6 +286,14 @@ public sealed partial class TransferViewModel : ObservableObject
     }
 
     partial void OnSourceChanged(SourceOption? value)
+    {
+        if (!reloading)
+        {
+            ResetForSource(value);
+        }
+    }
+
+    private void ResetForSource(SourceOption? value)
     {
         Revisions.Clear();
         plan = null;

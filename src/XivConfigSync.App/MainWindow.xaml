@@ -792,7 +792,8 @@
                     Style="{StaticResource Muted}"
                     Text="{Binding StatusText}"
                     TextTrimming="CharacterEllipsis"
-                    TextWrapping="NoWrap" />
+                    TextWrapping="NoWrap"
+                    x:Name="StatusLine" />
             </DockPanel>
         </Border>
     </Grid>

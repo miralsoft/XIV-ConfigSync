@@ -38,7 +38,6 @@
   <data name="Common_Unknown" xml:space="preserve"><value>unknown</value></data>
   <data name="Error_Generic" xml:space="preserve"><value>{0}</value></data>
   <data name="Error_Settings" xml:space="preserve"><value>The settings in {0} could not be read. Rename or remove the file to start with new settings.</value></data>
-  <data name="Error_SyncFolderMissing" xml:space="preserve"><value>The sync folder {0} cannot be found. If it is on a drive that is not connected, connect it and start again. Otherwise choose the sync folder again.</value></data>
   <data name="Error_Unexpected" xml:space="preserve"><value>An unexpected error occurred. The details are in the log. The application stays open.</value></data>
   <data name="Evidence_Confirmed" xml:space="preserve"><value>confirmed</value></data>
   <data name="Evidence_Unconfirmed" xml:space="preserve"><value>not yet confirmed</value></data>
@@ -93,6 +92,7 @@
   <data name="Nav_Transfer" xml:space="preserve"><value>Transfer</value></data>
   <data name="Notify_Applied" xml:space="preserve"><value>{0} files taken over from {1}.</value></data>
   <data name="Notify_Conflicts" xml:space="preserve"><value>{0} files from {1} were also changed here. Please decide on the Transfer page.</value></data>
+  <data name="Notify_NotApplied" xml:space="preserve"><value>Settings from {0} were not taken: {1}</value></data>
   <data name="Origin_AfterApply" xml:space="preserve"><value>after a transfer</value></data>
   <data name="Origin_AppStart" xml:space="preserve"><value>at start</value></data>
   <data name="Origin_GameExit" xml:space="preserve"><value>after playing</value></data>
@@ -101,6 +101,7 @@
   <data name="Overview_ConflictCopies" xml:space="preserve"><value>{0} old conflict copies were found in the game folder. They are neither backed up nor deleted; you can remove them by hand.</value></data>
   <data name="Overview_DeviceName" xml:space="preserve"><value>Name</value></data>
   <data name="Overview_Devices" xml:space="preserve"><value>Devices in the sync folder</value></data>
+  <data name="Overview_FolderUnavailable" xml:space="preserve"><value>The sync folder {0} is not reachable right now (a drive not connected, OneDrive not started?). The application tries again; nothing is lost. To use another folder, choose Change sync folder in the settings.</value></data>
   <data name="Overview_GameNotRunning" xml:space="preserve"><value>Game is not running</value></data>
   <data name="Overview_GameRunning" xml:space="preserve"><value>Game is running: nothing is written</value></data>
   <data name="Overview_Intro" xml:space="preserve"><value>This device backs up its settings into its own part of the sync folder. On the Transfer page you take settings from another device or from an older backup.</value></data>
@@ -128,6 +129,7 @@
   <data name="Recovery_LeftAlone" xml:space="preserve"><value>{0} files changed after the interruption and were left as they are. You can take them on the Transfer page.</value></data>
   <data name="Recovery_Text" xml:space="preserve"><value>A transfer or an undo was interrupted, for example by a power cut or because the game was started. Yes: finish it. No: go back to the state before it. Cancel: decide later.</value></data>
   <data name="Recovery_Title" xml:space="preserve"><value>Interrupted transfer</value></data>
+  <data name="Refuse_AlreadySyncFolder" xml:space="preserve"><value>This folder is already a sync folder. Choose it to join it instead of creating a new one.</value></data>
   <data name="Refuse_Busy" xml:space="preserve"><value>Another operation is running. Please try again in a moment.</value></data>
   <data name="Refuse_ChangedSincePlan" xml:space="preserve"><value>Some files changed since the comparison, for example because the game ran. Nothing was written. Please compare again.</value></data>
   <data name="Refuse_Damaged" xml:space="preserve"><value>Some files of this backup are missing or damaged, possibly because OneDrive has not finished downloading them. Nothing was applied. Try again later.</value></data>
@@ -139,7 +141,8 @@
   <data name="Refuse_NoSnapshot" xml:space="preserve"><value>This transfer can no longer be undone.</value></data>
   <data name="Refuse_NoSyncFolder" xml:space="preserve"><value>No sync folder is set up.</value></data>
   <data name="Refuse_NothingSelected" xml:space="preserve"><value>No file is selected.</value></data>
-  <data name="Refuse_OpenJournal" xml:space="preserve"><value>An interrupted transfer must be finished or rolled back first. Restart the application.</value></data>
+  <data name="Refuse_OpenJournal" xml:space="preserve"><value>An interrupted transfer or undo must be finished or rolled back first. Close the game if it runs, then press Refresh on the overview to be asked.</value></data>
+  <data name="Refuse_SyncFolderUnavailable" xml:space="preserve"><value>The sync folder is not reachable right now. Connect the drive or start OneDrive, then try again.</value></data>
   <data name="Refuse_UnknownDevice" xml:space="preserve"><value>This device is not in the sync folder.</value></data>
   <data name="Root_Game" xml:space="preserve"><value>Game</value></data>
   <data name="Root_Plugins" xml:space="preserve"><value>Plugins</value></data>
@@ -155,6 +158,7 @@
   <data name="Rules_PatternHint" xml:space="preserve"><value>Pattern, for example SomePlugin/*.json</value></data>
   <data name="Rules_Remove" xml:space="preserve"><value>Remove</value></data>
   <data name="Rules_Reset" xml:space="preserve"><value>Reset all rules</value></data>
+  <data name="Rules_ResetConfirm" xml:space="preserve"><value>Set every rule back to its default? Your exclusions stay.</value></data>
   <data name="Rules_Title" xml:space="preserve"><value>Rules</value></data>
   <data name="Settings_AutoApply" xml:space="preserve"><value>Take files with the rule &quot;always&quot; from other devices automatically</value></data>
   <data name="Settings_Autostart" xml:space="preserve"><value>Start with Windows (in the notification area)</value></data>
@@ -193,6 +197,7 @@
   <data name="Setup_DoneAgain" xml:space="preserve"><value>This PC is set up again under its old name. Its last backups are on the Transfer page if you want to restore one. The other PCs will not take anything from this PC without asking until you have compared once.</value></data>
   <data name="Setup_DoneJoined" xml:space="preserve"><value>This device is set up and backed up. On the Transfer page you can now take the settings of your other device.</value></data>
   <data name="Setup_DoneNew" xml:space="preserve"><value>The sync folder is set up and this device is backed up. On your next PC, choose the same folder or double-click the .xivsync file in it.</value></data>
+  <data name="Setup_DoneNoBackup" xml:space="preserve"><value>This device is set up. The first backup could not be made yet and follows automatically: {0}</value></data>
   <data name="Setup_Finish" xml:space="preserve"><value>Finish</value></data>
   <data name="Setup_Folder_Empty" xml:space="preserve"><value>A new sync folder will be created here.</value></data>
   <data name="Setup_Folder_Foreign" xml:space="preserve"><value>This folder contains other files. Please choose an empty folder or an existing sync folder.</value></data>
@@ -226,7 +231,7 @@
   <data name="Transfer_Compare" xml:space="preserve"><value>Compare</value></data>
   <data name="Transfer_ConfirmOwn" xml:space="preserve"><value>An older state of this device is restored. Afterwards it is backed up as the current state, which your other devices then see.</value></data>
   <data name="Transfer_ConfirmSensitive" xml:space="preserve"><value>The selection contains device files or files with credentials. Please make sure you want them here.</value></data>
-  <data name="Transfer_ConfirmText" xml:space="preserve"><value>{0} files will be replaced. Before that, the current files are saved, so the transfer can be undone.</value></data>
+  <data name="Transfer_ConfirmText" xml:space="preserve"><value>{0} files will be replaced or created. Before that, the current files are saved, so the transfer can be undone.</value></data>
   <data name="Transfer_Done" xml:space="preserve"><value>{0} files taken over. You can undo this with &quot;Undo last transfer&quot;.</value></data>
   <data name="Transfer_Intro" xml:space="preserve"><value>Choose a device and a backup, then compare. Files with a check mark are taken over. Nothing is written until you confirm, and every transfer can be undone.</value></data>
   <data name="Transfer_Latest" xml:space="preserve"><value>Latest backup</value></data>
@@ -237,7 +242,7 @@
   <data name="Transfer_SelectNone" xml:space="preserve"><value>Select none</value></data>
   <data name="Transfer_ShowSkipped" xml:space="preserve"><value>Also show unchanged files</value></data>
   <data name="Transfer_Source" xml:space="preserve"><value>Device</value></data>
-  <data name="Transfer_Summary" xml:space="preserve"><value>{0} selected, {1} conflicts, {2} offered, {3} without change.</value></data>
+  <data name="Transfer_Summary" xml:space="preserve"><value>{0} selected, {1} conflicts, {2} offered, {3} not affected.</value></data>
   <data name="Transfer_ThisDevice" xml:space="preserve"><value>(this device)</value></data>
   <data name="Transfer_Title" xml:space="preserve"><value>Transfer</value></data>
   <data name="Transfer_Undo" xml:space="preserve"><value>Undo last transfer</value></data>
@@ -247,6 +252,7 @@
   <data name="Tray_BackupNow" xml:space="preserve"><value>Back up now</value></data>
   <data name="Tray_Exit" xml:space="preserve"><value>Quit</value></data>
   <data name="Tray_Open" xml:space="preserve"><value>Open</value></data>
+  <data name="Tray_StillRunning" xml:space="preserve"><value>XIV ConfigSync keeps running here in the notification area. Quit it with a right click on the icon.</value></data>
   <data name="Upload_InSync" xml:space="preserve"><value>Uploaded (OneDrive reports it in sync)</value></data>
   <data name="Upload_Pending" xml:space="preserve"><value>Handed to OneDrive, upload pending</value></data>
   <data name="Upload_Unknown" xml:space="preserve"><value>Handed to the sync folder; cloud state unknown</value></data>

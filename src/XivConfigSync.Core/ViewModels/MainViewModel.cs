@@ -32,6 +32,8 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     private readonly Timer periodic;
     private bool disposed;
     private int sequences;
+    private bool lastRefreshFailed;
+    private readonly Dictionary<string, string> announcedRefusals = [];
 
     public MainViewModel(SyncEngine engine, IUiServices ui, Log log, IGameMonitor game, IShellIntegration shell, IGameLocator locator)
     {
@@ -40,7 +42,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         this.log = log;
         this.game = game;
         Transfer = new TransferViewModel(this, ui);
-        Rules = new RulesViewModel(this);
+        Rules = new RulesViewModel(this, ui);
         Settings = new SettingsViewModel(this, ui, shell, locator);
         LogPage = new LogViewModel(log, ui);
         game.RunningChanged += OnGameRunningChanged;
@@ -155,14 +157,21 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         List<DeviceStatus> devices = [];
         CloudFileState upload = CloudFileState.Unknown;
         int conflictCopies = 0;
+        await AskRecoveryAsync().ConfigureAwait(true);
         var ok = await RunAsync(Strings.Status_Refreshing, () =>
         {
             devices = [.. Engine.GetDevices()];
             upload = Engine.GetOwnUploadState();
             conflictCopies = Engine.ScanOnly().ConflictCopies;
         }, showErrors: false).ConfigureAwait(true);
+        SyncFolderText = Engine.Settings.SyncFolder ?? string.Empty;
+        ThisDeviceName = Engine.Settings.DisplayName;
+        lastRefreshFailed = !ok;
         if (!ok)
         {
+            // The sync folder is not reachable (a drive not connected, OneDrive not started yet): the
+            // application keeps running and tries again later (review 3, finding 6).
+            Notice = Text.Format(Strings.Overview_FolderUnavailable, Engine.Settings.SyncFolder);
             return;
         }
 
@@ -251,7 +260,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         }
     }
 
-    /// <summary>Clears the sync folder and asks the application to run the set-up again.</summary>
+    /// <summary>Asks the application to run the set-up again; the current sync folder stays until it is done.</summary>
     public void RequestSetup()
     {
         if (Busy || sequences > 0)
@@ -260,11 +269,14 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             return;
         }
 
-        Engine.Settings.SyncFolder = null;
-        Engine.SaveSettings();
+        if (Engine.HasInterruptedApply)
+        {
+            ui.ShowError(Strings.Refuse_OpenJournal);
+            return;
+        }
+
         SetupRequested?.Invoke(this, EventArgs.Empty);
     }
-
     public void Dispose()
     {
         if (disposed)
@@ -284,7 +296,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     partial void OnGameRunningChanged(bool value) => OnPropertyChanged(nameof(GameStateText));
 
     /// <summary>Backs up this device, then takes what the rules allow from the others.</summary>
-    private async Task BackupAndPullAsync(RevisionOrigin origin, bool quiet, IReadOnlyList<DeviceInfo>? alreadyFound = null)
+    private async Task BackupAndPullAsync(RevisionOrigin origin, bool quiet, IReadOnlyList<(DeviceInfo Device, string RevisionId)>? alreadyFound = null)
     {
         sequences++;
         try
@@ -297,7 +309,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         }
     }
 
-    private async Task BackupAndPullCoreAsync(RevisionOrigin origin, bool quiet, IReadOnlyList<DeviceInfo>? alreadyFound)
+    private async Task BackupAndPullCoreAsync(RevisionOrigin origin, bool quiet, IReadOnlyList<(DeviceInfo Device, string RevisionId)>? alreadyFound)
     {
         await AskRecoveryAsync().ConfigureAwait(true);
         if (Engine.Settings.BackupOnGameExit != false || origin != RevisionOrigin.GameExit)
@@ -305,35 +317,67 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             await RunAsync(Strings.Status_BackingUp, () => Engine.Backup(origin), showErrors: !quiet).ConfigureAwait(true);
         }
 
-        List<DeviceInfo> fresh = [.. alreadyFound ?? []];
-        await RunAsync(Strings.Status_Refreshing, () => fresh.AddRange(Engine.FindNewRevisions()), showErrors: false).ConfigureAwait(true);
-        foreach (var device in fresh.DistinctBy(d => d.DeviceId).ToList())
+        List<(DeviceInfo Device, string RevisionId)> fresh = [.. alreadyFound ?? []];
+        if (alreadyFound is null)
         {
-            if (Engine.Settings.AutoApplyAlways == true && !game.IsRunning)
-            {
-                (int Applied, int Waiting) result = (0, 0);
-                if (await RunAsync(Strings.Status_Applying, () => result = Engine.AutoApply(device.DeviceId), showErrors: false).ConfigureAwait(true))
-                {
-                    if (result.Applied > 0)
-                    {
-                        ui.Notify(Strings.App_Title, Text.Format(Strings.Notify_Applied, result.Applied, device.DisplayName));
-                    }
+            await RunAsync(Strings.Status_Refreshing, () => fresh.AddRange(Engine.FindUnhandledRevisions()), showErrors: false).ConfigureAwait(true);
+        }
 
-                    if (result.Waiting > 0)
-                    {
-                        ui.Notify(Strings.App_Title, Text.Format(Strings.Notify_Conflicts, result.Waiting, device.DisplayName));
-                    }
-                }
-            }
-            else
+        foreach (var (device, revisionId) in fresh.DistinctBy(f => f.Device.DeviceId).ToList())
+        {
+            if (Engine.Settings.AutoApplyAlways != true)
             {
                 ui.Notify(Strings.App_Title, Text.Format(Strings.Overview_NewFrom, device.DisplayName));
+                await RunAsync(Strings.Status_Refreshing, () => Engine.MarkHandled(device.DeviceId, revisionId), showErrors: false).ConfigureAwait(true);
+                continue;
+            }
+
+            if (game.IsRunning)
+            {
+                // Tried again after the game exits.
+                continue;
+            }
+
+            SyncEngine.AutoApplyResult? result = null;
+            string? failure = null;
+            var ran = await RunAsync(Strings.Status_Applying, () =>
+            {
+                try
+                {
+                    result = Engine.AutoApply(device.DeviceId);
+                }
+                catch (RefusedException refused)
+                {
+                    failure = refused.ReasonKey;
+                }
+            }, showErrors: false).ConfigureAwait(true);
+
+            var refusal = failure ?? result?.RefusalKey;
+            if (ran && refusal is null && result is not null)
+            {
+                if (result.Applied > 0)
+                {
+                    ui.Notify(Strings.App_Title, Text.Format(Strings.Notify_Applied, result.Applied, device.DisplayName));
+                }
+
+                if (result.Waiting > 0)
+                {
+                    ui.Notify(Strings.App_Title, Text.Format(Strings.Notify_Conflicts, result.Waiting, device.DisplayName));
+                }
+
+                await RunAsync(Strings.Status_Refreshing, () => Engine.MarkHandled(device.DeviceId, revisionId), showErrors: false).ConfigureAwait(true);
+            }
+            else if (refusal is not null && refusal != "Refuse_GameRunning" && refusal != "Refuse_Busy"
+                && announcedRefusals.GetValueOrDefault(device.DeviceId) != revisionId + refusal)
+            {
+                // Not handled: tried again later; told once per revision and reason.
+                announcedRefusals[device.DeviceId] = revisionId + refusal;
+                ui.Notify(Strings.App_Title, Text.Format(Strings.Notify_NotApplied, device.DisplayName, Text.Get(refusal)));
             }
         }
 
         await RefreshAsync().ConfigureAwait(true);
     }
-
     private void OnGameRunningChanged(object? sender, bool running)
     {
         ui.OnUiThread(async () =>
@@ -377,8 +421,14 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
                     return;
                 }
 
-                List<DeviceInfo> fresh = [];
-                await RunAsync(Strings.Status_Refreshing, () => fresh = [.. Engine.FindNewRevisions()], showErrors: false).ConfigureAwait(true);
+                if (lastRefreshFailed)
+                {
+                    // The sync folder was not reachable: look again, and clear the notice once it is.
+                    await RefreshAsync().ConfigureAwait(true);
+                }
+
+                List<(DeviceInfo Device, string RevisionId)> fresh = [];
+                await RunAsync(Strings.Status_Refreshing, () => fresh = [.. Engine.FindUnhandledRevisions()], showErrors: false).ConfigureAwait(true);
                 if (fresh.Count > 0)
                 {
                     await BackupAndPullAsync(RevisionOrigin.Manual, quiet: true, fresh).ConfigureAwait(true);

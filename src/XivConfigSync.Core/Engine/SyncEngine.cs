@@ -112,8 +112,9 @@ public sealed class SyncEngine
     /// <summary>Replaces the rules and saves them.</summary>
     public void UpdateRules(RuleSet rules)
     {
-        Rules = rules;
+        // Saved first: a failed save must not leave other rules in use than on disk.
         rules.Save(local.RulesPath);
+        Rules = rules;
     }
 
     /// <summary>Opens the configured sync folder.</summary>
@@ -320,50 +321,68 @@ public sealed class SyncEngine
     }
 
     /// <summary>
-    /// Finds other devices whose latest revision this device has not received yet, confirms the
-    /// intact ones, and returns their names and IDs.
+    /// Finds other devices whose latest revision this device has not handled yet, and confirms the
+    /// receipt of every intact one. "Handled" is separate from "received": a revision is handled
+    /// once it was applied as far as the rules allow, or the user was told about it, so an apply
+    /// that was refused (another game version, the game started) is tried again (review 3, finding 1).
     /// </summary>
-    public IReadOnlyList<DeviceInfo> FindNewRevisions()
+    public IReadOnlyList<(DeviceInfo Device, string RevisionId)> FindUnhandledRevisions()
     {
         var store = OpenStore();
-        var fresh = new List<DeviceInfo>();
+        var handled = HandledTable.Load(local.HandledPath);
+        var fresh = new List<(DeviceInfo, string)>();
         foreach (var device in store.ListDevices().Where(d => d.DeviceId != Settings.DeviceId))
         {
             var head = store.ReadHead(device.DeviceId);
-            if (head is not null && store.ReadReceived(Settings.DeviceId, device.DeviceId)?.RevisionId != head)
+            if (head is not null && handled.Get(device.DeviceId) != head)
             {
-                fresh.Add(device);
+                fresh.Add((device, head));
             }
         }
 
-        if (fresh.Count > 0)
+        try
         {
-            try
-            {
-                ConfirmReceived();
-            }
-            catch (RefusedException ex)
-            {
-                log.Debug("receipt", "Receipts not written now: " + ex.ReasonKey);
-            }
+            ConfirmReceived();
+        }
+        catch (RefusedException ex)
+        {
+            log.Debug("receipt", "Receipts not written now: " + ex.ReasonKey);
         }
 
         return fresh;
     }
 
+    /// <summary>Records that a revision of another device was handled (applied or announced).</summary>
+    public void MarkHandled(string deviceId, string revisionId)
+    {
+        var handled = HandledTable.Load(local.HandledPath);
+        handled.Set(deviceId, revisionId);
+        handled.Save(local.HandledPath);
+    }
+
+    /// <summary>The result of an automatic apply.</summary>
+    public sealed record AutoApplyResult(int Applied, int Waiting, string? RefusalKey);
+
     /// <summary>
     /// Applies from another device only what the rules allow without asking: files planned as
-    /// <see cref="PlanAction.Apply"/>. Returns how many were applied and how many wait for the user.
+    /// <see cref="PlanAction.Apply"/>. Reports how many were applied, how many conflicts wait, and
+    /// why nothing could be done, if that is the case.
     /// </summary>
-    public (int Applied, int Waiting) AutoApply(string sourceDeviceId)
+    public AutoApplyResult AutoApply(string sourceDeviceId)
     {
         var plan = Plan(sourceDeviceId, null);
+
         // Offers are not counted: the game changes some of them on every login (V00), so a
         // notification for them would come every time. They wait on the transfer page.
         var waiting = plan.Items.Count(i => i.Action == PlanAction.Conflict && i.Rule == ApplyRule.Always);
-        if (plan.Refusals.Count > 0 || !plan.Items.Any(i => i.Selected))
+        if (plan.Refusals.Count > 0)
         {
-            return (0, waiting);
+            return new AutoApplyResult(0, waiting, plan.Refusals[0]);
+        }
+
+        if (!plan.Items.Any(i => i.Selected))
+        {
+            return new AutoApplyResult(0, waiting, null);
         }
 
         foreach (var item in plan.Items)
@@ -372,9 +391,8 @@ public sealed class SyncEngine
         }
 
         var result = Apply(plan);
-        return (result.Applied, waiting);
+        return new AutoApplyResult(result.Applied, waiting, null);
     }
-
     /// <summary>Plans applying a revision of any device (the latest when <paramref name="revisionId"/> is null).</summary>
     public ApplyPlan Plan(string sourceDeviceId, string? revisionId)
     {
@@ -760,9 +778,11 @@ public sealed class SyncEngine
     private void Touch(SyncStore store)
     {
         var info = store.ListDevices().FirstOrDefault(d => d.DeviceId == Settings.DeviceId);
-        if (info is not null && DateTimeOffset.UtcNow - info.LastSeen > TimeSpan.FromHours(1))
+        if (info is not null && (DateTimeOffset.UtcNow - info.LastSeen > TimeSpan.FromHours(1) || info.DisplayName != Settings.DisplayName))
         {
+            // Also carries a name changed while the sync folder was not reachable.
             info.LastSeen = DateTimeOffset.UtcNow;
+            info.DisplayName = Settings.DisplayName;
             store.WriteDeviceInfo(info);
         }
     }

@@ -74,4 +74,17 @@ public sealed class AppSettings
 
     /// <summary>Saves the settings atomically.</summary>
     public void Save(string path) => FileOps.WriteJsonAtomic(path, this);
+
+    /// <summary>A deep copy, to put the settings back when a save fails.</summary>
+    public AppSettings Clone() =>
+        System.Text.Json.JsonSerializer.Deserialize<AppSettings>(System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(this, Json.Options), Json.Options)!;
+
+    /// <summary>Takes over every value of another instance.</summary>
+    public void CopyFrom(AppSettings other)
+    {
+        foreach (var property in typeof(AppSettings).GetProperties().Where(p => p.CanWrite))
+        {
+            property.SetValue(this, property.GetValue(other));
+        }
+    }
 }

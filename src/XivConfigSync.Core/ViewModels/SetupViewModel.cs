@@ -5,7 +5,6 @@ using XivConfigSync.Core.Discovery;
 using XivConfigSync.Core.Engine;
 using XivConfigSync.Core.Model;
 using XivConfigSync.Core.Platform;
-using XivConfigSync.Core.Settings;
 using XivConfigSync.Core.Store;
 
 namespace XivConfigSync.Core.ViewModels;
@@ -42,6 +41,11 @@ public sealed partial class SetupViewModel : ObservableObject
         if (initialPath is not null)
         {
             Folder = SyncStore.FolderOf(initialPath);
+        }
+        else if (!string.IsNullOrWhiteSpace(known.SyncFolder))
+        {
+            // Changing the sync folder, or one that was not reachable: start from the one in use.
+            Folder = known.SyncFolder;
         }
         else
         {
@@ -105,6 +109,7 @@ public sealed partial class SetupViewModel : ObservableObject
     public partial bool FileAssociation { get; set; } = true;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CanGoBack))]
     public partial bool Working { get; set; }
 
     [ObservableProperty]
@@ -118,7 +123,7 @@ public sealed partial class SetupViewModel : ObservableObject
 
     public bool IsOptionsStep => Step == 3;
 
-    public bool CanGoBack => Step > 0;
+    public bool CanGoBack => Step > 0 && !Working;
 
     public string NextText => Step == 3 ? Strings.Setup_Finish : Strings.Setup_Next;
 
@@ -180,8 +185,14 @@ public sealed partial class SetupViewModel : ObservableObject
     {
         switch (Step)
         {
-            case 0 when FolderUsable:
-                Step = 1;
+            case 0:
+                // Inspected again with the text as it is now (review 3, finding 10).
+                InspectFolder();
+                if (FolderUsable)
+                {
+                    Step = 1;
+                }
+
                 break;
             case 1 when !string.IsNullOrWhiteSpace(DeviceName) && (!SetUpAgain || AgainAs is not null):
                 // Two PCs under one identity would disturb each other (review finding 9).
@@ -219,6 +230,20 @@ public sealed partial class SetupViewModel : ObservableObject
         }
     }
 
+    /// <summary>Whether this device is already set up in that sync folder.</summary>
+    private bool AlreadyJoined(string folder)
+    {
+        var settings = engine.Settings;
+        if (string.IsNullOrWhiteSpace(settings.SyncFolder) || !SyncStore.IsDeviceId(settings.DeviceId)
+            || !string.Equals(Path.GetFullPath(settings.SyncFolder), Path.GetFullPath(folder), StringComparison.OrdinalIgnoreCase)
+            || SyncStore.Inspect(folder) != SyncStore.FolderKind.SyncFolder)
+        {
+            return false;
+        }
+
+        return SyncStore.Open(folder).ListDevices().Any(d => d.DeviceId == settings.DeviceId);
+    }
+
     private void InspectFolder()
     {
         ExistingDevices.Clear();
@@ -232,10 +257,10 @@ public sealed partial class SetupViewModel : ObservableObject
         }
 
         // A path to the sync file stands for its folder (a double-click hands over the file).
-        var folder = SyncStore.FolderOf(Folder.Trim().Trim('"'));
-        if (!string.Equals(folder, Folder, StringComparison.Ordinal))
+        var typed = Folder.Trim().Trim('"');
+        if (typed.EndsWith(SyncStore.SyncFileExtension, StringComparison.OrdinalIgnoreCase) && File.Exists(typed))
         {
-            Folder = folder;
+            Folder = SyncStore.FolderOf(typed);
             return;
         }
 
@@ -284,7 +309,6 @@ public sealed partial class SetupViewModel : ObservableObject
         settings.BackUpPlugins = BackUpPlugins && settings.PluginConfigFolder is not null;
         settings.BackupOnGameExit = BackupOnGameExit;
         settings.AutoApplyAlways = AutoApply;
-        settings.CloseAction ??= CloseAction.MinimizeToTray;
         settings.FileAssociation = FileAssociation;
         var number = 1;
         foreach (var folder in GameFolders.FindCharacterFolders(GameFolder))
@@ -300,9 +324,21 @@ public sealed partial class SetupViewModel : ObservableObject
         var again = SetUpAgain ? AgainAs?.DeviceId : null;
         try
         {
+            string? backupProblem = null;
             await Task.Run(() =>
             {
-                if (joins)
+                // A retry after a partial failure, or choosing the folder already in use, must not
+                // add this PC a second time (review 3, finding 3).
+                var alreadyIn = AlreadyJoined(folderPath);
+                if (alreadyIn)
+                {
+                    if (again is null && !string.Equals(engine.Settings.DisplayName, name, StringComparison.Ordinal))
+                    {
+                        engine.Settings.DisplayName = name;
+                        engine.UpdateDeviceInfo();
+                    }
+                }
+                else if (joins)
                 {
                     engine.JoinSyncFolder(folderPath, name, again);
                 }
@@ -311,13 +347,15 @@ public sealed partial class SetupViewModel : ObservableObject
                     engine.CreateSyncFolder(folderPath, name);
                 }
 
+                engine.SaveSettings();
                 try
                 {
                     engine.Backup(RevisionOrigin.Manual);
                 }
-                catch (RefusedException refused) when (refused.ReasonKey == "Refuse_GameRunning")
+                catch (Exception ex) when (ex is RefusedException or IOException or UnauthorizedAccessException or InvalidOperationException)
                 {
-                    // The first backup follows when the game exits; the set-up itself is complete.
+                    // The set-up is complete; the first backup follows later (game exit, next start).
+                    backupProblem = Text.ForError(ex);
                 }
             }).ConfigureAwait(true);
 
@@ -340,7 +378,13 @@ public sealed partial class SetupViewModel : ObservableObject
 
             engine.SaveSettings();
             Progress = string.Empty;
-            ui.Inform(Strings.Setup_Title, again is not null ? Strings.Setup_DoneAgain : joins ? Strings.Setup_DoneJoined : Strings.Setup_DoneNew);
+            var done = again is not null ? Strings.Setup_DoneAgain : joins ? Strings.Setup_DoneJoined : Strings.Setup_DoneNew;
+            if (backupProblem is not null)
+            {
+                done = Text.Format(Strings.Setup_DoneNoBackup, backupProblem);
+            }
+
+            ui.Inform(Strings.Setup_Title, done);
             Completed?.Invoke(this, EventArgs.Empty);
         }
         catch (Exception ex) when (ex is RefusedException or IOException or UnauthorizedAccessException or InvalidOperationException or InvalidDataException)

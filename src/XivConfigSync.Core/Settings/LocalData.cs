@@ -21,6 +21,8 @@ public sealed class LocalData
 
     public string JournalPath => Path.Combine(Root, "journal.json");
 
+    public string HandledPath => Path.Combine(Root, "handled.json");
+
     public string LockPath => Path.Combine(Root, "busy.lock");
 
     public string SnapshotsFolder => Path.Combine(Root, "snapshots");

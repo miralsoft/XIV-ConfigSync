@@ -145,7 +145,7 @@ public sealed class SyncStoreTests
         Directory.CreateDirectory(foreign);
         File.WriteAllText(Path.Combine(foreign, "notes.txt"), "x");
         Assert.Equal(SyncStore.FolderKind.Foreign, SyncStore.Inspect(foreign));
-        Assert.Throws<InvalidOperationException>(() => SyncStore.Create(foreign, SyncStore.NewDeviceId()));
+        Assert.Throws<Engine.RefusedException>(() => SyncStore.Create(foreign, SyncStore.NewDeviceId()));
 
         var sync = temp.Sub("FFXIV Sync");
         var store = SyncStore.Create(sync, SyncStore.NewDeviceId());

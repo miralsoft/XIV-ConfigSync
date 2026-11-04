@@ -59,10 +59,12 @@ public sealed record ExclusionRow(string Root, string Pattern, string RootText);
 public sealed partial class RulesViewModel : ObservableObject
 {
     private readonly MainViewModel main;
+    private readonly IUiServices ui;
 
-    public RulesViewModel(MainViewModel main)
+    public RulesViewModel(MainViewModel main, IUiServices ui)
     {
         this.main = main;
+        this.ui = ui;
         Reload();
     }
 
@@ -100,19 +102,28 @@ public sealed partial class RulesViewModel : ObservableObject
             main.StatusText = Strings.Rules_NeverWarning;
         }
 
-        var updated = main.Engine.Rules.WithOverride(row.Entry.Root, row.Entry.Pattern, rule == row.Entry.DefaultRule ? null : rule);
-        main.Engine.UpdateRules(updated);
+        // Through the operation queue, so a running backup or plan never sees rules change halfway
+        // (review 3, finding 8).
+        var root = row.Entry.Root;
+        var pattern = row.Entry.Pattern;
+        var value = rule == row.Entry.DefaultRule ? (ApplyRule?)null : rule;
+        _ = main.RunAsync(Strings.Rules_Title, () => main.Engine.UpdateRules(main.Engine.Rules.WithOverride(root, pattern, value)));
     }
 
     [RelayCommand]
-    public void ResetAll()
+    public async Task ResetAllAsync()
     {
-        main.Engine.UpdateRules(new RuleSet(new RuleFile { Exclusions = [.. main.Engine.Rules.File.Exclusions] }));
+        if (!ui.Confirm(Strings.Rules_Title, Strings.Rules_ResetConfirm))
+        {
+            return;
+        }
+
+        await main.RunAsync(Strings.Rules_Title, () => main.Engine.UpdateRules(new RuleSet(new RuleFile { Exclusions = [.. main.Engine.Rules.File.Exclusions] }))).ConfigureAwait(true);
         Reload();
     }
 
     [RelayCommand]
-    public void AddExclusion()
+    public async Task AddExclusionAsync()
     {
         var pattern = NewExclusionPattern.Trim().Replace('\\', '/');
         if (pattern.Length == 0 || pattern.Contains("..", StringComparison.Ordinal))
@@ -121,20 +132,23 @@ public sealed partial class RulesViewModel : ObservableObject
         }
 
         var root = NewExclusionRoot == 0 ? Roots.Game : Roots.Plugins;
-        main.Engine.UpdateRules(main.Engine.Rules.WithExclusion(root, pattern, true));
-        NewExclusionPattern = string.Empty;
+        if (await main.RunAsync(Strings.Rules_Title, () => main.Engine.UpdateRules(main.Engine.Rules.WithExclusion(root, pattern, true))).ConfigureAwait(true))
+        {
+            NewExclusionPattern = string.Empty;
+        }
+
         Reload();
     }
 
     [RelayCommand]
-    public void RemoveExclusion(ExclusionRow? row)
+    public async Task RemoveExclusionAsync(ExclusionRow? row)
     {
         if (row is null)
         {
             return;
         }
 
-        main.Engine.UpdateRules(main.Engine.Rules.WithExclusion(row.Root, row.Pattern, false));
+        await main.RunAsync(Strings.Rules_Title, () => main.Engine.UpdateRules(main.Engine.Rules.WithExclusion(row.Root, row.Pattern, false))).ConfigureAwait(true);
         Reload();
     }
 

@@ -90,7 +90,7 @@ public sealed partial class SyncStore
         var kind = Inspect(folder);
         if (kind != FolderKind.Empty)
         {
-            throw new InvalidOperationException($"The folder is not empty ({kind}).");
+            throw new Engine.RefusedException(kind == FolderKind.SyncFolder ? "Refuse_AlreadySyncFolder" : "Setup_Folder_Foreign");
         }
 
         Directory.CreateDirectory(folder);
@@ -111,9 +111,16 @@ public sealed partial class SyncStore
     public static SyncStore Open(string path)
     {
         var folder = FolderOf(path);
-        if (Inspect(folder) != FolderKind.SyncFolder)
+        var kind = Inspect(folder);
+        if (kind == FolderKind.Empty)
         {
-            throw new InvalidOperationException("The folder is not a sync folder of this application.");
+            // Not there (a drive not connected, OneDrive not started) rather than broken.
+            throw new Engine.RefusedException("Refuse_SyncFolderUnavailable");
+        }
+
+        if (kind != FolderKind.SyncFolder)
+        {
+            throw new Engine.RefusedException("Setup_Folder_Invalid");
         }
 
         var syncFile = Directory.GetFiles(folder, "*" + SyncFileExtension, SearchOption.TopDirectoryOnly)[0];

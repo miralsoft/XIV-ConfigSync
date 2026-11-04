@@ -157,7 +157,19 @@ public sealed partial class SettingsViewModel : ObservableObject
                 throw new Engine.RefusedException("Refuse_OpenJournal");
             }
 
+            // The registry first: if it fails, nothing else has changed yet (review 3, finding 9).
+            if (autostart != shell.IsAutostartEnabled)
+            {
+                shell.SetAutostart(autostart);
+            }
+
+            if (association != shell.IsFileAssociationRegistered)
+            {
+                shell.SetFileAssociation(association);
+            }
+
             var s = main.Engine.Settings;
+            var before = s.Clone();
             s.DisplayName = deviceName.Length == 0 ? s.DisplayName : deviceName;
             s.GameConfigFolder = gameFolder;
             s.PluginConfigFolder = pluginFolder;
@@ -169,21 +181,25 @@ public sealed partial class SettingsViewModel : ObservableObject
             s.Language = languageCode;
             s.KeepRevisions = keepRevisions;
             s.CharacterNames = names;
-
-            // Only what changed is written, so saving other settings leaves the registry alone.
-            if (autostart != shell.IsAutostartEnabled)
-            {
-                shell.SetAutostart(autostart);
-            }
-
-            if (association != shell.IsFileAssociationRegistered)
-            {
-                shell.SetFileAssociation(association);
-            }
-
             s.FileAssociation = association;
-            main.Engine.SaveSettings();
-            main.Engine.UpdateDeviceInfo();
+            try
+            {
+                main.Engine.SaveSettings();
+            }
+            catch
+            {
+                s.CopyFrom(before);
+                throw;
+            }
+
+            try
+            {
+                main.Engine.UpdateDeviceInfo();
+            }
+            catch (Engine.RefusedException)
+            {
+                // The new name reaches the sync folder with the next successful refresh or backup.
+            }
         }).ConfigureAwait(true);
 
         Load();

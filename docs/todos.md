@@ -44,5 +44,6 @@
   whether applying plugin settings stays in 0.1)
 - [ ] Transfer check of MACRO, GEARSET, COMMON, CONTROL1 in the game (then "always")
 - [ ] Upload state on a personal OneDrive
-- [ ] Manual accessibility check before release (keyboard only, Narrator, 150 and 200 percent)
+- [ ] Manual accessibility check before release (keyboard only, Narrator, 150 and 200 percent,
+  high contrast: the colours are fixed today)
 - [ ] Gate 5: release candidate, changelog, release notes, release procedure

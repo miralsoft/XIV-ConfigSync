@@ -82,7 +82,7 @@
                             <TextBox
                                 AutomationProperties.AutomationId="SetupFolder"
                                 AutomationProperties.Name="{x:Static core:Strings.Setup_ChooseFolder}"
-                                Text="{Binding Folder, UpdateSourceTrigger=PropertyChanged, Delay=400}" />
+                                Text="{Binding Folder, UpdateSourceTrigger=PropertyChanged}" />
                         </DockPanel>
                         <TextBlock
                             AutomationProperties.AutomationId="SetupFolderState"

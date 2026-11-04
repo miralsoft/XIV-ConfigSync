@@ -36,7 +36,9 @@ public sealed class ReviewTests
         var item = Item(b.Engine.Plan(a.Settings.DeviceId, null), Hotbar);
         Assert.Equal(PlanAction.Conflict, item.Action);
         Assert.False(item.Selected);
-        Assert.Equal((0, 1), b.Engine.AutoApply(a.Settings.DeviceId));
+        var auto = b.Engine.AutoApply(a.Settings.DeviceId);
+        Assert.Equal(0, auto.Applied);
+        Assert.Equal(1, auto.Waiting);
         Assert.Equal(x1, b.ReadGame(Hotbar));
     }
 
@@ -205,8 +207,8 @@ public sealed class ReviewTests
 
         // C's HEAD arrived, its manifest not yet.
         File.Delete(Path.Combine(c.Engine.OpenStore().DeviceFolder(c.Settings.DeviceId), "revisions", cHead + ".json"));
-        var fresh = b.Engine.FindNewRevisions();
-        Assert.Contains(fresh, d => d.DeviceId == a.Settings.DeviceId);
+        var fresh = b.Engine.FindUnhandledRevisions();
+        Assert.Contains(fresh, f => f.Device.DeviceId == a.Settings.DeviceId);
         Assert.Contains("B", a.Engine.GetDevices().Single(d => d.IsThisDevice).ReceivedBy);
     }
 
@@ -455,5 +457,48 @@ public sealed class ReviewTests
                 action();
             }
         }
+    }
+
+    [Fact]
+    public void Review3ARefusedAutoApplyIsTriedAgainUntilItWorks()
+    {
+        using var temp = new TempFolder();
+        var (a, b) = TwoDevices(temp);
+        Align(a, b);
+        WriteVersion(temp.Sub("a-install"), "2026.11.01.0000.0000");
+        WriteVersion(temp.Sub("b-install"), "2026.10.16.0000.0000");
+        a.Settings.GameInstallFolder = temp.Sub("a-install");
+        b.Settings.GameInstallFolder = temp.Sub("b-install");
+        a.WriteGame(Hotbar, Device.Random());
+        var head = a.Engine.Backup(RevisionOrigin.Manual).RevisionId!;
+
+        // Patch day: B is not updated yet, so the apply is refused and stays unhandled.
+        Assert.Contains(b.Engine.FindUnhandledRevisions(), f => f.RevisionId == head);
+        Assert.Equal("Refuse_GameVersion", b.Engine.AutoApply(a.Settings.DeviceId).RefusalKey);
+        Assert.Contains(b.Engine.FindUnhandledRevisions(), f => f.RevisionId == head);
+
+        // After the update it works, and only then the revision counts as handled.
+        WriteVersion(temp.Sub("b-install"), "2026.11.01.0000.0000");
+        var result = b.Engine.AutoApply(a.Settings.DeviceId);
+        Assert.Null(result.RefusalKey);
+        Assert.Equal(1, result.Applied);
+        b.Engine.MarkHandled(a.Settings.DeviceId, head);
+        Assert.DoesNotContain(b.Engine.FindUnhandledRevisions(), f => f.Device.DeviceId == a.Settings.DeviceId);
+        Assert.Equal(a.ReadGame(Hotbar), b.ReadGame(Hotbar));
+    }
+
+    [Fact]
+    public void Review3AnUnreachableSyncFolderIsReportedAsSuch()
+    {
+        using var temp = new TempFolder();
+        var (_, b) = TwoDevices(temp);
+        b.Settings.SyncFolder = temp.Sub("drive-not-connected");
+        Assert.Equal("Refuse_SyncFolderUnavailable", Assert.Throws<RefusedException>(() => b.Engine.GetDevices()).ReasonKey);
+    }
+
+    private static void WriteVersion(string install, string version)
+    {
+        Directory.CreateDirectory(Path.Combine(install, "game"));
+        File.WriteAllText(Path.Combine(install, "game", "ffxivgame.ver"), version);
     }
 }

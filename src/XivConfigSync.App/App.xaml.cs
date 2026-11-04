@@ -28,10 +28,27 @@ public partial class App : Application
     private MainViewModel? mainModel;
     private UiServices? ui;
     private bool exiting;
+    private bool toldAboutTray;
 
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
+        try
+        {
+            Start(e);
+        }
+        catch (Exception ex)
+        {
+            // A failure before a window or the tray exists would leave an invisible process holding
+            // the single-instance lock (review 3, finding 5).
+            log.Error("start", "Start failed: " + ex);
+            MessageBox.Show(Strings.Error_Unexpected, Strings.App_Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            Shutdown(1);
+        }
+    }
+
+    private void Start(StartupEventArgs e)
+    {
         var syncFileArg = e.Args.FirstOrDefault(a => a.EndsWith(SyncStore.SyncFileExtension, StringComparison.OrdinalIgnoreCase));
         var startInTray = e.Args.Contains("--tray", StringComparer.OrdinalIgnoreCase);
 
@@ -78,15 +95,12 @@ public partial class App : Application
         ui = new UiServices(() => (Window?)mainWindow ?? Windows.OfType<Window>().FirstOrDefault(w => w.IsActive), (title, text) => tray?.Show(title, text));
         _ = instance.ListenAsync(message => Dispatcher.BeginInvoke(() => OnSecondInstance(message)));
 
-        if (!settings.IsSetUp || SyncStore.Inspect(settings.SyncFolder!) != SyncStore.FolderKind.SyncFolder)
+        // A device that is set up always starts normally, also when its sync folder is not reachable
+        // right now (a drive not connected, OneDrive not started yet): the overview says so and the
+        // application tries again; it never runs the set-up on its own (review 3, finding 6).
+        if (!settings.IsSetUp)
         {
-            if (settings.IsSetUp)
-            {
-                log.Warning("start", "The sync folder is missing; the set-up runs again.");
-                MessageBox.Show(Text.Format(Strings.Error_SyncFolderMissing, settings.SyncFolder), Strings.App_Title, MessageBoxButton.OK, MessageBoxImage.Warning);
-            }
-
-            ShowSetup(syncFileArg);
+            ShowSetup(syncFileArg, changing: false);
         }
         else
         {
@@ -150,9 +164,14 @@ public partial class App : Application
         log.Error("ui", "Unexpected error: " + args.Exception);
         args.Handled = true;
         MessageBox.Show(Strings.Error_Unexpected, Strings.App_Title, MessageBoxButton.OK, MessageBoxImage.Error);
+        if (tray is null && !Windows.OfType<Window>().Any(w => w.IsVisible))
+        {
+            // Nothing left the user could reach: end rather than run on invisibly.
+            Shutdown(1);
+        }
     }
 
-    private void ShowSetup(string? syncFileArg)
+    private void ShowSetup(string? syncFileArg, bool changing)
     {
         var shell = new ShellIntegration(Environment.ProcessPath!, Strings.SyncFile_TypeName);
         var model = new SetupViewModel(engine!, ui!, shell, new GameLocator(), syncFileArg);
@@ -165,7 +184,17 @@ public partial class App : Application
         };
         window.Closed += (_, _) =>
         {
-            if (!window.Completed)
+            if (window.Completed)
+            {
+                return;
+            }
+
+            if (changing)
+            {
+                // Changing the sync folder was cancelled: back to the folder in use.
+                ShowMain(startHidden: false);
+            }
+            else
             {
                 Shutdown(0);
             }
@@ -217,7 +246,7 @@ public partial class App : Application
         tray?.Dispose();
         tray = null;
         exiting = false;
-        ShowSetup(null);
+        ShowSetup(null, changing: true);
     }
 
     private void ShowMainWindow()
@@ -277,6 +306,13 @@ public partial class App : Application
         {
             e.Cancel = true;
             mainWindow!.Hide();
+            if (!toldAboutTray)
+            {
+                // Windows 11 hides new tray icons in the overflow; say once where the application is.
+                toldAboutTray = true;
+                tray?.Show(Strings.App_Title, Strings.Tray_StillRunning);
+            }
+
             return;
         }
 

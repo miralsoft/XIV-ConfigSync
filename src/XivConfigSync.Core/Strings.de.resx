@@ -38,7 +38,6 @@
   <data name="Common_Unknown" xml:space="preserve"><value>unbekannt</value></data>
   <data name="Error_Generic" xml:space="preserve"><value>{0}</value></data>
   <data name="Error_Settings" xml:space="preserve"><value>Die Einstellungen in {0} konnten nicht gelesen werden. Benenne die Datei um oder entferne sie, um mit neuen Einstellungen zu starten.</value></data>
-  <data name="Error_SyncFolderMissing" xml:space="preserve"><value>Der Sync-Ordner {0} ist nicht erreichbar. Liegt er auf einem nicht verbundenen Laufwerk, verbinde es und starte neu. Sonst wähle den Sync-Ordner noch einmal.</value></data>
   <data name="Error_Unexpected" xml:space="preserve"><value>Ein unerwarteter Fehler ist aufgetreten. Die Einzelheiten stehen im Protokoll. Das Programm bleibt geöffnet.</value></data>
   <data name="Evidence_Confirmed" xml:space="preserve"><value>belegt</value></data>
   <data name="Evidence_Unconfirmed" xml:space="preserve"><value>noch nicht belegt</value></data>
@@ -93,6 +92,7 @@
   <data name="Nav_Transfer" xml:space="preserve"><value>Übertragen</value></data>
   <data name="Notify_Applied" xml:space="preserve"><value>{0} Dateien von {1} übernommen.</value></data>
   <data name="Notify_Conflicts" xml:space="preserve"><value>{0} Dateien von {1} wurden auch hier geändert. Bitte entscheide auf der Seite „Übertragen“.</value></data>
+  <data name="Notify_NotApplied" xml:space="preserve"><value>Einstellungen von {0} wurden nicht übernommen: {1}</value></data>
   <data name="Origin_AfterApply" xml:space="preserve"><value>nach einer Übertragung</value></data>
   <data name="Origin_AppStart" xml:space="preserve"><value>beim Start</value></data>
   <data name="Origin_GameExit" xml:space="preserve"><value>nach dem Spielen</value></data>
@@ -101,6 +101,7 @@
   <data name="Overview_ConflictCopies" xml:space="preserve"><value>Im Spielordner liegen {0} alte Konfliktkopien. Sie werden weder gesichert noch gelöscht; du kannst sie von Hand entfernen.</value></data>
   <data name="Overview_DeviceName" xml:space="preserve"><value>Name</value></data>
   <data name="Overview_Devices" xml:space="preserve"><value>Geräte im Sync-Ordner</value></data>
+  <data name="Overview_FolderUnavailable" xml:space="preserve"><value>Der Sync-Ordner {0} ist gerade nicht erreichbar (Laufwerk nicht verbunden, OneDrive nicht gestartet?). Das Programm versucht es weiter; nichts geht verloren. Für einen anderen Ordner wähle in den Einstellungen Sync-Ordner wechseln.</value></data>
   <data name="Overview_GameNotRunning" xml:space="preserve"><value>Spiel läuft nicht</value></data>
   <data name="Overview_GameRunning" xml:space="preserve"><value>Spiel läuft: es wird nichts geschrieben</value></data>
   <data name="Overview_Intro" xml:space="preserve"><value>Dieses Gerät sichert seine Einstellungen in seinen eigenen Bereich im Sync-Ordner. Auf der Seite „Übertragen“ übernimmst du Einstellungen von einem anderen Gerät oder aus einer älteren Sicherung.</value></data>
@@ -128,6 +129,7 @@
   <data name="Recovery_LeftAlone" xml:space="preserve"><value>{0} Dateien wurden nach der Unterbrechung geändert und so gelassen, wie sie sind. Du kannst sie auf der Seite Übertragen übernehmen.</value></data>
   <data name="Recovery_Text" xml:space="preserve"><value>Eine Übertragung oder ein Rückgängigmachen wurde unterbrochen, zum Beispiel durch einen Stromausfall oder weil das Spiel gestartet wurde. Ja: zu Ende führen. Nein: auf den Stand davor zurück. Abbrechen: später entscheiden.</value></data>
   <data name="Recovery_Title" xml:space="preserve"><value>Unterbrochene Übertragung</value></data>
+  <data name="Refuse_AlreadySyncFolder" xml:space="preserve"><value>Dieser Ordner ist schon ein Sync-Ordner. Wähle ihn, um ihm beizutreten, statt einen neuen anzulegen.</value></data>
   <data name="Refuse_Busy" xml:space="preserve"><value>Ein anderer Vorgang läuft gerade. Bitte versuche es gleich noch einmal.</value></data>
   <data name="Refuse_ChangedSincePlan" xml:space="preserve"><value>Einige Dateien haben sich seit dem Vergleich geändert, zum Beispiel weil das Spiel lief. Es wurde nichts geschrieben. Bitte vergleiche noch einmal.</value></data>
   <data name="Refuse_Damaged" xml:space="preserve"><value>Einige Dateien dieser Sicherung fehlen oder sind beschädigt, vielleicht weil OneDrive sie noch nicht vollständig heruntergeladen hat. Es wurde nichts übertragen. Versuche es später noch einmal.</value></data>
@@ -139,7 +141,8 @@
   <data name="Refuse_NoSnapshot" xml:space="preserve"><value>Diese Übertragung lässt sich nicht mehr rückgängig machen.</value></data>
   <data name="Refuse_NoSyncFolder" xml:space="preserve"><value>Es ist kein Sync-Ordner eingerichtet.</value></data>
   <data name="Refuse_NothingSelected" xml:space="preserve"><value>Es ist keine Datei ausgewählt.</value></data>
-  <data name="Refuse_OpenJournal" xml:space="preserve"><value>Eine unterbrochene Übertragung muss zuerst abgeschlossen oder zurückgesetzt werden. Starte das Programm neu.</value></data>
+  <data name="Refuse_OpenJournal" xml:space="preserve"><value>Eine unterbrochene Übertragung oder ein unterbrochenes Rückgängigmachen muss zuerst abgeschlossen oder zurückgesetzt werden. Schließe das Spiel, falls es läuft, und drücke dann auf der Übersicht Aktualisieren.</value></data>
+  <data name="Refuse_SyncFolderUnavailable" xml:space="preserve"><value>Der Sync-Ordner ist gerade nicht erreichbar. Verbinde das Laufwerk oder starte OneDrive und versuche es dann noch einmal.</value></data>
   <data name="Refuse_UnknownDevice" xml:space="preserve"><value>Dieses Gerät ist nicht im Sync-Ordner.</value></data>
   <data name="Root_Game" xml:space="preserve"><value>Spiel</value></data>
   <data name="Root_Plugins" xml:space="preserve"><value>Plugins</value></data>
@@ -155,6 +158,7 @@
   <data name="Rules_PatternHint" xml:space="preserve"><value>Muster, zum Beispiel EinPlugin/*.json</value></data>
   <data name="Rules_Remove" xml:space="preserve"><value>Entfernen</value></data>
   <data name="Rules_Reset" xml:space="preserve"><value>Alle Regeln zurücksetzen</value></data>
+  <data name="Rules_ResetConfirm" xml:space="preserve"><value>Alle Regeln auf den Standard zurücksetzen? Deine Ausschlüsse bleiben.</value></data>
   <data name="Rules_Title" xml:space="preserve"><value>Regeln</value></data>
   <data name="Settings_AutoApply" xml:space="preserve"><value>Dateien mit der Regel „immer“ automatisch von anderen Geräten übernehmen</value></data>
   <data name="Settings_Autostart" xml:space="preserve"><value>Mit Windows starten (im Infobereich)</value></data>
@@ -193,6 +197,7 @@
   <data name="Setup_DoneAgain" xml:space="preserve"><value>Dieser PC ist unter seinem alten Namen neu eingerichtet. Seine letzten Sicherungen findest du auf der Seite Übertragen, falls du eine zurückholen willst. Die anderen PCs übernehmen von diesem PC nichts ohne Rückfrage, bis einmal verglichen wurde.</value></data>
   <data name="Setup_DoneJoined" xml:space="preserve"><value>Dieses Gerät ist eingerichtet und gesichert. Auf der Seite „Übertragen“ kannst du jetzt die Einstellungen deines anderen Geräts übernehmen.</value></data>
   <data name="Setup_DoneNew" xml:space="preserve"><value>Der Sync-Ordner ist eingerichtet und dieses Gerät gesichert. Wähle auf deinem nächsten PC denselben Ordner oder doppelklicke die .xivsync-Datei darin.</value></data>
+  <data name="Setup_DoneNoBackup" xml:space="preserve"><value>Dieses Gerät ist eingerichtet. Die erste Sicherung war noch nicht möglich und folgt automatisch: {0}</value></data>
   <data name="Setup_Finish" xml:space="preserve"><value>Fertigstellen</value></data>
   <data name="Setup_Folder_Empty" xml:space="preserve"><value>Hier wird ein neuer Sync-Ordner angelegt.</value></data>
   <data name="Setup_Folder_Foreign" xml:space="preserve"><value>Dieser Ordner enthält andere Dateien. Bitte wähle einen leeren Ordner oder einen vorhandenen Sync-Ordner.</value></data>
@@ -226,7 +231,7 @@
   <data name="Transfer_Compare" xml:space="preserve"><value>Vergleichen</value></data>
   <data name="Transfer_ConfirmOwn" xml:space="preserve"><value>Ein älterer Stand dieses Geräts wird wiederhergestellt. Danach wird er als aktueller Stand gesichert, den deine anderen Geräte dann sehen.</value></data>
   <data name="Transfer_ConfirmSensitive" xml:space="preserve"><value>Die Auswahl enthält Gerätedateien oder Dateien mit Zugangsdaten. Bitte prüfe, ob du sie hier haben willst.</value></data>
-  <data name="Transfer_ConfirmText" xml:space="preserve"><value>{0} Dateien werden ersetzt. Vorher werden die aktuellen Dateien gesichert, die Übertragung lässt sich also rückgängig machen.</value></data>
+  <data name="Transfer_ConfirmText" xml:space="preserve"><value>{0} Dateien werden ersetzt oder angelegt. Vorher werden die aktuellen Dateien gesichert, die Übertragung lässt sich also rückgängig machen.</value></data>
   <data name="Transfer_Done" xml:space="preserve"><value>{0} Dateien übernommen. Mit „Letzte Übertragung rückgängig“ lässt sich das zurücknehmen.</value></data>
   <data name="Transfer_Intro" xml:space="preserve"><value>Wähle ein Gerät und eine Sicherung, dann vergleiche. Dateien mit Haken werden übernommen. Bis du bestätigst, wird nichts geschrieben, und jede Übertragung lässt sich rückgängig machen.</value></data>
   <data name="Transfer_Latest" xml:space="preserve"><value>Neueste Sicherung</value></data>
@@ -237,7 +242,7 @@
   <data name="Transfer_SelectNone" xml:space="preserve"><value>Auswahl aufheben</value></data>
   <data name="Transfer_ShowSkipped" xml:space="preserve"><value>Auch unveränderte Dateien zeigen</value></data>
   <data name="Transfer_Source" xml:space="preserve"><value>Gerät</value></data>
-  <data name="Transfer_Summary" xml:space="preserve"><value>{0} ausgewählt, {1} Konflikte, {2} angeboten, {3} ohne Änderung.</value></data>
+  <data name="Transfer_Summary" xml:space="preserve"><value>{0} ausgewählt, {1} Konflikte, {2} angeboten, {3} nicht betroffen.</value></data>
   <data name="Transfer_ThisDevice" xml:space="preserve"><value>(dieses Gerät)</value></data>
   <data name="Transfer_Title" xml:space="preserve"><value>Übertragen</value></data>
   <data name="Transfer_Undo" xml:space="preserve"><value>Letzte Übertragung rückgängig</value></data>
@@ -247,6 +252,7 @@
   <data name="Tray_BackupNow" xml:space="preserve"><value>Jetzt sichern</value></data>
   <data name="Tray_Exit" xml:space="preserve"><value>Beenden</value></data>
   <data name="Tray_Open" xml:space="preserve"><value>Öffnen</value></data>
+  <data name="Tray_StillRunning" xml:space="preserve"><value>XIV ConfigSync läuft hier im Infobereich weiter. Beenden mit einem Rechtsklick auf das Symbol.</value></data>
   <data name="Upload_InSync" xml:space="preserve"><value>Hochgeladen (OneDrive meldet synchron)</value></data>
   <data name="Upload_Pending" xml:space="preserve"><value>An OneDrive übergeben, Upload ausstehend</value></data>
   <data name="Upload_Unknown" xml:space="preserve"><value>An den Sync-Ordner übergeben; Cloud-Status unbekannt</value></data>

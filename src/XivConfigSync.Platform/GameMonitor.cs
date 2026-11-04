@@ -4,14 +4,20 @@ using XivConfigSync.Core.Platform;
 namespace XivConfigSync.Platform;
 
 /// <summary>
-/// Watches for the game process. While the game is not running it looks every few seconds by
-/// process name, which costs a process list; while it runs it waits for the process to exit
-/// instead of polling (gate 3, measurement 7). Read-only towards the game (X-04).
+/// Watches for the game process. It looks every few seconds by process name, which costs a process
+/// list, and additionally reacts at once when the watched process exits (gate 3, measurement 7).
+/// Read-only towards the game (X-04).
 /// </summary>
 public sealed class GameMonitor : IGameMonitor
 {
-    /// <summary>The process names of the game client.</summary>
-    public static readonly IReadOnlyList<string> ProcessNames = ["ffxiv_dx11", "ffxiv"];
+    /// <summary>
+    /// The processes that keep the configuration folder busy: the game client, and the game's own
+    /// launcher and configuration tool, which edit FFXIV.cfg and FFXIV_BOOT.cfg (review 3, finding 11).
+    /// The Steam edition runs the same client executable.
+    /// </summary>
+    public static readonly IReadOnlyList<string> ProcessNames = ["ffxiv_dx11", "ffxiv", "ffxivboot", "ffxivboot64", "ffxivlauncher", "ffxivlauncher64", "ffxivconfig", "ffxivconfig64"];
+
+    private readonly object pollGate = new();
 
     private readonly Timer timer;
     private readonly object gate = new();
@@ -95,6 +101,24 @@ public sealed class GameMonitor : IGameMonitor
     private void OnExited(object? sender, EventArgs e) => Poll();
 
     private void Poll()
+    {
+        // One poll at a time: the timer and the exit event must not report out of order.
+        if (!Monitor.TryEnter(pollGate))
+        {
+            return;
+        }
+
+        try
+        {
+            PollOnce();
+        }
+        finally
+        {
+            Monitor.Exit(pollGate);
+        }
+    }
+
+    private void PollOnce()
     {
         bool changed;
         bool now;
