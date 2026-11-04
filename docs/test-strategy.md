@@ -1,6 +1,6 @@
 # Test strategy: XIV ConfigSync
 
-Status: gate 2 draft, 2026-11-04.
+Status: approved in gate 2 (2026-11-04). What was run in gates 3 and 4 is listed in `status.md`.
 
 ## 1. Levels
 

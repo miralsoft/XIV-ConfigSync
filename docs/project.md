@@ -18,11 +18,14 @@ The identity card of the project.
 
 ## Declared languages, frameworks, and active profiles
 
+- C# on .NET 10: `rules/languages/csharp.md`. The product (`src/`, `tests/`).
+- WPF: `rules/frameworks/wpf.md`. The desktop application (`src/XivConfigSync.App`).
 - PowerShell 5.1: `rules/languages/powershell.md`. Used for the build script and the read-only
   analysis tools under `tools/`.
+- XAML and `.resx` resources, checked by XamlStyler and the build.
 - Markdown for documentation.
 
-The product will be written in C# on .NET 10 with WPF (decided 2026-11-04). The profiles`nrules/languages/csharp.md` and `rules/frameworks/wpf.md` are declared and adopted with the first`nproduct code in gate 3, when there is something for their checks to run on.
+The SDK is pinned in `global.json` (10.0.403) and packages are locked (`packages.lock.json`).
 
 ## Targeted foundation version
 

@@ -1,7 +1,7 @@
 # Specification: XIV ConfigSync
 
-Status: gate 2 draft, 2026-11-04. Revises the preliminary specification of the project package in
-the light of the feasibility analysis (gate 1). Nothing of the product is implemented yet.
+Status: approved in gate 2 (2026-11-04); release 0.1 is implemented (gates 3 and 4). Revises the
+preliminary specification of the project package in the light of the feasibility analysis (gate 1).
 
 Related pages: `architecture.md` (how it is built), `data-model.md` (what it stores),
 `test-strategy.md` (how it is proven), `file-matrix.md` (what each game file is),

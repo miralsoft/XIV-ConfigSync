@@ -195,3 +195,33 @@ Append-only. Never edit or delete past entries; a later entry may supersede an e
   owner installs it. Rejected: pinning the installed 10.0.303, which would depart from the profile.
 - (2026-11-04) The owner allows a test folder `Games\ConfigSync-Dev-Test` in the OneDrive used for
   the earlier measurement, for test files only, to verify reading the upload state from C#.
+- (2026-11-04) Gate 3 measurements, on device A: the game version is read from
+  `game\ffxivgame.ver` in the installation folder (found through the uninstall entry, XIVLauncher's
+  `GamePath` or the default folder), read-only; the OneDrive upload state can be read from C#
+  through the shell's automation object, on any thread, in 11 to 24 ms per file, with the same
+  values as in gate 1 (4 pending, 2 in sync). Because of that cost, only the files a backup added
+  are checked. The game process is found by name every 5 s while it is not running, and waited for
+  while it runs.
+- (2026-11-04) Gate 3 and 4 implementation choices. CommunityToolkit.Mvvm as the MVVM base (WPF
+  profile). The tray icon uses Windows Forms' `NotifyIcon`, part of the Windows Desktop runtime, so
+  no package; the Windows Forms analyzer advice WFO0003 on DPI is suppressed in the application
+  project because the WPF profile requires the DPI awareness in `app.manifest`. One instance per
+  user (a named mutex); a second start hands its `.xivsync` argument over through a named pipe
+  restricted to the current user. The execution level is `asInvoker`; nothing needs
+  administrator rights, so the extraction finding of the WPF profile does not apply. Symbols are
+  embedded, so the published file has nothing beside it.
+- (2026-11-04) The planner offers every differing file that is not "never", also when the local
+  copy is the newer one. It applies on its own only what is newer on the source and unchanged here
+  ("always" files). Rejected: skipping files whose local copy is newer, which left no way to take
+  the other device's version by hand, for example after undoing a transfer. An undone transfer
+  forgets the shared state of its files and is removed from the list of undoable transfers.
+- (2026-11-04) Notifications after a backup name only conflicts in "always" files; offers are not
+  announced, because the game changes some of them on every login (V00).
+- (2026-11-04) The resource files carry no `reader` and `writer` headers. Rationale: the shared
+  pre-commit hook reads the public key token in those headers as an API key and blocks the commit;
+  the build does not need them. Reported to the owner as a false positive of the hook.
+- (2026-11-04) The foundation has no CI template for C#; `.github/workflows/dotnet-checks.yml`
+  follows the PowerShell template's shape and runs what the C# and WPF profiles name: format,
+  build with warnings as errors, tests, XAML format and the dependency audit. `actions/setup-dotnet`
+  is pinned by commit to v6.0.0, the newest release older than three weeks. `build.ps1` runs the
+  same checks locally.

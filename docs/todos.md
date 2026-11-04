@@ -25,4 +25,24 @@
 - [x] Data model of the shared folder and the local data (`data-model.md`)
 - [x] Test strategy, gate 3 prototype scope, mapping of T01 to T21 and A01 to A08 (`test-strategy.md`)
 - [x] Owner's review and decisions on credentials (6.1) and plugin apply in 0.1 (6.2)
-- [ ] Gate 3 approval
+- [x] Gate 3 and 4 approval (2026-11-04)
+
+## Gates 3 and 4: prototype and core functions
+
+- [x] Solution per the C# and WPF profiles: pinned SDK, locked packages, strict build, format
+  checks, tests, CI workflow
+- [x] Core: store, scanner, rules, planner, applier with snapshot, journal and undo, engine
+- [x] Platform: game process, OneDrive state, game version, autostart, file association
+- [x] Application: set-up, overview, transfer, rules, settings, log, about, tray, one instance
+- [x] Texts in English and German with a completeness test
+- [x] Portable single executable
+- [x] Manual test on one machine with copies of real data
+- [x] User guide, README
+- [ ] First CI run of the .NET workflow (after the owner's push)
+- [ ] Test on two real devices (gate 4 acceptance A01 to A05)
+- [ ] Dalamud test: does Dalamud keep a plugin settings file written from outside (decides
+  whether applying plugin settings stays in 0.1)
+- [ ] Transfer check of MACRO, GEARSET, COMMON, CONTROL1 in the game (then "always")
+- [ ] Upload state on a personal OneDrive
+- [ ] Manual accessibility check before release (keyboard only, Narrator, 150 and 200 percent)
+- [ ] Gate 5: release candidate, changelog, release notes, release procedure

@@ -1,8 +1,7 @@
 # Architecture: XIV ConfigSync
 
-Status: gate 2 draft, 2026-11-04. Nothing of the product is implemented; the repository holds
-only the read-only analysis tools in `tools/`. What the product does is in `specification.md`; the
-formats are in `data-model.md`.
+Status: implemented for release 0.1 (gates 3 and 4, 2026-11-04); the test on two real devices is
+still open. What the product does is in `specification.md`; the formats are in `data-model.md`.
 
 ## Overview
 
@@ -115,15 +114,20 @@ attempts the backup stops without publishing anything.
    hashes: the source's, the local file's, and the base (the hash both had when this device last
    applied or backed up that file).
 
-   | Source vs base | Local vs base | Rule "always" | Rule "on request" |
+   | Source vs local | What both last shared | Rule "always" | Rule "on request" |
    |---|---|---|---|
-   | same | any | nothing to do | nothing to do |
-   | changed | same | apply | offer |
-   | changed | changed, equal to source | nothing to do | nothing to do |
-   | changed | changed, different | conflict | conflict |
+   | equal | any | nothing to do | nothing to do |
+   | different | the source's state (only the local copy changed) | offer | offer |
+   | different | the local state (only the source changed) | apply | offer |
+   | different | neither, or unknown (first transfer) | conflict | conflict |
+   | missing locally | any | apply | offer |
 
-   "Never" files are not offered. A conflict keeps both versions: the local file stays, the
-   source version stays in the store, and the user chooses. No last-writer-wins.
+   "What both last shared" comes from the base table and, where it has no entry, from the history
+   of both devices' revisions: a local file equal to an older state of the source means only the
+   source changed; a source file equal to an older local state means only the local copy changed.
+   "Never" files are not offered from another device. A conflict keeps both versions: the local
+   file stays, the source version stays in the store, and the user chooses. Only "apply" is ever
+   done without the user ticking it. No last-writer-wins.
 3. Checks that refuse the whole apply: the game runs (the apply waits instead), the game version
    differs, a source object fails its hash, the source revision is incomplete.
 4. Preview: every file with its action and reason. The preview writes nothing.

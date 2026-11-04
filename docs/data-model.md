@@ -1,6 +1,6 @@
 # Data model: XIV ConfigSync
 
-Status: gate 2 draft, 2026-11-04. Every stored format carries a `schema` number from its first
+Status: implemented in release 0.1 (2026-11-04). Every stored format carries a `schema` number from its first
 version, so a later release can read and migrate it (D-10, D-11). All JSON is UTF-8 without a
 byte-order mark. Times are UTC in ISO 8601. Hashes are lower-case hexadecimal SHA-256.
 
