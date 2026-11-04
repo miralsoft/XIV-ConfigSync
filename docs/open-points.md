@@ -46,5 +46,8 @@
   recognized" error; 1.25.0 failed 6 of 8, five with that error and one where the analyzer step
   ended with exit code 5 and no output. The error therefore also exists in 1.24.0, and staying on
   the pinned 1.25.0 costs nothing. A one-time retry for exactly this error is now in place (see
-  `decisions.md`); whether it ends the failures in CI is still to be measured. It does not cover the
-  run that ended with exit code 5, whose cause is unknown.
+  `decisions.md`). It does not cover the run that ended with exit code 5, whose cause is unknown.
+- The retry does not help (measured 2026-11-04, eight sequential CI runs on `main`): 3 of 8 failed.
+  In each failed run the error, once it appeared, came back on the second analysis and in every
+  file analysed after it. The fault is a state of the PowerShell process, not of one analysis, so
+  analysing again in the same process cannot clear it. A second analysis in a new process might.
