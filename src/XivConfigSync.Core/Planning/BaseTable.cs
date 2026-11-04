@@ -19,7 +19,8 @@ public sealed class BaseTable
     public static BaseTable Load(string path)
     {
         var table = FileOps.ReadJson<BaseTable>(path) ?? new BaseTable();
-        table.Files = new Dictionary<string, string>(table.Files, StringComparer.OrdinalIgnoreCase);
+        table.Files = new Dictionary<string, string>(table.Files ?? [], StringComparer.OrdinalIgnoreCase);
+        table.SourceEpoch ??= string.Empty;
         return table;
     }
 

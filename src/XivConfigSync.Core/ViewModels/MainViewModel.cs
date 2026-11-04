@@ -120,7 +120,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             StatusText = Strings.Status_Ready;
             return true;
         }
-        catch (Exception ex) when (ex is RefusedException or IOException or UnauthorizedAccessException or InvalidOperationException or InvalidDataException or System.Text.Json.JsonException or System.Security.SecurityException)
+        catch (Exception ex) when (ex is RefusedException or IOException or UnauthorizedAccessException or InvalidOperationException or InvalidDataException or System.Text.Json.JsonException or System.Security.SecurityException or ArgumentException or NotSupportedException)
         {
             log.Warning("ui", $"{busyText}: {ex.GetType().Name}: {ex.Message}");
             StatusText = Text.ForError(ex);
@@ -338,15 +338,23 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     {
         ui.OnUiThread(async () =>
         {
-            GameRunning = running;
-            if (!running)
+            try
             {
-                // The game writes its files while it shuts down; give it time to finish (V00).
-                await Task.Delay(TimeSpan.FromSeconds(15)).ConfigureAwait(true);
-                if (!disposed && !game.IsRunning)
+                GameRunning = running;
+                if (!running)
                 {
-                    await BackupAndPullAsync(RevisionOrigin.GameExit, quiet: true).ConfigureAwait(true);
+                    // The game writes its files while it shuts down; give it time to finish (V00).
+                    await Task.Delay(TimeSpan.FromSeconds(15)).ConfigureAwait(true);
+                    if (!disposed && !game.IsRunning)
+                    {
+                        await BackupAndPullAsync(RevisionOrigin.GameExit, quiet: true).ConfigureAwait(true);
+                    }
                 }
+            }
+            catch (Exception ex)
+            {
+                // An async void path: nothing may escape to the dispatcher (review 2, finding 11).
+                log.Error("game-exit", ex.ToString());
             }
         });
     }
@@ -359,10 +367,16 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         }
 
         var tcs = new TaskCompletionSource();
-        ui.OnUiThread(async () =>
+        var posted = ui.OnUiThread(async () =>
         {
             try
             {
+                // Checked again on the UI thread, where the flags are set (review 2, finding 12).
+                if (disposed || game.IsRunning || Busy || sequences > 0)
+                {
+                    return;
+                }
+
                 List<DeviceInfo> fresh = [];
                 await RunAsync(Strings.Status_Refreshing, () => fresh = [.. Engine.FindNewRevisions()], showErrors: false).ConfigureAwait(true);
                 if (fresh.Count > 0)
@@ -370,11 +384,20 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
                     await BackupAndPullAsync(RevisionOrigin.Manual, quiet: true, fresh).ConfigureAwait(true);
                 }
             }
+            catch (Exception ex)
+            {
+                log.Error("periodic", ex.ToString());
+            }
             finally
             {
-                tcs.SetResult();
+                tcs.TrySetResult();
             }
         });
+        if (!posted)
+        {
+            return;
+        }
+
         await tcs.Task.ConfigureAwait(false);
     }
 }

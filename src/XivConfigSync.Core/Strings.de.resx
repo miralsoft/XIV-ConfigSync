@@ -46,12 +46,14 @@
   <data name="Exclude_Backup" xml:space="preserve"><value>Sicherungsdatei</value></data>
   <data name="Exclude_Cache" xml:space="preserve"><value>Cache</value></data>
   <data name="Exclude_ConflictCopy" xml:space="preserve"><value>Konfliktkopie eines Cloud-Clients</value></data>
+  <data name="Exclude_Link" xml:space="preserve"><value>Verknüpfung auf einen anderen Ordner</value></data>
   <data name="Exclude_Lock" xml:space="preserve"><value>Sperr- oder Journaldatei</value></data>
   <data name="Exclude_Log" xml:space="preserve"><value>Logdatei</value></data>
   <data name="Exclude_NotConfig" xml:space="preserve"><value>keine Konfiguration</value></data>
   <data name="Exclude_Old" xml:space="preserve"><value>die eigene Vorgängerkopie des Spiels</value></data>
   <data name="Exclude_Temp" xml:space="preserve"><value>temporäre Datei</value></data>
   <data name="Exclude_TooLarge" xml:space="preserve"><value>größer als 64 MB</value></data>
+  <data name="Exclude_Unreadable" xml:space="preserve"><value>nicht lesbar</value></data>
   <data name="Exclude_User" xml:space="preserve"><value>von dir ausgeschlossen</value></data>
   <data name="Flag_Credential" xml:space="preserve"><value>Enthält Zugangsdaten.</value></data>
   <data name="Flag_Large" xml:space="preserve"><value>Große Datei.</value></data>
@@ -129,6 +131,8 @@
   <data name="Refuse_Busy" xml:space="preserve"><value>Ein anderer Vorgang läuft gerade. Bitte versuche es gleich noch einmal.</value></data>
   <data name="Refuse_ChangedSincePlan" xml:space="preserve"><value>Einige Dateien haben sich seit dem Vergleich geändert, zum Beispiel weil das Spiel lief. Es wurde nichts geschrieben. Bitte vergleiche noch einmal.</value></data>
   <data name="Refuse_Damaged" xml:space="preserve"><value>Einige Dateien dieser Sicherung fehlen oder sind beschädigt, vielleicht weil OneDrive sie noch nicht vollständig heruntergeladen hat. Es wurde nichts übertragen. Versuche es später noch einmal.</value></data>
+  <data name="Refuse_FolderChanged" xml:space="preserve"><value>Der Spiel- oder Plugin-Ordner wurde in den Einstellungen geändert, seit dies gesichert wurde. Stelle den Ordner zurück, um es abzuschließen oder rückgängig zu machen.</value></data>
+  <data name="Refuse_FolderMissing" xml:space="preserve"><value>Der Ordner der Spieleinstellungen dieses Geräts ist nicht da. Prüfe den Ordner in den Einstellungen; in einen fehlenden Ordner wird nichts übertragen.</value></data>
   <data name="Refuse_GameRunning" xml:space="preserve"><value>Das Spiel läuft. Solange es läuft, wird nichts in seine Dateien geschrieben; das passiert, nachdem du es beendet hast.</value></data>
   <data name="Refuse_GameVersion" xml:space="preserve"><value>Die Spielversion ist auf beiden Geräten verschieden. Bitte aktualisiere das Spiel zuerst auf beiden Geräten.</value></data>
   <data name="Refuse_NoRevision" xml:space="preserve"><value>Dieses Gerät hat noch keine Sicherung.</value></data>
@@ -237,7 +241,7 @@
   <data name="Transfer_ThisDevice" xml:space="preserve"><value>(dieses Gerät)</value></data>
   <data name="Transfer_Title" xml:space="preserve"><value>Übertragen</value></data>
   <data name="Transfer_Undo" xml:space="preserve"><value>Letzte Übertragung rückgängig</value></data>
-  <data name="Transfer_UndoChanged" xml:space="preserve"><value>Vorsicht: {0} dieser Dateien wurden seit der Übertragung geändert, zum Beispiel weil du gespielt hast. Rückgängig setzt auch sie zurück; der aktuelle Stand wird vorher gesichert.</value></data>
+  <data name="Transfer_UndoChanged" xml:space="preserve"><value>Vorsicht: {0} dieser Dateien wurden seit der Übertragung geändert, zum Beispiel weil du gespielt hast. Rückgängig setzt auch sie zurück. Der aktuelle Stand wird vorher im Snapshot-Ordner gesichert (siehe Benutzerhandbuch).</value></data>
   <data name="Transfer_UndoConfirm" xml:space="preserve"><value>Die Übertragung vom {0} rückgängig machen? {1} Dateien werden auf den Stand davor zurückgesetzt.</value></data>
   <data name="Transfer_Undone" xml:space="preserve"><value>Die Übertragung wurde rückgängig gemacht.</value></data>
   <data name="Tray_BackupNow" xml:space="preserve"><value>Jetzt sichern</value></data>

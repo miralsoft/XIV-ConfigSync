@@ -380,6 +380,19 @@ public sealed class SyncEngine
     {
         var store = OpenStore();
         var roots = Roots;
+
+        // A configured folder that is not there (moved, a drive not ready) is unknown, not empty:
+        // nothing may be planned into it (review 2, finding 7).
+        if (roots.TryGetValue(Model.Roots.Game, out var gameFolder) && (gameFolder is null || !Directory.Exists(gameFolder)))
+        {
+            throw new RefusedException("Refuse_FolderMissing");
+        }
+
+        if (roots.TryGetValue(Model.Roots.Plugins, out var pluginFolder) && pluginFolder is not null && !Directory.Exists(pluginFolder))
+        {
+            roots = new Dictionary<string, string?>(roots) { [Model.Roots.Plugins] = null };
+        }
+
         var id = revisionId ?? store.ReadHead(sourceDeviceId) ?? throw new RefusedException("Refuse_NoRevision");
         var source = store.ReadRevision(sourceDeviceId, id);
         var scan = Scanner.Scan(roots, Rules);
@@ -396,9 +409,30 @@ public sealed class SyncEngine
 
             var full = RelativePath.Combine(folder, file.Path);
             var excluded = Rules.ExclusionReason(root, file.Path) is not null;
-            if (excluded || File.Exists(full))
+            var key = BaseTable.Key(root, file.Path);
+            try
             {
-                outsideScan[BaseTable.Key(root, file.Path)] = File.Exists(full) ? FileOps.HashFile(full) : null;
+                // GetAttributes, not File.Exists: a file that cannot be accessed must not look absent.
+                bool exists;
+                try
+                {
+                    exists = !File.GetAttributes(full).HasFlag(FileAttributes.Directory);
+                }
+                catch (Exception missing) when (missing is FileNotFoundException or DirectoryNotFoundException)
+                {
+                    exists = false;
+                }
+
+                if (excluded || exists)
+                {
+                    outsideScan[key] = exists ? FileOps.HashFile(full) : null;
+                }
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                // Present but unreadable: a value that never matches, so it is only offered and the
+                // check before writing refuses it cleanly (review 2, finding 6).
+                outsideScan[key] = "unreadable";
             }
         }
 
@@ -470,7 +504,10 @@ public sealed class SyncEngine
                 plan.SourceRevisionId,
                 selected.Select(i => new ApplyTarget(i.Root, i.Path, i.SourceHash, i.LocalHash)).ToList());
 
-            if (!plan.IsOwnDevice)
+            // The common state is only kept for the source device's current epoch: applying an older
+            // revision from an earlier epoch must not wipe it (review 2, finding 8).
+            var currentEpoch = store.ListDevices().FirstOrDefault(d => d.DeviceId == plan.SourceDeviceId)?.Epoch;
+            if (!plan.IsOwnDevice && currentEpoch == plan.SourceEpoch)
             {
                 var path = local.BasePath(plan.SourceDeviceId);
                 var bases = BaseTable.Load(path);
@@ -487,7 +524,7 @@ public sealed class SyncEngine
                 bases.Save(path);
             }
 
-            applier.PruneSnapshots(20, TimeSpan.FromDays(30), DateTimeOffset.UtcNow);
+            PruneSnapshots(applier, correlation);
             log.Info(correlation, $"Apply done; snapshot {snapshotId}.");
         }
 
@@ -509,6 +546,11 @@ public sealed class SyncEngine
         if (game.IsRunning)
         {
             throw new RefusedException("Refuse_GameRunning");
+        }
+
+        if (HasInterruptedApply)
+        {
+            throw new RefusedException("Refuse_OpenJournal");
         }
 
         var correlation = Correlation();
@@ -562,7 +604,9 @@ public sealed class SyncEngine
         }
         else
         {
-            leftAlone = NewApplier(OpenStore()).FinishOpenJournal();
+            var applier = NewApplier(null);
+            var kind = applier.ReadJournal()?.Kind;
+            leftAlone = (kind == Journal.RestoreKind ? applier : NewApplier(OpenStore())).FinishOpenJournal();
         }
 
         log.Info(Correlation(), rollBack ? "Interrupted apply rolled back." : $"Interrupted apply finished; {leftAlone.Count} changed files left alone.");
@@ -638,6 +682,18 @@ public sealed class SyncEngine
     }
 
     private static string Correlation() => Guid.NewGuid().ToString("N")[..8];
+
+    private void PruneSnapshots(Applier applier, string correlation)
+    {
+        try
+        {
+            applier.PruneSnapshots(20, TimeSpan.FromDays(30), DateTimeOffset.UtcNow);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidDataException)
+        {
+            log.Warning(correlation, "Old snapshots could not be removed: " + ex.Message);
+        }
+    }
 
     private Applier NewApplier(SyncStore? store) => new(store, local.JournalPath, local.SnapshotsFolder, Roots, () => game.IsRunning, probe);
 

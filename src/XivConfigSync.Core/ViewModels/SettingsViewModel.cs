@@ -151,6 +151,12 @@ public sealed partial class SettingsViewModel : ObservableObject
 
         var saved = await main.RunAsync(Strings.Settings_Title, () =>
         {
+            if (main.Engine.HasInterruptedApply)
+            {
+                // The recovery must write into the folders it saved from (review 2, finding 10).
+                throw new Engine.RefusedException("Refuse_OpenJournal");
+            }
+
             var s = main.Engine.Settings;
             s.DisplayName = deviceName.Length == 0 ? s.DisplayName : deviceName;
             s.GameConfigFolder = gameFolder;

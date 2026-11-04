@@ -123,8 +123,19 @@ public sealed class ReviewTests
         }
 
         Assert.Equal("Refuse_GameRunning", Assert.Throws<RefusedException>(() => b.Engine.Apply(plan)).ReasonKey);
+
+        // Nothing more is written while the game runs, not even a rollback (second review, finding 1):
+        // the journal stays, and the first file is still the applied one.
+        Assert.True(b.Engine.HasInterruptedApply);
+        Assert.Equal(a.ReadGame(Hotbar), b.ReadGame(Hotbar));
+        Assert.Throws<RefusedException>(() => b.Engine.ResolveInterruptedApply(rollBack: true));
+
+        // After the game closed: roll back to the state before; the apply is not offered for undo.
+        game.IsRunning = false;
+        b.Engine.ResolveInterruptedApply(rollBack: true);
         Assert.Equal(before, State(b));
         Assert.False(b.Engine.HasInterruptedApply);
+        Assert.Empty(b.Engine.ListSnapshots());
     }
 
     [Fact]
@@ -175,6 +186,7 @@ public sealed class ReviewTests
         Assert.Throws<IOException>(() => b.Engine.Apply(plan));
         Assert.Equal(before, State(b));
         Assert.False(b.Engine.HasInterruptedApply);
+        Assert.Empty(b.Engine.ListSnapshots());
 
         // With a journal left open (a crash), no backup is made.
         File.WriteAllText(b.Local.JournalPath, "{}");
@@ -311,6 +323,96 @@ public sealed class ReviewTests
         var files = Scanner.Walk(folder).Select(f => Path.GetRelativePath(folder, f)).ToList();
         Assert.Contains(Path.Combine("real", "a.json"), files);
         Assert.DoesNotContain(files, f => f.Contains("secret", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void Review2UndoIsRefusedWhileAWriteIsInterrupted()
+    {
+        using var temp = new TempFolder();
+        var (a, b) = TwoDevices(temp);
+        var plan = b.Engine.Plan(a.Settings.DeviceId, null);
+        Item(plan, Hotbar).Selected = true;
+        var result = b.Engine.Apply(plan);
+        File.WriteAllText(b.Local.JournalPath, "{ \"kind\": \"apply\", \"snapshotId\": \"x\" }");
+        Assert.Equal("Refuse_OpenJournal", Assert.Throws<RefusedException>(() => b.Engine.Undo(result.SnapshotId)).ReasonKey);
+    }
+
+    [Fact]
+    public void Review2AnUndoStoppedByTheGameIsFinishedLater()
+    {
+        using var temp = new TempFolder();
+        var (a, b) = TwoDevices(temp);
+        var original = b.ReadGame(Hotbar);
+        var originalKeys = b.ReadGame(Keybind);
+        var plan = b.Engine.Plan(a.Settings.DeviceId, null);
+        Item(plan, Hotbar).Selected = true;
+        Item(plan, Keybind).Selected = true;
+        var result = b.Engine.Apply(plan);
+
+        // The game starts while the undo writes, after the first file: the undo stops, its journal
+        // stays, and once the game is closed it is finished.
+        b.Game.StartAfterChecks(3); // Engine.Undo, Applier.Restore, first file; the second file sees the game.
+        Assert.Equal("Refuse_GameRunning", Assert.Throws<RefusedException>(() => b.Engine.Undo(result.SnapshotId)).ReasonKey);
+        Assert.True(b.Engine.HasInterruptedApply);
+        b.Game.IsRunning = false;
+        b.Engine.ResolveInterruptedApply(rollBack: false);
+        Assert.False(b.Engine.HasInterruptedApply);
+        Assert.Equal(original, b.ReadGame(Hotbar));
+        Assert.Equal(originalKeys, b.ReadGame(Keybind));
+        Assert.DoesNotContain(b.Engine.ListSnapshots(), s => s.SnapshotId == result.SnapshotId);
+    }
+    [Fact]
+    public void Review2AMissingGameFolderIsRefusedNotFilled()
+    {
+        using var temp = new TempFolder();
+        var (a, b) = TwoDevices(temp);
+        b.Settings.GameConfigFolder = temp.Sub("moved-away");
+        Assert.Equal("Refuse_FolderMissing", Assert.Throws<RefusedException>(() => b.Engine.Plan(a.Settings.DeviceId, null)).ReasonKey);
+        Assert.Equal("Refuse_FolderMissing", Assert.Throws<RefusedException>(() => b.Engine.AutoApply(a.Settings.DeviceId)).ReasonKey);
+        Assert.False(Directory.Exists(temp.Sub("moved-away")));
+    }
+
+    [Fact]
+    public void Review2RecoveryRefusesAnotherFolder()
+    {
+        using var temp = new TempFolder();
+        var a = new Device(temp, "a");
+        a.Populate();
+        a.Engine.CreateSyncFolder(temp.Sub("sync"), "A");
+        a.Engine.Backup(RevisionOrigin.Manual);
+        var b = new Device(temp, "b", new CrashProbe("write", 1));
+        b.Populate();
+        b.Engine.JoinSyncFolder(temp.Sub("sync"), "B", null);
+        b.Engine.Backup(RevisionOrigin.Manual);
+        var plan = b.Engine.Plan(a.Settings.DeviceId, null);
+        Item(plan, Hotbar).Selected = true;
+        Item(plan, Keybind).Selected = true;
+        Assert.Throws<SimulatedCrashException>(() => b.Engine.Apply(plan));
+
+        var original = b.Settings.GameConfigFolder;
+        b.Settings.GameConfigFolder = temp.Sub("other");
+        Directory.CreateDirectory(b.Settings.GameConfigFolder);
+        Assert.Equal("Refuse_FolderChanged", Assert.Throws<RefusedException>(() => b.Engine.ResolveInterruptedApply(rollBack: true)).ReasonKey);
+        b.Settings.GameConfigFolder = original;
+        b.Engine.ResolveInterruptedApply(rollBack: true);
+        Assert.False(b.Engine.HasInterruptedApply);
+    }
+
+    [Fact]
+    public void Review2AnUnreadableFileIsOnlyOffered()
+    {
+        using var temp = new TempFolder();
+        var (a, b) = TwoDevices(temp);
+        Align(a, b);
+        b.Engine.UpdateRules(b.Engine.Rules.WithExclusion(Roots.Game, Hotbar, true));
+        a.WriteGame(Hotbar, Device.Random());
+        a.Engine.Backup(RevisionOrigin.Manual);
+        using (new FileStream(b.GamePath(Hotbar), FileMode.Open, FileAccess.Read, FileShare.None))
+        {
+            var item = Item(b.Engine.Plan(a.Settings.DeviceId, null), Hotbar);
+            Assert.Equal(PlanAction.Offer, item.Action);
+            Assert.False(item.Selected);
+        }
     }
 
     private static (Device A, Device B) TwoDevices(TempFolder temp)

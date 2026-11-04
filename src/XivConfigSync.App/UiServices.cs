@@ -55,12 +55,12 @@ internal sealed class UiServices : IUiServices
 
     public void Notify(string title, string message) => notify(title, message);
 
-    public void OnUiThread(Action action)
+    public bool OnUiThread(Action action)
     {
         var dispatcher = Application.Current?.Dispatcher;
-        if (dispatcher is null)
+        if (dispatcher is null || dispatcher.HasShutdownStarted)
         {
-            return;
+            return false;
         }
 
         if (dispatcher.CheckAccess())
@@ -71,6 +71,8 @@ internal sealed class UiServices : IUiServices
         {
             dispatcher.BeginInvoke(action);
         }
+
+        return true;
     }
 
     public void OpenFolder(string path)

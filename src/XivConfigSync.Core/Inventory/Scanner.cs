@@ -30,7 +30,13 @@ public static class Scanner
     /// other reparse points, such as cloud placeholders under OneDrive, are ordinary files here
     /// (review finding 13). Folders that cannot be read are skipped.
     /// </summary>
-    public static IEnumerable<string> Walk(string folder)
+    public static IEnumerable<string> Walk(string folder) => WalkWithSkipped(folder).Where(e => e.Reason is null).Select(e => e.FullPath);
+
+    /// <summary>
+    /// As <see cref="Walk"/>, but also returns what was skipped and why ("Exclude_Link",
+    /// "Exclude_Unreadable"), so a backup can show it instead of losing it silently (review 2, finding 9).
+    /// </summary>
+    public static IEnumerable<(string FullPath, string? Reason)> WalkWithSkipped(string folder)
     {
         var pending = new Stack<DirectoryInfo>();
         pending.Push(new DirectoryInfo(folder));
@@ -38,34 +44,54 @@ public static class Scanner
         {
             var directory = pending.Pop();
             List<FileSystemInfo> entries;
+            var unreadable = false;
             try
             {
                 entries = [.. directory.EnumerateFileSystemInfos()];
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
+                entries = [];
+                unreadable = true;
+            }
+
+            if (unreadable)
+            {
+                // Reported as a whole folder; a yield is not allowed inside the catch.
+                yield return (directory.FullName, "Exclude_Unreadable");
                 continue;
             }
 
             foreach (var entry in entries.OrderBy(e => e.Name, StringComparer.OrdinalIgnoreCase))
             {
-                if (entry.LinkTarget is not null)
+                string? reason = null;
+                try
                 {
-                    continue;
+                    if (entry.LinkTarget is not null)
+                    {
+                        reason = "Exclude_Link";
+                    }
+                }
+                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+                {
+                    reason = "Exclude_Unreadable";
                 }
 
-                if (entry is DirectoryInfo sub)
+                if (reason is not null)
+                {
+                    yield return (entry.FullName, reason);
+                }
+                else if (entry is DirectoryInfo sub)
                 {
                     pending.Push(sub);
                 }
                 else if (!entry.Attributes.HasFlag(FileAttributes.Device))
                 {
-                    yield return entry.FullName;
+                    yield return (entry.FullName, null);
                 }
             }
         }
     }
-
     /// <summary>Scans every root that has a folder. A root whose folder is null or missing is skipped.</summary>
     /// <param name="roots">Root name to folder.</param>
     /// <param name="rules">Exclusions to apply.</param>
@@ -80,10 +106,16 @@ public static class Scanner
                 continue;
             }
 
-            foreach (var full in Walk(folder))
+            foreach (var (full, skipped) in WalkWithSkipped(folder))
             {
                 if (!RelativePath.TryNormalize(Path.GetRelativePath(folder, full), out var relative))
                 {
+                    continue;
+                }
+
+                if (skipped is not null)
+                {
+                    result.Excluded.Add(new ExcludedEntry { Root = root, Path = relative, Reason = skipped });
                     continue;
                 }
 

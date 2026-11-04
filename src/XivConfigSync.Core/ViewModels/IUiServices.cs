@@ -21,8 +21,8 @@ public interface IUiServices
     /// <summary>A notification in the tray, if the window is not visible.</summary>
     void Notify(string title, string message);
 
-    /// <summary>Runs an action on the UI thread.</summary>
-    void OnUiThread(Action action);
+    /// <summary>Runs an action on the UI thread; false when there is no UI thread any more (shutdown).</summary>
+    bool OnUiThread(Action action);
 
     /// <summary>Opens a folder in Explorer.</summary>
     void OpenFolder(string path);

@@ -24,18 +24,26 @@ public sealed class SnapshotFile
 /// <summary>Content of <c>snapshot.json</c>.</summary>
 public sealed class SnapshotManifest
 {
+    /// <summary>Snapshot of an apply; offered for undo.</summary>
+    public const string ApplyReason = "apply";
+
+    /// <summary>The state saved before an undo or a recovery; kept on disk for manual recovery.</summary>
+    public const string SafetyReason = "safety";
+
     public int Schema { get; set; } = 1;
 
     public string SnapshotId { get; set; } = string.Empty;
 
-    /// <summary><c>apply</c>, or <c>safety</c> for the state saved before an undo or a recovery.</summary>
-    public string Reason { get; set; } = "apply";
+    public string Reason { get; set; } = ApplyReason;
 
     public DateTimeOffset Created { get; set; }
 
     public string? SourceDeviceId { get; set; }
 
     public string? SourceRevisionId { get; set; }
+
+    /// <summary>The folder each root had when the snapshot was taken; a restore refuses another one.</summary>
+    public Dictionary<string, string> RootFolders { get; set; } = [];
 
     public List<SnapshotFile> Files { get; set; } = [];
 
@@ -54,18 +62,36 @@ public sealed class JournalStep
     public bool Done { get; set; }
 }
 
-/// <summary>Content of <c>journal.json</c>, present only while an apply runs.</summary>
+/// <summary>
+/// Content of <c>journal.json</c>, present only while an apply or an undo writes. Finishing it or
+/// rolling it back is decided by the user at the next start (FR-066).
+/// </summary>
 public sealed class Journal
 {
+    /// <summary>An apply from the store.</summary>
+    public const string ApplyKind = "apply";
+
+    /// <summary>An undo (a restore of a snapshot).</summary>
+    public const string RestoreKind = "restore";
+
     public int Schema { get; set; } = 1;
+
+    public string Kind { get; set; } = ApplyKind;
 
     public string ApplyId { get; set; } = string.Empty;
 
+    /// <summary>The state before the writes: the apply's snapshot, or for a restore the safety snapshot.</summary>
     public string SnapshotId { get; set; } = string.Empty;
+
+    /// <summary>For a restore: the snapshot being restored.</summary>
+    public string? TargetSnapshotId { get; set; }
 
     public string SourceDeviceId { get; set; } = string.Empty;
 
     public string SourceRevisionId { get; set; } = string.Empty;
+
+    /// <summary>The folder each root had when the journal was written; recovery refuses another one.</summary>
+    public Dictionary<string, string> RootFolders { get; set; } = [];
 
     public List<JournalStep> Steps { get; set; } = [];
 }
@@ -81,11 +107,10 @@ public interface IApplyProbe
 }
 
 /// <summary>
-/// Applies files from the store to the configuration folders: a check that nothing changed since
-/// the plan, a verified snapshot (X-02), a journal, one atomic replace per file with the game checked
-/// before each, a final check. A failure in between rolls back at once; an interruption (power cut)
-/// is finished or rolled back at the next start. Undo and recovery save the current state first, so
-/// they can be undone too.
+/// Writes into the configuration folders: applies from the store and restores snapshots. Every
+/// write run has a verified snapshot of the state before and a journal; the game is checked before
+/// every single file (X-01). An I/O failure rolls back at once; a game started in between, a crash
+/// or a power cut leave the journal, and the user finishes or rolls back at the next start.
 /// </summary>
 public sealed class Applier
 {
@@ -98,7 +123,7 @@ public sealed class Applier
 
     /// <summary>Creates an applier for this device.</summary>
     /// <param name="store">The sync folder; only needed to apply or to finish an interrupted apply.</param>
-    /// <param name="journalPath">Where the journal of a running apply is kept.</param>
+    /// <param name="journalPath">Where the journal of a running write is kept.</param>
     /// <param name="snapshotsFolder">Where snapshots are kept.</param>
     /// <param name="roots">Root name to folder on this device.</param>
     /// <param name="gameRunning">Whether the game runs; checked before every write (X-01).</param>
@@ -113,7 +138,7 @@ public sealed class Applier
         this.probe = probe;
     }
 
-    /// <summary>Whether an interrupted apply is waiting to be finished or rolled back.</summary>
+    /// <summary>Whether an interrupted write is waiting to be finished or rolled back.</summary>
     public bool HasOpenJournal => File.Exists(journalPath);
 
     /// <summary>Reads the open journal, if any.</summary>
@@ -136,7 +161,7 @@ public sealed class Applier
             contents[target] = source.ReadObject(sourceDeviceId, target.Hash);
         }
 
-        // Nothing may have changed since the plan was shown (review finding 4).
+        // Nothing may have changed since the plan was shown.
         foreach (var target in targets)
         {
             if (CurrentHash(target.Root, target.Path) != target.ExpectedLocalHash)
@@ -147,16 +172,18 @@ public sealed class Applier
 
         EnsureGameClosed();
         probe?.Before("snapshot", -1);
-        var snapshot = TakeSnapshot(targets.Select(t => (t.Root, t.Path)), "apply", sourceDeviceId, sourceRevisionId);
+        var snapshot = TakeSnapshot(targets.Select(t => (t.Root, t.Path)), SnapshotManifest.ApplyReason, sourceDeviceId, sourceRevisionId);
 
-        var journal = new Journal
+        // The snapshot is the state the plan saw, also for a change in the moment between the check
+        // and the copy.
+        if (snapshot.Files.Any(f => f.Hash != targets.First(t => t.Root == f.Root && t.Path == f.Path).ExpectedLocalHash))
         {
-            ApplyId = Guid.NewGuid().ToString("N"),
-            SnapshotId = snapshot.SnapshotId,
-            SourceDeviceId = sourceDeviceId,
-            SourceRevisionId = sourceRevisionId,
-            Steps = targets.Select(t => new JournalStep { Root = t.Root, Path = t.Path, Hash = t.Hash }).ToList(),
-        };
+            DeleteSnapshot(snapshot.SnapshotId);
+            throw new RefusedException("Refuse_ChangedSincePlan");
+        }
+
+        var journal = NewJournal(Journal.ApplyKind, snapshot.SnapshotId, null, sourceDeviceId, sourceRevisionId);
+        journal.Steps = targets.Select(t => new JournalStep { Root = t.Root, Path = t.Path, Hash = t.Hash }).ToList();
         probe?.Before("journal", -1);
         FileOps.WriteJsonAtomic(journalPath, journal);
 
@@ -181,11 +208,19 @@ public sealed class Applier
                 }
             }
         }
+        catch (RefusedException refused) when (refused.ReasonKey == "Refuse_GameRunning")
+        {
+            // The game was started: nothing more is written now, not even a rollback. The journal
+            // stays, and the user finishes or rolls back once the game is closed.
+            throw;
+        }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or RefusedException)
         {
-            // A failure in the same session: back to the state before, at once (review finding 6).
+            // A failure in the same session: back to the state before, at once. If the rollback
+            // itself fails, the journal stays for the recovery at the next start.
             RestoreFiles(snapshot);
             File.Delete(journalPath);
+            DeleteSnapshot(snapshot.SnapshotId);
             throw;
         }
 
@@ -200,16 +235,31 @@ public sealed class Applier
     }
 
     /// <summary>
-    /// Finishes an interrupted apply: writes the steps not done yet, but only where the file is still
-    /// as it was before the apply. Returns the files left alone because they changed since.
+    /// Finishes an interrupted write. An apply: writes the steps not done yet, but only where the
+    /// file is still as it was before the apply. An undo: restores its snapshot. Returns the files
+    /// left alone because they changed since.
     /// </summary>
     public IReadOnlyList<string> FinishOpenJournal()
     {
-        var source = store ?? throw new InvalidOperationException("Finishing needs the sync folder.");
-        var journal = ReadJournal() ?? throw new InvalidOperationException("There is no interrupted apply.");
+        var journal = ReadJournal() ?? throw new InvalidOperationException("There is no interrupted write.");
         EnsureGameClosed();
+        EnsureSameFolders(journal.RootFolders);
+        if (journal.Kind == Journal.RestoreKind)
+        {
+            var target = ReadSnapshot(journal.TargetSnapshotId ?? string.Empty);
+            if (target is { Complete: true })
+            {
+                RestoreFiles(target);
+                DeleteSnapshot(target.SnapshotId);
+            }
+
+            File.Delete(journalPath);
+            return [];
+        }
+
+        var source = store ?? throw new InvalidOperationException("Finishing needs the sync folder.");
         var before = ReadSnapshot(journal.SnapshotId);
-        TakeSnapshot(journal.Steps.Select(s => (s.Root, s.Path)), "safety", journal.SourceDeviceId, journal.SourceRevisionId);
+        TakeSnapshot(journal.Steps.Select(s => (s.Root, s.Path)), SnapshotManifest.SafetyReason, journal.SourceDeviceId, journal.SourceRevisionId);
         var leftAlone = new List<string>();
         foreach (var step in journal.Steps.Where(s => !s.Done))
         {
@@ -219,64 +269,108 @@ public sealed class Applier
                 continue;
             }
 
-            var saved = before?.Files.FirstOrDefault(f => f.Root == step.Root && f.Path == step.Path);
-            if (saved is not null && current != saved.Hash)
+            // Without a readable state from before, nothing proves the file is unchanged: leave it.
+            var saved = before is { Complete: true } ? before.Files.FirstOrDefault(f => f.Root == step.Root && f.Path == step.Path) : null;
+            if (saved is null || current != saved.Hash)
             {
                 leftAlone.Add(step.Root + "/" + step.Path);
                 continue;
             }
 
+            EnsureGameClosed();
             FileOps.WriteAtomic(TargetPath(step.Root, step.Path), source.ReadObject(journal.SourceDeviceId, step.Hash), step.Hash);
+        }
+
+        if (before is { Complete: true })
+        {
+            foreach (var file in before.Files)
+            {
+                var step = journal.Steps.FirstOrDefault(s => s.Root == file.Root && s.Path == file.Path);
+                file.AppliedHash = step is not null && CurrentHash(file.Root, file.Path) == step.Hash ? step.Hash : null;
+            }
+
+            FileOps.WriteJsonAtomic(Path.Combine(SnapshotFolder(before.SnapshotId), "snapshot.json"), before);
         }
 
         File.Delete(journalPath);
         return leftAlone;
     }
 
-    /// <summary>Rolls an interrupted apply back to its snapshot, after saving the current state.</summary>
+    /// <summary>Rolls an interrupted write back to the state before it, after saving the current state.</summary>
     public void RollBackOpenJournal()
     {
-        var journal = ReadJournal() ?? throw new InvalidOperationException("There is no interrupted apply.");
+        var journal = ReadJournal() ?? throw new InvalidOperationException("There is no interrupted write.");
         EnsureGameClosed();
+        EnsureSameFolders(journal.RootFolders);
         var snapshot = ReadSnapshot(journal.SnapshotId);
         if (snapshot is { Complete: true })
         {
-            TakeSnapshot(snapshot.Files.Select(f => (f.Root, f.Path)), "safety", journal.SourceDeviceId, journal.SourceRevisionId);
+            TakeSnapshot(snapshot.Files.Select(f => (f.Root, f.Path)), SnapshotManifest.SafetyReason, journal.SourceDeviceId, journal.SourceRevisionId);
             RestoreFiles(snapshot);
+            if (journal.Kind == Journal.ApplyKind)
+            {
+                // A rolled-back apply is not offered for undo (review 2, finding 2).
+                DeleteSnapshot(snapshot.SnapshotId);
+            }
         }
 
         File.Delete(journalPath);
     }
 
     /// <summary>
-    /// Restores every file of a snapshot exactly, after saving the current state in a new snapshot,
-    /// so an undo can be undone. Returns the files that changed since the apply wrote them.
+    /// Undoes an apply: saves the current state (safety snapshot), writes a journal, restores the
+    /// apply's snapshot file by file. Returns the files that changed since the apply wrote them.
     /// </summary>
     public IReadOnlyList<string> Restore(string snapshotId)
     {
+        if (HasOpenJournal)
+        {
+            throw new RefusedException("Refuse_OpenJournal");
+        }
+
         EnsureGameClosed();
-        var snapshot = ReadSnapshot(snapshotId) ?? throw new RefusedException("Refuse_NoSnapshot");
-        if (!snapshot.Complete)
+        var target = ReadSnapshot(snapshotId);
+        if (target is not { Complete: true })
         {
             throw new RefusedException("Refuse_NoSnapshot");
         }
 
-        var changedSince = ChangedSinceApply(snapshot);
-        TakeSnapshot(snapshot.Files.Select(f => (f.Root, f.Path)), "safety", snapshot.SourceDeviceId, snapshot.SourceRevisionId);
-        RestoreFiles(snapshot);
+        EnsureSameFolders(target.RootFolders);
+        var changedSince = ChangedSinceApply(target);
+        var safety = TakeSnapshot(target.Files.Select(f => (f.Root, f.Path)), SnapshotManifest.SafetyReason, target.SourceDeviceId, target.SourceRevisionId);
+        FileOps.WriteJsonAtomic(journalPath, NewJournal(Journal.RestoreKind, safety.SnapshotId, target.SnapshotId, target.SourceDeviceId ?? string.Empty, target.SourceRevisionId ?? string.Empty));
+        try
+        {
+            RestoreFiles(target);
+        }
+        catch (RefusedException refused) when (refused.ReasonKey == "Refuse_GameRunning")
+        {
+            throw;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            RestoreFiles(safety);
+            File.Delete(journalPath);
+            throw;
+        }
+
+        File.Delete(journalPath);
         return changedSince;
     }
 
-    /// <summary>The files of a snapshot that changed since the apply wrote them.</summary>
+    /// <summary>
+    /// The files of an apply's snapshot that changed since the apply wrote them. A file whose
+    /// written state is not known counts as changed, so the user is warned rather than not.
+    /// </summary>
     public IReadOnlyList<string> ChangedSinceApply(SnapshotManifest snapshot) =>
-        snapshot.Files
-            .Where(f => f.AppliedHash is not null && CurrentHash(f.Root, f.Path) != f.AppliedHash)
+        (snapshot.Files ?? [])
+            .Where(f => f.AppliedHash is null || CurrentHash(f.Root, f.Path) != f.AppliedHash)
             .Select(f => f.Root + "/" + f.Path)
             .ToList();
 
     /// <summary>The snapshots of applies that can be undone, newest first.</summary>
     public IReadOnlyList<SnapshotManifest> ListSnapshots() =>
-        ReadAllSnapshots().Where(s => s.Reason == "apply").ToList();
+        ReadAllSnapshots().Where(s => s.Reason == SnapshotManifest.ApplyReason).ToList();
 
     /// <summary>Removes one snapshot.</summary>
     public void DeleteSnapshot(string snapshotId)
@@ -288,14 +382,30 @@ public sealed class Applier
         }
     }
 
-    /// <summary>Removes snapshots beyond the newest <paramref name="keep"/> that are older than <paramref name="minAge"/>.</summary>
+    /// <summary>
+    /// Keeps the newest <paramref name="keep"/> snapshots of each kind and every one younger than
+    /// <paramref name="minAge"/>; removes incomplete snapshot folders older than a day. Best effort.
+    /// </summary>
     public int PruneSnapshots(int keep, TimeSpan minAge, DateTimeOffset now)
     {
         var removed = 0;
-        foreach (var snapshot in ReadAllSnapshots().Skip(keep).Where(s => now - s.Created > minAge))
+        var all = ReadAllSnapshots().ToList();
+        var old = all.GroupBy(s => s.Reason).SelectMany(group => group.Skip(keep)).Where(s => now - s.Created > minAge);
+        foreach (var snapshot in old)
         {
-            DeleteSnapshot(snapshot.SnapshotId);
-            removed++;
+            removed += TryDelete(Path.Combine(snapshotsFolder, snapshot.SnapshotId)) ? 1 : 0;
+        }
+
+        if (Directory.Exists(snapshotsFolder))
+        {
+            var complete = all.Select(s => s.SnapshotId).ToHashSet(StringComparer.Ordinal);
+            foreach (var folder in Directory.GetDirectories(snapshotsFolder))
+            {
+                if (!complete.Contains(Path.GetFileName(folder)) && now.UtcDateTime - Directory.GetLastWriteTimeUtc(folder) > TimeSpan.FromDays(1))
+                {
+                    removed += TryDelete(folder) ? 1 : 0;
+                }
+            }
         }
 
         return removed;
@@ -308,6 +418,7 @@ public sealed class Applier
         var id = now.UtcDateTime.ToString("yyyyMMdd'T'HHmmssfff'Z'", CultureInfo.InvariantCulture) + "-" + Guid.NewGuid().ToString("N")[..6];
         var folder = SnapshotFolder(id);
         Directory.CreateDirectory(folder);
+        var list = files.Distinct().ToList();
         var manifest = new SnapshotManifest
         {
             SnapshotId = id,
@@ -315,10 +426,11 @@ public sealed class Applier
             Created = now,
             SourceDeviceId = sourceDeviceId,
             SourceRevisionId = sourceRevisionId,
+            RootFolders = CurrentFolders(list.Select(f => f.Root)),
         };
         FileOps.WriteJsonAtomic(Path.Combine(folder, "snapshot.json"), manifest);
 
-        foreach (var (root, path) in files.Distinct())
+        foreach (var (root, path) in list)
         {
             var current = TargetPath(root, path);
             if (File.Exists(current))
@@ -338,6 +450,48 @@ public sealed class Applier
         return manifest;
     }
 
+    private static bool TryDelete(string folder)
+    {
+        try
+        {
+            Directory.Delete(folder, recursive: true);
+            return true;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            return false;
+        }
+    }
+
+    private Journal NewJournal(string kind, string snapshotId, string? targetSnapshotId, string sourceDeviceId, string sourceRevisionId) => new()
+    {
+        Kind = kind,
+        ApplyId = Guid.NewGuid().ToString("N"),
+        SnapshotId = snapshotId,
+        TargetSnapshotId = targetSnapshotId,
+        SourceDeviceId = sourceDeviceId,
+        SourceRevisionId = sourceRevisionId,
+        RootFolders = CurrentFolders(roots.Keys),
+    };
+
+    private Dictionary<string, string> CurrentFolders(IEnumerable<string> rootNames) =>
+        rootNames.Distinct()
+            .Where(r => roots.TryGetValue(r, out var folder) && folder is not null)
+            .ToDictionary(r => r, r => Path.GetFullPath(roots[r]!));
+
+    /// <summary>A recovery or undo must write into the folders it saved from (review 2, finding 10).</summary>
+    private void EnsureSameFolders(Dictionary<string, string>? recorded)
+    {
+        foreach (var (root, folder) in recorded ?? [])
+        {
+            if (!roots.TryGetValue(root, out var now) || now is null
+                || !string.Equals(Path.GetFullPath(now), folder, StringComparison.OrdinalIgnoreCase))
+            {
+                throw new RefusedException("Refuse_FolderChanged");
+            }
+        }
+    }
+
     private IEnumerable<SnapshotManifest> ReadAllSnapshots()
     {
         if (!Directory.Exists(snapshotsFolder))
@@ -351,12 +505,14 @@ public sealed class Applier
             try
             {
                 var manifest = FileOps.ReadJson<SnapshotManifest>(Path.Combine(folder, "snapshot.json"));
-                if (manifest is { Complete: true })
+                if (manifest is { Complete: true } && manifest.SnapshotId == Path.GetFileName(folder))
                 {
+                    manifest.Files ??= [];
+                    manifest.RootFolders ??= [];
                     list.Add(manifest);
                 }
             }
-            catch (Exception ex) when (ex is IOException or System.Text.Json.JsonException)
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Text.Json.JsonException)
             {
                 // A damaged snapshot is not offered.
             }
@@ -365,14 +521,35 @@ public sealed class Applier
         return list.OrderByDescending(s => s.Created).ThenByDescending(s => s.SnapshotId, StringComparer.Ordinal);
     }
 
-    private SnapshotManifest? ReadSnapshot(string snapshotId) =>
-        FileOps.ReadJson<SnapshotManifest>(Path.Combine(SnapshotFolder(snapshotId), "snapshot.json"));
+    private SnapshotManifest? ReadSnapshot(string snapshotId)
+    {
+        if (snapshotId.Length == 0)
+        {
+            return null;
+        }
+
+        try
+        {
+            var manifest = FileOps.ReadJson<SnapshotManifest>(Path.Combine(SnapshotFolder(snapshotId), "snapshot.json"));
+            if (manifest is not null)
+            {
+                manifest.Files ??= [];
+                manifest.RootFolders ??= [];
+            }
+
+            return manifest;
+        }
+        catch (System.Text.Json.JsonException)
+        {
+            return null;
+        }
+    }
 
     private void RestoreFiles(SnapshotManifest snapshot)
     {
         if (!snapshot.Complete)
         {
-            // An incomplete snapshot means the apply never started writing; nothing to restore.
+            // An incomplete snapshot means the write never started; nothing to restore.
             return;
         }
 
@@ -382,11 +559,18 @@ public sealed class Applier
             var target = TargetPath(file.Root, file.Path);
             if (file.Existed)
             {
+                if (CurrentHash(file.Root, file.Path) == file.Hash)
+                {
+                    continue;
+                }
+
+                EnsureGameClosed();
                 var saved = RelativePath.Combine(Path.Combine(folder, "files", file.Root), file.Path);
                 FileOps.CopyAtomic(saved, target, file.Hash!);
             }
             else if (File.Exists(target))
             {
+                EnsureGameClosed();
                 File.Delete(target);
             }
         }
@@ -410,7 +594,7 @@ public sealed class Applier
     {
         if (snapshotId.Length == 0 || snapshotId.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0 || snapshotId.Contains("..", StringComparison.Ordinal))
         {
-            throw new ArgumentException("Invalid snapshot ID.", nameof(snapshotId));
+            throw new InvalidDataException("Invalid snapshot ID.");
         }
 
         return Path.Combine(snapshotsFolder, snapshotId);

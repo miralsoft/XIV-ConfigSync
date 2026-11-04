@@ -425,6 +425,13 @@ public sealed partial class SyncStore
             throw new InvalidDataException("The revision does not belong where it was found.");
         }
 
+        if (manifest.Roots is null || manifest.Roots.Values.Any(r => r?.Files is null || r.Files.Any(f => f is null)) || manifest.Excluded is null)
+        {
+            throw new InvalidDataException("The revision is incomplete and is rejected as a whole.");
+        }
+
+        manifest.Epoch ??= string.Empty;
+
         var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         foreach (var (root, file) in manifest.AllFiles())
         {

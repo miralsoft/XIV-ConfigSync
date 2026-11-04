@@ -46,12 +46,14 @@
   <data name="Exclude_Backup" xml:space="preserve"><value>backup file</value></data>
   <data name="Exclude_Cache" xml:space="preserve"><value>cache</value></data>
   <data name="Exclude_ConflictCopy" xml:space="preserve"><value>conflict copy of a cloud client</value></data>
+  <data name="Exclude_Link" xml:space="preserve"><value>link to another folder</value></data>
   <data name="Exclude_Lock" xml:space="preserve"><value>lock or journal file</value></data>
   <data name="Exclude_Log" xml:space="preserve"><value>log file</value></data>
   <data name="Exclude_NotConfig" xml:space="preserve"><value>not configuration</value></data>
   <data name="Exclude_Old" xml:space="preserve"><value>the game&apos;s own previous copy</value></data>
   <data name="Exclude_Temp" xml:space="preserve"><value>temporary file</value></data>
   <data name="Exclude_TooLarge" xml:space="preserve"><value>larger than 64 MB</value></data>
+  <data name="Exclude_Unreadable" xml:space="preserve"><value>cannot be read</value></data>
   <data name="Exclude_User" xml:space="preserve"><value>excluded by you</value></data>
   <data name="Flag_Credential" xml:space="preserve"><value>Contains credentials.</value></data>
   <data name="Flag_Large" xml:space="preserve"><value>Large file.</value></data>
@@ -129,6 +131,8 @@
   <data name="Refuse_Busy" xml:space="preserve"><value>Another operation is running. Please try again in a moment.</value></data>
   <data name="Refuse_ChangedSincePlan" xml:space="preserve"><value>Some files changed since the comparison, for example because the game ran. Nothing was written. Please compare again.</value></data>
   <data name="Refuse_Damaged" xml:space="preserve"><value>Some files of this backup are missing or damaged, possibly because OneDrive has not finished downloading them. Nothing was applied. Try again later.</value></data>
+  <data name="Refuse_FolderChanged" xml:space="preserve"><value>The game or plugin folder was changed in the settings since this was saved. Set the folder back to finish or undo it.</value></data>
+  <data name="Refuse_FolderMissing" xml:space="preserve"><value>The game settings folder of this device cannot be found. Check the folder in the settings; nothing is transferred into a folder that is not there.</value></data>
   <data name="Refuse_GameRunning" xml:space="preserve"><value>The game is running. Nothing is written to its files while it runs; this happens after you close it.</value></data>
   <data name="Refuse_GameVersion" xml:space="preserve"><value>The game version differs between the two devices. Please update the game on both devices first.</value></data>
   <data name="Refuse_NoRevision" xml:space="preserve"><value>This device has no backup yet.</value></data>
@@ -237,7 +241,7 @@
   <data name="Transfer_ThisDevice" xml:space="preserve"><value>(this device)</value></data>
   <data name="Transfer_Title" xml:space="preserve"><value>Transfer</value></data>
   <data name="Transfer_Undo" xml:space="preserve"><value>Undo last transfer</value></data>
-  <data name="Transfer_UndoChanged" xml:space="preserve"><value>Careful: {0} of these files changed since the transfer, for example because you played. Undo sets them back too; the current state is saved first and stays available.</value></data>
+  <data name="Transfer_UndoChanged" xml:space="preserve"><value>Careful: {0} of these files changed since the transfer, for example because you played. Undo sets them back too. The current state is saved first in the snapshots folder (see the user guide).</value></data>
   <data name="Transfer_UndoConfirm" xml:space="preserve"><value>Undo the transfer of {0}? {1} files are set back to the state before it.</value></data>
   <data name="Transfer_Undone" xml:space="preserve"><value>The transfer was undone.</value></data>
   <data name="Tray_BackupNow" xml:space="preserve"><value>Back up now</value></data>

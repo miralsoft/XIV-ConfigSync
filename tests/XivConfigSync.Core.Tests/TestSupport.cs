@@ -38,12 +38,29 @@ internal sealed class TempFolder : IDisposable
 internal sealed class FakeGame : IGameMonitor
 {
     private bool running;
+    private int checksUntilStart = -1;
 
     public event EventHandler<bool>? RunningChanged;
 
+    /// <summary>The game "starts" after this many more checks of <see cref="IsRunning"/>.</summary>
+    public void StartAfterChecks(int checks) => checksUntilStart = checks;
+
     public bool IsRunning
     {
-        get => running;
+        get
+        {
+            if (checksUntilStart == 0)
+            {
+                running = true;
+                checksUntilStart = -1;
+            }
+            else if (checksUntilStart > 0)
+            {
+                checksUntilStart--;
+            }
+
+            return running;
+        }
         set
         {
             running = value;
