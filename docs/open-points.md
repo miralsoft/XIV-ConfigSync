@@ -34,3 +34,11 @@
   measured.
 - Whether the owner wants to sync through the work OneDrive at all. Tests run in its `Games`
   folder with the owner's consent.
+
+## Tooling
+
+- PSScriptAnalyzer 1.25.0 also failed once in CI (2026-11-04) outside the warm-up's reach: a
+  `RULE_ERROR` saying `Get-Command` is not recognized, in the `-SuppressedOnly` pass. A rerun
+  passed. Options: warm up that pass too, retry a file once on an analyzer error and fail only if
+  it persists (a softening of the strict rule, so the owner decides), or move to a newer release
+  once one fixes it.
