@@ -6,7 +6,7 @@ OWNER_NAME=Sanaka
 OWNER_EMAIL=20637644+miralsoft@users.noreply.github.com
 
 # Files checked for em-dashes. LICENSE is third-party text and is not matched.
-CONTENT_GLOBS=*.md *.ps1 *.psm1 *.psd1 *.yml
+CONTENT_GLOBS=*.md *.ps1 *.psm1 *.psd1 *.yml *.cs *.xaml *.resx *.csproj *.props *.json
 CONTENT_EXCLUDE=
 
 # PowerShell checks.

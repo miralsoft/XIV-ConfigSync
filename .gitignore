@@ -10,3 +10,10 @@
 .vscode/
 Thumbs.db
 desktop.ini
+
+# .NET build output.
+bin/
+obj/
+/artifacts/
+*.user
+TestResults/

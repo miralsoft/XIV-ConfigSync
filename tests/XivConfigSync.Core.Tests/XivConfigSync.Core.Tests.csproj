@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>XivConfigSync.Core.Tests</RootNamespace>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="xunit.v3" Version="4.0.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\XivConfigSync.Core\XivConfigSync.Core.csproj" />
+  </ItemGroup>
+
+</Project>

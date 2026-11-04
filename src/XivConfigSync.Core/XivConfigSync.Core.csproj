@@ -1,0 +1,26 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>XivConfigSync.Core</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Update="Strings.resx">
+      <StronglyTypedFileName>$(IntermediateOutputPath)Strings.g.cs</StronglyTypedFileName>
+      <StronglyTypedLanguage>CSharp</StronglyTypedLanguage>
+      <StronglyTypedNamespace>XivConfigSync.Core</StronglyTypedNamespace>
+      <StronglyTypedClassName>Strings</StronglyTypedClassName>
+      <PublicClass>true</PublicClass>
+    </EmbeddedResource>
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="XivConfigSync.Core.Tests" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,10 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/XivConfigSync.App/XivConfigSync.App.csproj" />
+    <Project Path="src/XivConfigSync.Core/XivConfigSync.Core.csproj" />
+    <Project Path="src/XivConfigSync.Platform/XivConfigSync.Platform.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/XivConfigSync.Core.Tests/XivConfigSync.Core.Tests.csproj" />
+  </Folder>
+</Solution>
