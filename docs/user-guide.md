@@ -37,6 +37,11 @@ one. Tick what you want from the other PC, or use **Take all conflicts from the 
 - Play as usual. When you close the game, the application waits a few seconds for the game to
   finish writing, then backs up, then takes from the other PCs what the rules allow.
 - If a file was changed on both PCs, you get a notification; decide on the **Transfer** page.
+  Files are compared as a whole: two different hotbar slots changed on two PCs are still a
+  conflict, because both live in one file. Then take the version you want and redo the other
+  change by hand.
+- To avoid conflicts, let the application run in the notification area (or start with Windows):
+  it then takes the other PC's changes before you start the game.
 - The application can run in the notification area. Closing the window asks once whether it
   should keep running there.
 
