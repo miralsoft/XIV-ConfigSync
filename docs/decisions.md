@@ -71,3 +71,12 @@ Append-only. Never edit or delete past entries; a later entry may supersede an e
   with a `RULE_ERROR` after the plain warm-up. Chosen by the owner. Rejected: retrying a file once
   and failing only if the error persists, which would soften the rule that any analyzer error
   fails; moving to a newer release, which needs a new pinned dependency.
+- (2026-11-04) PSScriptAnalyzer stays at the pinned 1.25.0. In `build.ps1` and in the CI workflow, a
+  file whose only analyzer errors are "The term 'Get-Command' is not recognized" is analysed once
+  more, and the second result counts; any other analyzer error, or the same one again, still fails
+  the gate. Rationale: in eight sequential CI runs each, 1.24.0 failed 3 and 1.25.0 failed 6, nearly
+  all with this error, so the error is not specific to one release and a version change does not
+  end it; it has never appeared locally. Chosen by the owner. This narrows the earlier rejection of
+  a retry: it covers one known error text only. Rejected: pinning 1.24.0, which departs from the
+  language profile without ending the failures; retrying on any analyzer error, which would hide a
+  crashed rule.

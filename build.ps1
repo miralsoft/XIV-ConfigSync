@@ -70,17 +70,46 @@ foreach ($file in $powershellFiles) {
     $null = Invoke-ScriptAnalyzer -Path (Join-Path -Path $root -ChildPath $file) -Settings $settings -ErrorAction SilentlyContinue
     $null = Invoke-ScriptAnalyzer -Path (Join-Path -Path $root -ChildPath $file) -Settings $settings -SuppressedOnly -ErrorAction SilentlyContinue
 }
+function Invoke-ProjectAnalysis {
+    [CmdletBinding()]
+    [OutputType([hashtable])]
+    param (
+        [Parameter(Mandatory = $true)]
+        [string] $Path
+    )
+
+    $mainErrors = $null
+    $found = @(Invoke-ScriptAnalyzer -Path $Path -Settings $settings -ErrorVariable mainErrors -ErrorAction SilentlyContinue)
+    $suppressedErrors = $null
+    $unexplained = @(Invoke-ScriptAnalyzer -Path $Path -Settings $settings -SuppressedOnly -ErrorVariable suppressedErrors -ErrorAction SilentlyContinue |
+            Where-Object { [string]::IsNullOrWhiteSpace($_.Justification) })
+    @{
+        Found       = $found
+        Unexplained = $unexplained
+        Errors      = @(@($mainErrors) + @($suppressedErrors) | Where-Object { $_ })
+    }
+}
+
+# In CI a rule intermittently fails with "The term 'Get-Command' is not recognized", in 1.24.0 and
+# 1.25.0 alike (measured 2026-11-04, docs/decisions.md). A file whose only analyzer errors are that
+# one is analysed once more, and the second result counts. Any other analyzer error, or the same
+# error again, still fails the gate.
+$transient = "The term 'Get-Command' is not recognized"
 $failed = $false
 foreach ($file in $powershellFiles) {
     $full = Join-Path -Path $root -ChildPath $file
-    $analyzerErrors = $null
-    $found = @(Invoke-ScriptAnalyzer -Path $full -Settings $settings -ErrorVariable analyzerErrors -ErrorAction SilentlyContinue)
+    $analysis = Invoke-ProjectAnalysis -Path $full
+    $otherErrors = @($analysis.Errors | Where-Object { -not ([string]$_).StartsWith($transient, [System.StringComparison]::Ordinal) })
+    $onlyTransient = $analysis.Errors.Count -gt 0 -and $otherErrors.Count -eq 0
+    if ($onlyTransient) {
+        Write-Information -MessageData ('Analyzer error "{0}" in {1}, analysing it once more.' -f $transient, $file) -InformationAction Continue
+        $analysis = Invoke-ProjectAnalysis -Path $full
+    }
+    $found = $analysis.Found
+    $unexplained = $analysis.Unexplained
+    $analyzerErrors = $analysis.Errors
     $found | ForEach-Object { '{0}:{1} {2} [{3}] {4}' -f $file, $_.Line, $_.RuleName, $_.Severity, $_.Message }
     if ($found | Where-Object { $_.Severity -in 'Error', 'Warning', 'ParseError' }) { $failed = $true }
-    $suppressedErrors = $null
-    $unexplained = @(Invoke-ScriptAnalyzer -Path $full -Settings $settings -SuppressedOnly -ErrorVariable suppressedErrors -ErrorAction SilentlyContinue |
-            Where-Object { [string]::IsNullOrWhiteSpace($_.Justification) })
-    $analyzerErrors = @($analyzerErrors) + @($suppressedErrors) | Where-Object { $_ }
     $unexplained | ForEach-Object { '{0}:{1} {2} suppressed without a Justification' -f $file, $_.Line, $_.RuleName }
     if ($unexplained.Count -gt 0) { $failed = $true }
     if (@($analyzerErrors).Count -gt 0) {

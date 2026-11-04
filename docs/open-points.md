@@ -45,5 +45,6 @@
   a test branch): PSScriptAnalyzer 1.24.0 failed 3 of 8 runs, all with the same "Get-Command is not
   recognized" error; 1.25.0 failed 6 of 8, five with that error and one where the analyzer step
   ended with exit code 5 and no output. The error therefore also exists in 1.24.0, and staying on
-  the pinned 1.25.0 costs nothing. Open for the owner: retry a file once when this specific error
-  appears and fail only if it persists.
+  the pinned 1.25.0 costs nothing. A one-time retry for exactly this error is now in place (see
+  `decisions.md`); whether it ends the failures in CI is still to be measured. It does not cover the
+  run that ended with exit code 5, whose cause is unknown.
