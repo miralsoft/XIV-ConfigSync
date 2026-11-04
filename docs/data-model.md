@@ -8,7 +8,7 @@ byte-order mark. Times are UTC in ISO 8601. Hashes are lower-case hexadecimal SH
 
 ```
 <sync folder chosen by the user>\
-  store.json                          marks the folder; written once
+  <folder name>.xivsync              the sync file: marks the folder; written once
   devices\
     <deviceId>\
       device.json                     display name, created, last seen
@@ -21,13 +21,13 @@ byte-order mark. Times are UTC in ISO 8601. Hashes are lower-case hexadecimal SH
 Only the device named in the path writes below `devices\<deviceId>\`. `<h0h1>` is the first two
 hex digits of the hash, to keep folders small.
 
-### store.json
+### Sync file (`<folder name>.xivsync`)
 
 ```json
 { "schema": 1, "kind": "xiv-configsync-store", "created": "2026-11-04T20:00:00Z", "createdBy": "3f2a..." }
 ```
 
-Marks the folder as a sync folder of this application. Written once by the first device, never
+JSON with its own extension, so that a double-click opens the application on this folder. It is named after the folder when it is created (`FFXIV Sync\FFXIV Sync.xivsync`) and found by its extension, so renaming it does no harm; a folder with more than one is refused. Marks the folder as a sync folder of this application. Written once by the first device, never
 changed afterwards. The device list is not kept here but read from `devices\*\device.json`, so no
 file in the folder is written by more than one device.
 

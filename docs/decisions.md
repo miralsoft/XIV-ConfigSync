@@ -169,3 +169,11 @@ Append-only. Never edit or delete past entries; a later entry may supersede an e
   is read from each device's own `device.json` instead. Also confirmed by the owner: everything is
   backed up, device settings included, so that a finer choice of what to apply can come later
   without a new backup.
+- (2026-11-04) The marker file of the sync folder gets its own extension, `.xivsync`, named after
+  the folder (`FFXIV Sync.xivsync`), and replaces the `store.json` of the entry before. The owner's
+  idea: like a project file of a backup program, a double-click opens the application on that
+  sync folder, and on a device not yet set up it starts the set-up with the folder chosen. The
+  extension is registered per user without administrator rights, only after asking once in the
+  portable executable (X-08), by the installer from 0.3. Rejected: a fixed name such as
+  `store.json`, which Windows opens in an editor. Before release the extension is checked against
+  known uses so that it does not take over another program's files.

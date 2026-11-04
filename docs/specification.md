@@ -40,7 +40,7 @@ All confirmed in gate 1 unless marked otherwise; details in `file-matrix.md`.
 ## 3. Core concept: back up everything, apply by rule
 
 - **One sync folder.** The user chooses a single folder for all devices. On a further device the
-  user chooses the same folder; the application recognises it, lists the devices already in it and
+  user chooses the same folder or double-clicks the sync file in it (`.xivsync`); the application recognises it, lists the devices already in it and
   creates this device's part by itself (`architecture.md`, "Setting up a device"). The user never
   chooses a folder per device.
 - **Back up.** Each device records the whole state of its configuration folders, device settings
@@ -77,6 +77,7 @@ specification makes of it and in which release. "0.1" is the first public releas
 | FR-001 | Main window with the status of the game (running or not), the shared folder, the last backup, the last apply, warnings and conflicts. Compact view first; an extended view later | 0.1 |
 | FR-002 | Run now, pause and history; in 0.1 for the one sync job, later per job | 0.1 / 0.2 |
 | FR-003 | First-start wizard: choose the one sync folder (new or existing), name the device or recognise it as a device set up again, confirm the folders found, run the first backup. Job templates for local and USB targets | 0.1 / 0.2 |
+| (new) | Own file extension `.xivsync` for the sync file, registered per user after asking once; a double-click opens the application on that sync folder or starts the set-up there | 0.1 |
 | FR-004 | Tray icon; closing the window minimises or quits, asked once and remembered | 0.1 |
 | FR-005 | Start with Windows (off by default, asked once, rule X-08); a headless command line mode | 0.1 (autostart), 0.3 (Task Scheduler, headless) |
 | FR-006 | Notifications for errors, conflicts and a missing shared folder; success optional | 0.1 |

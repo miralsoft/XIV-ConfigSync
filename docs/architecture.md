@@ -8,7 +8,7 @@ formats are in `data-model.md`.
 
 ```
  Game and plugin folders           Sync folder (OneDrive), chosen once
- on this device                    store.json
+ on this device                    <name>.xivsync
  +-------------------+  back up    +-------------------------------+
  | FFXIV config      | ----------> | devices\<this device>\        |  written only by this device
  | pluginConfigs     |             |   objects, revisions, HEAD    |
@@ -63,25 +63,34 @@ The user chooses one folder, the sync folder, and nothing else. Everything insid
 by the application; the user never picks a device folder.
 
 1. **First device:** the user chooses or creates a folder, for example `OneDrive\FFXIV Sync`. The
-   application writes `store.json` there, which marks the folder as a sync folder of this
+   application writes the sync file `<folder name>.xivsync` there, which marks the folder as a sync folder of this
    application, then creates its own device folder and makes the first backup.
 2. **Every further device:** the user chooses the same folder. The application finds
-   `store.json`, lists the devices it finds below `devices\` with their display names and last
+   the `.xivsync` file, lists the devices it finds below `devices\` with their display names and last
    backups, and asks one question: is this a new device, or one of the listed devices set up
    again (for example after Windows was reinstalled)?
    - New device: the application creates its device folder, backs up this device first, then
      shows the preview of what the other devices offer (FR-045).
    - Set up again: the application takes over that device's identity and folder, backs up the
      current state as a new revision of it, and offers to restore an older one.
-3. A folder that holds files but no `store.json` is refused, so the application never writes into
+3. A folder that holds files but no `.xivsync` file, or more than one, is refused, so the application never writes into
    an unrelated folder.
 
 No file in the sync folder lists the devices. The device list is the set of `device.json` files,
 each written by its own device. A single list that every device updates would be written by two
 devices at the same time sooner or later, and OneDrive would answer with a conflict copy; this is
-the problem the layout exists to avoid. `store.json` is written once, by the first device, and
+the problem the layout exists to avoid. The `.xivsync` file is written once, by the first device, and
 never changed.
 
+### Opening the sync file
+
+The extension `.xivsync` is registered for the current user (`HKCU\Software\Classes`, no
+administrator rights). A double-click on the sync file opens the application on that sync folder:
+on a device that is already set up there, it shows that folder's state and revisions; on a device
+that is not, it starts the set-up with the folder already chosen. The portable executable
+registers the extension only after asking once (X-08) and removes it when the user turns it off;
+the installer (0.3) registers it at install and removes it at uninstall. The file carries an icon
+of the application's own (X-09).
 ### Back up
 
 1. Trigger: the game process ends, the user presses "back up now", or the application starts.
