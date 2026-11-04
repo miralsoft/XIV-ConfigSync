@@ -60,3 +60,8 @@ Append-only. Never edit or delete past entries; a later entry may supersede an e
   player wants shared differs from player to player.
 - (2026-11-04) The file matrix is kept as a public draft in `docs/file-matrix.md`, with how well
   each row is known. Device names, character IDs and values from real files stay out of it.
+- (2026-11-04) Correction to the entry on the advanced mode for `FFXIV.cfg`: with the first device's
+  `UiHighScale` the game stayed usable on the second device, but every HUD element was shown far too
+  large; the owner lowered the value by hand to get the right size. The decision stands: the value
+  is device-specific, and a silent transfer would spoil the HUD on the other device, not break the
+  game.

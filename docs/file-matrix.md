@@ -65,8 +65,8 @@ and a 16:9 screen, a `FFXIV.cfg` taken over from a 16:10 device kept the first d
 name, resolution and graphics quality after play (confirmed). The file must therefore never be
 sent as a whole; the game will not repair it.
 
-`UiHighScale` is confirmed device-specific: the owner had to set it by hand on the 16:9 device to
-make the game playable.
+`UiHighScale` is confirmed device-specific: with the 16:10 device's value every HUD element was far too
+large on the 16:9 device, so the owner lowered it by hand. The game stays usable either way.
 
 The file is Device as a whole. An advanced mode, off by default, may later show the key-by-key
 differences to the other device and take over single keys the user picks (see `decisions.md`). It
