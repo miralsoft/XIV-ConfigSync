@@ -27,7 +27,9 @@ public sealed partial class RuleRow : ObservableObject
 
     public string Root => Entry.Root == Roots.Game ? Strings.Root_Game : Strings.Root_Plugins;
 
-    public string Pattern => Entry.Pattern.Replace("FFXIV_CHR*/", Strings.Character_Any + "/", StringComparison.Ordinal);
+    public string Pattern => Entry.Pattern == "**"
+        ? Strings.Rules_AllFiles
+        : Entry.Pattern.Replace("FFXIV_CHR*/", Strings.Character_Any + "/", StringComparison.Ordinal).Replace("/**", "/...", StringComparison.Ordinal);
 
     public string Note => Text.Get(Entry.NoteKey);
 

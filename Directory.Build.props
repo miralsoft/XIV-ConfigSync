@@ -17,5 +17,7 @@
     <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
     <InvariantGlobalization>false</InvariantGlobalization>
     <SatelliteResourceLanguages>en;de</SatelliteResourceLanguages>
+    <!-- Symbols inside the assemblies, so a published single file has nothing beside it (WPF profile). -->
+    <DebugType>embedded</DebugType>
   </PropertyGroup>
 </Project>

@@ -12,6 +12,7 @@
   <data name="Backup_Done" xml:space="preserve"><value>Sicherung erstellt: {0} Dateien, davon {1} neu.</value></data>
   <data name="Backup_Unchanged" xml:space="preserve"><value>Seit der letzten Sicherung hat sich nichts geändert.</value></data>
   <data name="Character_Any" xml:space="preserve"><value>Charakter</value></data>
+  <data name="Character_LastPlayed" xml:space="preserve"><value>zuletzt gespielt: {0}</value></data>
   <data name="Character_Number" xml:space="preserve"><value>Charakter {0}</value></data>
   <data name="Character_Path" xml:space="preserve"><value>{0}: {1}</value></data>
   <data name="Character_Unnamed" xml:space="preserve"><value>Charakter</value></data>
@@ -140,6 +141,7 @@
   <data name="Rule_Never" xml:space="preserve"><value>Nie</value></data>
   <data name="Rule_OnRequest" xml:space="preserve"><value>Nur auf Anforderung</value></data>
   <data name="Rules_Add" xml:space="preserve"><value>Hinzufügen</value></data>
+  <data name="Rules_AllFiles" xml:space="preserve"><value>Alle Plugin-Dateien</value></data>
   <data name="Rules_Exclusions" xml:space="preserve"><value>Von der Sicherung ausschließen</value></data>
   <data name="Rules_ExclusionsIntro" xml:space="preserve"><value>Dateien, die zu diesen Mustern passen, werden nicht gesichert. * gilt innerhalb eines Ordners, ** über Ordner hinweg. Caches, Logs und Sperrdateien bleiben immer draußen.</value></data>
   <data name="Rules_Intro" xml:space="preserve"><value>Gesichert wird alles. Diese Regeln bestimmen, was von einem anderen Gerät übernommen wird. Immer: ohne Rückfrage, wenn nur das andere Gerät die Datei geändert hat. Nur auf Anforderung: du wählst aus. Nie: gehört zu einem Gerät.</value></data>

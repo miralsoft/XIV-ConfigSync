@@ -13,16 +13,20 @@ public sealed record LanguageChoice(string? Code, string Name);
 /// <summary>A name for a character folder (X-06: the folder's ID is not shown).</summary>
 public sealed partial class CharacterRow : ObservableObject
 {
-    public CharacterRow(string folder, string name, int number)
+    public CharacterRow(string folder, string name, int number, DateTimeOffset? lastPlayed)
     {
         Folder = folder;
         Label = Text.Format(Strings.Character_Number, number);
         Name = name;
+        LastPlayed = Text.Format(Strings.Character_LastPlayed, Text.Time(lastPlayed));
     }
 
     public string Folder { get; }
 
     public string Label { get; }
+
+    /// <summary>When the game last wrote this character's files; tells the characters apart without their IDs.</summary>
+    public string LastPlayed { get; }
 
     [ObservableProperty]
     public partial string Name { get; set; }
@@ -121,7 +125,7 @@ public sealed partial class SettingsViewModel : ObservableObject
         var number = 1;
         foreach (var folder in GameFolders.FindCharacterFolders(s.GameConfigFolder))
         {
-            Characters.Add(new CharacterRow(folder, s.CharacterNames.TryGetValue(folder, out var name) ? name : string.Empty, number++));
+            Characters.Add(new CharacterRow(folder, s.CharacterNames.TryGetValue(folder, out var name) ? name : string.Empty, number++, LastWrite(s.GameConfigFolder, folder)));
         }
     }
 
@@ -223,4 +227,18 @@ public sealed partial class SettingsViewModel : ObservableObject
     }
 
     private static string SyncEngine_Version() => Engine.SyncEngine.AppVersion;
+
+    private static DateTimeOffset? LastWrite(string? gameFolder, string characterFolder)
+    {
+        try
+        {
+            var folder = Path.Combine(gameFolder ?? string.Empty, characterFolder);
+            var newest = Directory.EnumerateFiles(folder).Select(File.GetLastWriteTimeUtc).DefaultIfEmpty().Max();
+            return newest == default ? null : new DateTimeOffset(newest, TimeSpan.Zero);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            return null;
+        }
+    }
 }
