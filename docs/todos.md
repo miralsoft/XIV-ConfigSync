@@ -24,5 +24,5 @@
 - [x] Architecture with the decisions taken (`architecture.md`)
 - [x] Data model of the shared folder and the local data (`data-model.md`)
 - [x] Test strategy, gate 3 prototype scope, mapping of T01 to T21 and A01 to A08 (`test-strategy.md`)
-- [ ] Owner's review and decisions on credentials (6.1) and plugin apply in 0.1 (6.2)
+- [x] Owner's review and decisions on credentials (6.1) and plugin apply in 0.1 (6.2)
 - [ ] Gate 3 approval

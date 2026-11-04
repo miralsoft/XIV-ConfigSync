@@ -177,3 +177,9 @@ Append-only. Never edit or delete past entries; a later entry may supersede an e
   portable executable (X-08), by the installer from 0.3. Rejected: a fixed name such as
   `store.json`, which Windows opens in an editor. Before release the extension is checked against
   known uses so that it does not take over another program's files.
+- (2026-11-04) The owner accepts the two proposals left open in `specification.md`. Credentials:
+  files holding them are backed up like any other, marked in the revision, shown with a warning,
+  never written to the log, and can be excluded with one click; rejected: excluding them by
+  default, since the sync folder is the owner's own storage. Plugin settings: backed up in 0.1;
+  applying them ships in 0.1 only if the gate 3 test shows that Dalamud keeps a valid file written
+  from outside, otherwise in 0.2.
