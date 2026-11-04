@@ -183,3 +183,15 @@ Append-only. Never edit or delete past entries; a later entry may supersede an e
   default, since the sync folder is the owner's own storage. Plugin settings: backed up in 0.1;
   applying them ships in 0.1 only if the gate 3 test shows that Dalamud keeps a valid file written
   from outside, otherwise in 0.2.
+- (2026-11-04) The owner approves gate 3 (prototype of the critical paths) and gate 4 (core
+  functions, as far as they can be built without the owner) to be worked on in one run, locally,
+  with nothing pushed until the owner has reviewed the gate reports. The real two-device test of
+  gate 4, the Dalamud test with a running game, and gate 5 stay with the owner. No real game or
+  plugin folder is written during this run; only generated fixtures and copies are used.
+- (2026-11-04) Approved dependencies (R-15), all named by the WPF and C# profiles:
+  CommunityToolkit.Mvvm (MVVM base, MIT), xunit.v3 (tests, Apache-2.0) and XamlStyler.Console
+  (XAML format check, development only, MIT). Any further dependency needs a new approval.
+- (2026-11-04) The SDK is pinned at 10.0.403, the version the WPF profile was verified with; the
+  owner installs it. Rejected: pinning the installed 10.0.303, which would depart from the profile.
+- (2026-11-04) The owner allows a test folder `Games\ConfigSync-Dev-Test` in the OneDrive used for
+  the earlier measurement, for test files only, to verify reading the upload state from C#.
