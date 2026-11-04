@@ -28,7 +28,7 @@ V03 turn rows into confirmed ones or move them. Release 0.1 syncs only rows conf
 | `cfgcopy\FFXIV_CFGCPY<id>.dat` | Device, Sensitive | confirmed (content), unknown (purpose) | Section format masked with 0x73, like `MACRO.DAT`: a character's name, world and content ID, plus two values that change on every write. Rewritten together with `FFXIV.cfg` and `UISAVE.DAT` |
 | `FFXIV_CHR<id>\*.DAT` | Shared | unconfirmed | Per character: HUD, hotbars, macros, gear sets, key bindings, item order. V02 confirms file by file |
 | `FFXIV_CHR<id>\COMMON.DAT`, `CONTROL0.DAT`, `CONTROL1.DAT` | Shared | confirmed (format), unconfirmed (class) | Plain text like `FFXIV.cfg`: character, game pad and keyboard settings, no window positions |
-| `FFXIV_CHR<id>\ADDON.DAT` | Shared or per aspect ratio | confirmed (format), unknown (class) | HUD layout. Own format, not masked. Whether it carries over to another aspect ratio is what V03 answers |
+| `FFXIV_CHR<id>\ADDON.DAT` | Shared or per aspect ratio | confirmed (format), unconfirmed (class) | HUD layout. Own format, not masked. A layout from a 16:10 device has been in use on a 16:9 device without a problem the owner noticed; V03 checks the edge cases |
 
 ### Binary character files
 
@@ -59,6 +59,11 @@ two dozen graphics quality keys, the screenshot folder and the game pad GUIDs.
 | `GamePad Settings` other keys, `GamePad Button Settings` | Shared | unconfirmed |
 | `Sound Settings`, `SoundPlay Settings` | Shared | unconfirmed; a player may want quieter sound on a laptop |
 | `Mouse Settings`, `UI Settings`, `Move Operation`, `Cutscene Settings` | Shared | unconfirmed; `CameraZoom` and `DynamicRezoType` may be device |
+
+The game does not correct foreign device values: on a second device with another graphics adapter
+and a 16:9 screen, a `FFXIV.cfg` taken over from a 16:10 device kept the first device's adapter
+name, resolution and graphics quality after play (confirmed). The file must therefore never be
+sent as a whole; the game will not repair it.
 
 Whether 0.1 treats `FFXIV.cfg` as Device as a whole, or syncs an allow-list of keys, is open
 (see `open-points.md`). It is a text file of key and tab and value, so an allow-list does not
