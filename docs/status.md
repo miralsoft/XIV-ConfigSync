@@ -2,7 +2,7 @@
 
 ## Overall
 
-Feasibility analysis (gate 1) in progress since 2026-11-03. No product code.
+Feasibility analysis (gate 1) done on 2026-11-04: feasible. The report is finished and waits for the owner's decision on gate 2. No product code.
 
 ## Analysis tools (`tools/`)
 

@@ -9,11 +9,11 @@
 - [x] Transfer test from device B to device A: shared macros, hotbar, key binding, HUD layout and
   a HUD info setting, each changed on B, copied as whole files and seen in the game on A; then
   rolled back from a verified backup (2026-11-04)
-- [ ] Environment report and baseline inventory on device B
+- [x] ~~Environment report and baseline inventory on device B~~ dropped (owner's decision, see `decisions.md`)
 - [x] Key-by-key comparison and settings snapshot for text configuration files
 - [x] Draft file matrix from existing files (`docs/file-matrix.md`)
-- [ ] File matrix confirmed by experiments: shared, device-specific, cache, sensitive
+- [x] File matrix confirmed by experiments for the files release 0.1 needs; the remaining rows are checked in gate 2
 - [x] Cross test V03: done by the transfer test; the other direction is not tested (owner's decision, see `decisions.md`)
 - [x] Cloud-state recorder and OneDrive single-device test in a separate folder
 - [x] ~~OneDrive offline test and two-device conflict test~~ dropped (owner's decision, see `decisions.md`)
-- [ ] Feasibility report and framework decision (draft written; waits for the experiments)
+- [x] Feasibility report and framework recommendation (2026-11-04); waiting for the owner's decision on gate 2

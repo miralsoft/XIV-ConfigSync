@@ -122,3 +122,13 @@ Append-only. Never edit or delete past entries; a later entry may supersede an e
   copies whole files, so a direction that works works the other way too; and offline behaviour and
   concurrent writes are OneDrive's job, a cloud made for this, not the program's. Conflicts between
   two devices are handled in gate 2 by design (each device writes only its own folder), not by test.
+- (2026-11-04) The owner drops the environment report and baseline inventory of device B.
+  Rationale: the game files of device B are at hand from two uploads, and its screen size is
+  known; nothing in the feasibility question depends on more.
+- (2026-11-04) Gate 1 is closed: feasible. Proposed scope for 0.1, for the owner's decision: whole
+  files only; files the game does not change by itself (shared macros, hotbars, key bindings,
+  mouse and keyboard settings) are synced when their content changes; the HUD layout, which the
+  game changes on every login, is sent only on the user's request; `UISAVE.DAT`, the item order
+  and plugin settings stay out of 0.1. Rejected: syncing on a changed write time, since the game
+  rewrites unchanged files on every login (experiment V00); syncing the HUD automatically, since a
+  change the game made by itself would overwrite a deliberate change from the other device.
