@@ -38,7 +38,8 @@
 - [x] Portable single executable
 - [x] Manual test on one machine with copies of real data
 - [x] User guide, README
-- [ ] First CI run of the .NET workflow (after the owner's push)
+- [x] First CI run of the .NET workflow (2026-11-05, passed)
+- [x] Clean-up page for old conflict copies (FR-071, 2026-11-05); still to try on the real game folder
 - [ ] Test on two real devices (gate 4 acceptance A01 to A05)
 - [ ] Dalamud test: does Dalamud keep a plugin settings file written from outside (decides
   whether applying plugin settings stays in 0.1)
