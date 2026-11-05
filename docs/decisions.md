@@ -374,3 +374,7 @@ Append-only. Never edit or delete past entries; a later entry may supersede an e
   installation-specific plugin IDs and device paths; merging in both directions or removing
   repositories, which the owner did not ask for and which could drop a repository on purpose;
   merging automatically, which would add code sources to Dalamud without the user seeing them.
+- (2026-11-05) Items of the combo boxes (devices, backups, rules, languages, devices in the set-up)
+  give their name as their text form, which a screen reader announces. Found in the interface test
+  of the repository merge: the items were records and announced their full form, device IDs
+  included. A test covers every such record.

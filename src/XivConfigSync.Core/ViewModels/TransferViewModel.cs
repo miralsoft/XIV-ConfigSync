@@ -10,10 +10,17 @@ using XivConfigSync.Core.Rules;
 namespace XivConfigSync.Core.ViewModels;
 
 /// <summary>A device to take settings from.</summary>
-public sealed record SourceOption(string DeviceId, string Name);
+public sealed record SourceOption(string DeviceId, string Name)
+{
+    /// <summary>What a screen reader announces for the item: the name, never the device ID.</summary>
+    public override string ToString() => Name;
+}
 
 /// <summary>A revision of the chosen device.</summary>
-public sealed record RevisionOption(string? RevisionId, string Label);
+public sealed record RevisionOption(string? RevisionId, string Label)
+{
+    public override string ToString() => Label;
+}
 
 /// <summary>One file in the transfer preview.</summary>
 public sealed partial class PlanRow : ObservableObject

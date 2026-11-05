@@ -7,7 +7,10 @@ using XivConfigSync.Core.Rules;
 namespace XivConfigSync.Core.ViewModels;
 
 /// <summary>A rule as a choice in a list.</summary>
-public sealed record RuleChoice(ApplyRule Rule, string Name);
+public sealed record RuleChoice(ApplyRule Rule, string Name)
+{
+    public override string ToString() => Name;
+}
 
 /// <summary>One line of the rules page: a matrix row with its effective rule.</summary>
 public sealed partial class RuleRow : ObservableObject

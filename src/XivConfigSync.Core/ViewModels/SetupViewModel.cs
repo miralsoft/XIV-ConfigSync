@@ -10,7 +10,11 @@ using XivConfigSync.Core.Store;
 namespace XivConfigSync.Core.ViewModels;
 
 /// <summary>A device already in the chosen sync folder.</summary>
-public sealed record ExistingDevice(string DeviceId, string Name, DateTimeOffset LastSeen);
+public sealed record ExistingDevice(string DeviceId, string Name, DateTimeOffset LastSeen)
+{
+    /// <summary>What a screen reader announces for the item: the name, never the device ID.</summary>
+    public override string ToString() => Name;
+}
 
 /// <summary>
 /// The first-start wizard (FR-003, FR-045): one sync folder for every device; the application

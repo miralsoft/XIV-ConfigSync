@@ -8,7 +8,10 @@ using XivConfigSync.Core.Settings;
 namespace XivConfigSync.Core.ViewModels;
 
 /// <summary>A language choice; a null code means the system's language.</summary>
-public sealed record LanguageChoice(string? Code, string Name);
+public sealed record LanguageChoice(string? Code, string Name)
+{
+    public override string ToString() => Name;
+}
 
 /// <summary>A name for a character folder (X-06: the folder's ID is not shown).</summary>
 public sealed partial class CharacterRow : ObservableObject
