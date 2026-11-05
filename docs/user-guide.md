@@ -91,8 +91,12 @@ change on the other PC with a change the game made on its own.
 - **"The sync folder cannot be found":** the drive or OneDrive is not available. Connect it and
   start again, or choose the sync folder again.
 - **Old conflict copies:** if the game folder holds files such as `HOTBAR-PCNAME.DAT` from an
-  earlier whole-folder sync, the overview counts them. They are not backed up and not deleted;
-  you can remove them by hand.
+  earlier whole-folder sync, the overview counts them; they are not backed up and not
+  transferred. **Show and clean up** (or the **Clean up** page) lists them with the file each is a
+  copy of. Tick the ones you no longer need and choose **Move ticked files to the Recycle Bin**;
+  after you confirm, exactly those go to the Windows Recycle Bin, from where you can restore them.
+  Nothing is ticked for you. A copy whose original is missing cannot be ticked, since it may be
+  the only version left. While the game runs, nothing is moved.
 - **Log:** the **Log** page and the log folder (`%LOCALAPPDATA%\XIVConfigSync\logs`) show what
   happened. Character IDs and your user name are not written into the log.
 

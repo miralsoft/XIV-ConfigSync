@@ -654,6 +654,67 @@ public sealed class SyncEngine
     /// <summary>A scan of this device without storing anything; for diagnostics.</summary>
     public ScanResult ScanOnly() => Scanner.Scan(Roots, Rules);
 
+    /// <summary>The conflict copies in the game folder, read-only.</summary>
+    public IReadOnlyList<ConflictCopy> ListConflictCopies() => ConflictCopies.Find(Settings.GameConfigFolder, Rules);
+
+    /// <summary>
+    /// Moves the given conflict copies to the Recycle Bin, and nothing else. Each one is looked up
+    /// again first and left alone unless it is still a conflict copy of this game folder, unchanged
+    /// since it was listed (size and time), and its original is still there. Refused while the game
+    /// runs. Returns the ones moved and, for the others, why not.
+    /// </summary>
+    public (IReadOnlyList<string> Moved, IReadOnlyList<(string Path, string Reason)> Left) RemoveConflictCopies(IReadOnlyList<ConflictCopy> chosen, IRecycleBin bin)
+    {
+        if (game.IsRunning)
+        {
+            throw new RefusedException("Refuse_GameRunning");
+        }
+
+        using var busy = TakeLock();
+        var current = ConflictCopies.Find(Settings.GameConfigFolder, Rules).ToDictionary(c => c.Path, StringComparer.OrdinalIgnoreCase);
+        var moved = new List<string>();
+        var left = new List<(string, string)>();
+        foreach (var copy in chosen)
+        {
+            if (!current.TryGetValue(copy.Path, out var now) || now.FullPath != copy.FullPath)
+            {
+                left.Add((copy.Path, Strings.Cleanup_Gone));
+                continue;
+            }
+
+            if (now.Size != copy.Size || now.Modified != copy.Modified)
+            {
+                left.Add((copy.Path, Strings.Cleanup_Changed));
+                continue;
+            }
+
+            if (!now.Removable)
+            {
+                left.Add((copy.Path, Strings.Cleanup_OriginalMissing));
+                continue;
+            }
+
+            if (game.IsRunning)
+            {
+                left.Add((copy.Path, Strings.Refuse_GameRunning));
+                continue;
+            }
+
+            try
+            {
+                bin.Recycle(now.FullPath);
+                moved.Add(copy.Path);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException)
+            {
+                left.Add((copy.Path, ex.Message));
+            }
+        }
+
+        log.Info(Correlation(), $"Conflict copies moved to the Recycle Bin: {moved.Count}; left: {left.Count}.");
+        return (moved, left);
+    }
+
     private static Dictionary<string, HashSet<string>> History(SyncStore store, string deviceId, string? before, string? epoch)
     {
         var history = new Dictionary<string, HashSet<string>>(StringComparer.OrdinalIgnoreCase);

@@ -174,6 +174,7 @@ specification makes of it and in which release. "0.1" is the first public releas
 | FR-068 | No telemetry; no sign-in | 0.1 |
 | FR-069 | README, user guide, troubleshooting, changelog, third-party and trademark notes | 0.1 |
 | FR-070 | Low background load: watching for the game process, no periodic full scans; targets measured in gate 3 | 0.1 |
+| FR-071 | A clean-up page lists the conflict copies in the game folder with their original, date and size. Nothing is ticked by the application; the files the user ticks go to the Windows Recycle Bin after a confirmation, never deleted for good. A copy whose original is missing cannot be ticked. Each file is checked again before it goes (still a conflict copy, unchanged, original present), and nothing goes while the game runs. Added at the owner's request, 2026-11-05 | 0.1 |
 
 ## 5. Releases and priorities
 

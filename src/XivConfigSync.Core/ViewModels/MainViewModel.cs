@@ -35,7 +35,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     private bool lastRefreshFailed;
     private readonly Dictionary<string, string> announcedRefusals = [];
 
-    public MainViewModel(SyncEngine engine, IUiServices ui, Log log, IGameMonitor game, IShellIntegration shell, IGameLocator locator)
+    public MainViewModel(SyncEngine engine, IUiServices ui, Log log, IGameMonitor game, IShellIntegration shell, IGameLocator locator, IRecycleBin bin)
     {
         Engine = engine;
         this.ui = ui;
@@ -45,6 +45,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         Rules = new RulesViewModel(this, ui);
         Settings = new SettingsViewModel(this, ui, shell, locator);
         LogPage = new LogViewModel(log, ui);
+        Cleanup = new CleanupViewModel(this, ui, bin);
         game.RunningChanged += OnGameRunningChanged;
         GameRunning = game.IsRunning;
         SelectedPage = 0;
@@ -63,6 +64,11 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     public SettingsViewModel Settings { get; }
 
     public LogViewModel LogPage { get; }
+
+    public CleanupViewModel Cleanup { get; }
+
+    /// <summary>The page index of the clean-up page; the pages before it keep their numbers.</summary>
+    public const int CleanupPage = 6;
 
     public ObservableCollection<DeviceRow> Devices { get; } = [];
 
@@ -92,6 +98,9 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
     [ObservableProperty]
     public partial string Notice { get; set; } = string.Empty;
+
+    [ObservableProperty]
+    public partial bool HasConflictCopies { get; set; }
 
     [ObservableProperty]
     public partial string SyncFolderText { get; set; } = string.Empty;
@@ -172,6 +181,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             // The sync folder is not reachable (a drive not connected, OneDrive not started yet): the
             // application keeps running and tries again later (review 3, finding 6).
             Notice = Text.Format(Strings.Overview_FolderUnavailable, Engine.Settings.SyncFolder);
+            HasConflictCopies = false;
             return;
         }
 
@@ -200,6 +210,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             _ => Strings.Upload_Unknown,
         };
         Notice = conflictCopies > 0 ? Text.Format(Strings.Overview_ConflictCopies, conflictCopies) : string.Empty;
+        HasConflictCopies = conflictCopies > 0;
         Transfer.LoadSources();
     }
 
@@ -222,6 +233,19 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         if (row is not null)
         {
             Transfer.SelectSource(row.DeviceId);
+        }
+    }
+
+    /// <summary>Opens the clean-up page.</summary>
+    [RelayCommand]
+    public void ShowCleanup() => SelectedPage = CleanupPage;
+
+    /// <summary>The clean-up page lists the files again whenever it is opened.</summary>
+    partial void OnSelectedPageChanged(int value)
+    {
+        if (value == CleanupPage)
+        {
+            _ = Cleanup.LoadAsync();
         }
     }
 

@@ -332,3 +332,16 @@ Append-only. Never edit or delete past entries; a later entry may supersede an e
   Now the flag is cleared first, Finish does nothing once the set-up is complete or while it works,
   and the application opens at most one overview and one tray icon per process. A test covers it;
   it fails when either half of the fix is taken out.
+- (2026-11-05) A clean-up page for the conflict copies in the game folder (FR-071), at the owner's
+  request. Only the files the user ticks, only after a confirmation, and only to the Windows
+  Recycle Bin, through the shell with its warning before a file would be deleted for good; a file
+  still there afterwards counts as not moved. Each file is looked up again first and left alone
+  unless it is still a conflict copy of the game folder, unchanged since it was listed, with its
+  original present. Refused while the game runs (X-02), under the device lock. Rationale: the
+  owner's 45 old copies from the whole-folder sync of 2024 clutter the folder, and the only safe
+  way to let a user remove files from the game folder is one that can be undone and that cannot
+  reach a file the user did not choose. Rejected: deleting for good, which cannot be undone;
+  ticking all copies by default, which the owner ruled out; letting a copy without its original
+  be removed, since it may be the only version. Tested with a fake Recycle Bin, with each
+  safeguard taken out once to see a test fail, in the interface on a copy of the game folder
+  (refused there because the game was running), and with the real Recycle Bin on a scratch file.

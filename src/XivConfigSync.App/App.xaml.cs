@@ -217,7 +217,7 @@ public partial class App : Application
         }
 
         var shell = new ShellIntegration(Environment.ProcessPath!, Strings.SyncFile_TypeName);
-        mainModel = new MainViewModel(engine!, ui!, log, game!, shell, new GameLocator());
+        mainModel = new MainViewModel(engine!, ui!, log, game!, shell, new GameLocator(), new RecycleBin());
         mainModel.LogPage.Folder = local!.LogsFolder;
         mainWindow = new MainWindow { DataContext = mainModel };
         mainWindow.Closing += OnMainClosing;

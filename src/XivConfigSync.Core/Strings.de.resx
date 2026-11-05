@@ -16,21 +16,40 @@
   <data name="Character_Number" xml:space="preserve"><value>Charakter {0}</value></data>
   <data name="Character_Path" xml:space="preserve"><value>{0}: {1}</value></data>
   <data name="Character_Unnamed" xml:space="preserve"><value>Charakter</value></data>
+  <data name="Cleanup_Bytes" xml:space="preserve"><value>{0} Byte</value></data>
+  <data name="Cleanup_Changed" xml:space="preserve"><value>seit dem Einlesen geändert; bitte neu einlesen</value></data>
+  <data name="Cleanup_Confirm" xml:space="preserve"><value>{0} Konfliktkopien in den Papierkorb verschieben? Nur die angehakten Dateien werden verschoben. Du kannst sie aus dem Papierkorb wiederherstellen.</value></data>
+  <data name="Cleanup_Done" xml:space="preserve"><value>{0} Konfliktkopien wurden in den Papierkorb verschoben.</value></data>
+  <data name="Cleanup_Gone" xml:space="preserve"><value>nicht mehr vorhanden oder keine Konfliktkopie mehr</value></data>
+  <data name="Cleanup_Intro" xml:space="preserve"><value>Wenn OneDrive zwei Fassungen einer Datei nicht zusammenführen kann, behält es beide und benennt die zweite nach dem Computer, zum Beispiel FFXIV-PC2.cfg. Das Spiel beachtet diese Kopien nicht, und dieses Programm sichert und überträgt sie nicht. Hake die an, die du nicht mehr brauchst; sie kommen in den Papierkorb, du kannst sie dort also wiederherstellen. Entfernt wird nur, was du anhakst und bestätigst. Eine Kopie, deren Original fehlt, lässt sich nicht anhaken, weil sie die einzige verbliebene Fassung sein kann.</value></data>
+  <data name="Cleanup_KiB" xml:space="preserve"><value>{0} KB</value></data>
+  <data name="Cleanup_None" xml:space="preserve"><value>Im Spielordner liegen keine Konfliktkopien.</value></data>
+  <data name="Cleanup_NotMoved" xml:space="preserve"><value>Diese wurden nicht verschoben:</value></data>
+  <data name="Cleanup_OriginalMissing" xml:space="preserve"><value>Das Original fehlt; bleibt erhalten, weil es die einzige Fassung sein kann.</value></data>
+  <data name="Cleanup_Refresh" xml:space="preserve"><value>Neu einlesen</value></data>
+  <data name="Cleanup_Remove" xml:space="preserve"><value>Angehakte in den Papierkorb</value></data>
+  <data name="Cleanup_SelectAll" xml:space="preserve"><value>Alle anhaken</value></data>
+  <data name="Cleanup_Summary" xml:space="preserve"><value>{0} Konfliktkopien, {1} angehakt, {2} ohne Original.</value></data>
+  <data name="Cleanup_Title" xml:space="preserve"><value>Konfliktkopien</value></data>
   <data name="Close_AskText" xml:space="preserve"><value>Soll XIV ConfigSync im Infobereich weiterlaufen, wenn du das Fenster schließt? Ja: weiterlaufen, damit Sicherungen nach dem Spielen weiter passieren. Nein: beenden. Das lässt sich in den Einstellungen ändern.</value></data>
   <data name="Close_AskTitle" xml:space="preserve"><value>Fenster schließen</value></data>
   <data name="Close_Busy" xml:space="preserve"><value>Ein Vorgang läuft noch. Bitte warte, bis er fertig ist.</value></data>
   <data name="Col_Action" xml:space="preserve"><value>Vorschlag</value></data>
   <data name="Col_Area" xml:space="preserve"><value>Bereich</value></data>
+  <data name="Col_CopyOf" xml:space="preserve"><value>Kopie von</value></data>
   <data name="Col_Default" xml:space="preserve"><value>Standard</value></data>
   <data name="Col_Device" xml:space="preserve"><value>Gerät</value></data>
   <data name="Col_Evidence" xml:space="preserve"><value>Belegt</value></data>
   <data name="Col_File" xml:space="preserve"><value>Datei</value></data>
   <data name="Col_Level" xml:space="preserve"><value>Stufe</value></data>
   <data name="Col_Message" xml:space="preserve"><value>Meldung</value></data>
+  <data name="Col_Modified" xml:space="preserve"><value>Geändert</value></data>
   <data name="Col_Notes" xml:space="preserve"><value>Hinweise</value></data>
   <data name="Col_Reason" xml:space="preserve"><value>Begründung</value></data>
   <data name="Col_Receipt" xml:space="preserve"><value>Bestätigt von</value></data>
+  <data name="Col_Remove" xml:space="preserve"><value>Entfernen</value></data>
   <data name="Col_Rule" xml:space="preserve"><value>Regel</value></data>
+  <data name="Col_Size" xml:space="preserve"><value>Größe</value></data>
   <data name="Col_Take" xml:space="preserve"><value>Übernehmen</value></data>
   <data name="Col_Time" xml:space="preserve"><value>Zeit</value></data>
   <data name="Common_Browse" xml:space="preserve"><value>Durchsuchen...</value></data>
@@ -85,6 +104,7 @@
   <data name="Matrix_UiSave" xml:space="preserve"><value>Zustand der Oberfläche. Das Spiel ändert ihn von selbst; nur auf Anforderung.</value></data>
   <data name="Matrix_Unknown" xml:space="preserve"><value>Unbekannte Datei; wird gesichert und nur auf Anforderung übertragen.</value></data>
   <data name="Nav_About" xml:space="preserve"><value>Info</value></data>
+  <data name="Nav_Cleanup" xml:space="preserve"><value>Aufräumen</value></data>
   <data name="Nav_Log" xml:space="preserve"><value>Protokoll</value></data>
   <data name="Nav_Overview" xml:space="preserve"><value>Übersicht</value></data>
   <data name="Nav_Rules" xml:space="preserve"><value>Regeln</value></data>
@@ -98,7 +118,7 @@
   <data name="Origin_GameExit" xml:space="preserve"><value>nach dem Spielen</value></data>
   <data name="Origin_Manual" xml:space="preserve"><value>manuell</value></data>
   <data name="Overview_BackupNow" xml:space="preserve"><value>Jetzt sichern</value></data>
-  <data name="Overview_ConflictCopies" xml:space="preserve"><value>Im Spielordner liegen {0} alte Konfliktkopien. Sie werden weder gesichert noch gelöscht; du kannst sie von Hand entfernen.</value></data>
+  <data name="Overview_ConflictCopies" xml:space="preserve"><value>Im Spielordner liegen {0} alte Konfliktkopien. Sie werden weder gesichert noch übertragen; unter „Aufräumen“ kannst du sie ansehen und die angehakten in den Papierkorb verschieben.</value></data>
   <data name="Overview_DeviceName" xml:space="preserve"><value>Name</value></data>
   <data name="Overview_Devices" xml:space="preserve"><value>Geräte im Sync-Ordner</value></data>
   <data name="Overview_FolderUnavailable" xml:space="preserve"><value>Der Sync-Ordner {0} ist gerade nicht erreichbar (Laufwerk nicht verbunden, OneDrive nicht gestartet?). Das Programm versucht es weiter; nichts geht verloren. Für einen anderen Ordner wähle in den Einstellungen Sync-Ordner wechseln.</value></data>
@@ -112,6 +132,7 @@
   <data name="Overview_Receipt" xml:space="preserve"><value>Empfangen</value></data>
   <data name="Overview_ReceivedBy" xml:space="preserve"><value>empfangen von {0}</value></data>
   <data name="Overview_Refresh" xml:space="preserve"><value>Aktualisieren</value></data>
+  <data name="Overview_ShowConflictCopies" xml:space="preserve"><value>Anzeigen und aufräumen</value></data>
   <data name="Overview_SyncFolder" xml:space="preserve"><value>Sync-Ordner</value></data>
   <data name="Overview_ThisDevice" xml:space="preserve"><value>Dieses Gerät</value></data>
   <data name="Overview_Upload" xml:space="preserve"><value>Upload</value></data>
@@ -220,6 +241,7 @@
   <data name="Setup_Welcome" xml:space="preserve"><value>Willkommen. XIV ConfigSync hält die Einstellungen des Spiels und deiner Dalamud-Plugins auf allen deinen PCs gleich, ohne zu überschreiben, was zu einem PC gehört, etwa Auflösung oder UI-Skalierung.</value></data>
   <data name="Status_Applying" xml:space="preserve"><value>Übertrage...</value></data>
   <data name="Status_BackingUp" xml:space="preserve"><value>Sichere...</value></data>
+  <data name="Status_Cleaning" xml:space="preserve"><value>Verschiebe Dateien in den Papierkorb...</value></data>
   <data name="Status_Comparing" xml:space="preserve"><value>Vergleiche...</value></data>
   <data name="Status_Ready" xml:space="preserve"><value>Bereit.</value></data>
   <data name="Status_Recovering" xml:space="preserve"><value>Stelle eine unterbrochene Übertragung wieder her...</value></data>

@@ -48,3 +48,13 @@ public interface IShellIntegration
 
     void SetFileAssociation(bool enabled);
 }
+
+/// <summary>Moves files to the Windows Recycle Bin, so a removal can be undone there.</summary>
+public interface IRecycleBin
+{
+    /// <summary>
+    /// Moves one file to the Recycle Bin. Throws when the file cannot go there; it never deletes
+    /// a file for good instead.
+    /// </summary>
+    void Recycle(string fullPath);
+}

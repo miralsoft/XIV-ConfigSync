@@ -16,21 +16,40 @@
   <data name="Character_Number" xml:space="preserve"><value>Character {0}</value></data>
   <data name="Character_Path" xml:space="preserve"><value>{0}: {1}</value></data>
   <data name="Character_Unnamed" xml:space="preserve"><value>Character</value></data>
+  <data name="Cleanup_Bytes" xml:space="preserve"><value>{0} bytes</value></data>
+  <data name="Cleanup_Changed" xml:space="preserve"><value>changed since it was listed; please list again</value></data>
+  <data name="Cleanup_Confirm" xml:space="preserve"><value>Move {0} conflict copies to the Recycle Bin? Only the ticked files are moved. You can restore them from the Recycle Bin.</value></data>
+  <data name="Cleanup_Done" xml:space="preserve"><value>{0} conflict copies were moved to the Recycle Bin.</value></data>
+  <data name="Cleanup_Gone" xml:space="preserve"><value>no longer there, or no longer a conflict copy</value></data>
+  <data name="Cleanup_Intro" xml:space="preserve"><value>When OneDrive cannot merge two versions of a file, it keeps both and names the second one after the computer, for example FFXIV-PC2.cfg. The game ignores these copies, and this application neither backs them up nor transfers them. Tick the ones you no longer need; they go to the Recycle Bin, so you can restore them from there. Nothing is removed unless you tick it and confirm. A copy whose original is missing cannot be ticked, since it may be the only version left.</value></data>
+  <data name="Cleanup_KiB" xml:space="preserve"><value>{0} KB</value></data>
+  <data name="Cleanup_None" xml:space="preserve"><value>No conflict copies in the game folder.</value></data>
+  <data name="Cleanup_NotMoved" xml:space="preserve"><value>These were left in place:</value></data>
+  <data name="Cleanup_OriginalMissing" xml:space="preserve"><value>The original is missing; kept, as it may be the only version.</value></data>
+  <data name="Cleanup_Refresh" xml:space="preserve"><value>List again</value></data>
+  <data name="Cleanup_Remove" xml:space="preserve"><value>Move ticked files to the Recycle Bin</value></data>
+  <data name="Cleanup_SelectAll" xml:space="preserve"><value>Tick all</value></data>
+  <data name="Cleanup_Summary" xml:space="preserve"><value>{0} conflict copies, {1} ticked, {2} without original.</value></data>
+  <data name="Cleanup_Title" xml:space="preserve"><value>Conflict copies</value></data>
   <data name="Close_AskText" xml:space="preserve"><value>Should XIV ConfigSync keep running in the notification area when you close the window? Yes: keep running, so backups after playing still happen. No: quit. You can change this in the settings.</value></data>
   <data name="Close_AskTitle" xml:space="preserve"><value>Close window</value></data>
   <data name="Close_Busy" xml:space="preserve"><value>An operation is still running. Please wait until it has finished.</value></data>
   <data name="Col_Action" xml:space="preserve"><value>Proposal</value></data>
   <data name="Col_Area" xml:space="preserve"><value>Area</value></data>
+  <data name="Col_CopyOf" xml:space="preserve"><value>Copy of</value></data>
   <data name="Col_Default" xml:space="preserve"><value>Default</value></data>
   <data name="Col_Device" xml:space="preserve"><value>Device</value></data>
   <data name="Col_Evidence" xml:space="preserve"><value>Known</value></data>
   <data name="Col_File" xml:space="preserve"><value>File</value></data>
   <data name="Col_Level" xml:space="preserve"><value>Level</value></data>
   <data name="Col_Message" xml:space="preserve"><value>Message</value></data>
+  <data name="Col_Modified" xml:space="preserve"><value>Changed</value></data>
   <data name="Col_Notes" xml:space="preserve"><value>Notes</value></data>
   <data name="Col_Reason" xml:space="preserve"><value>Reason</value></data>
   <data name="Col_Receipt" xml:space="preserve"><value>Confirmed by</value></data>
+  <data name="Col_Remove" xml:space="preserve"><value>Remove</value></data>
   <data name="Col_Rule" xml:space="preserve"><value>Rule</value></data>
+  <data name="Col_Size" xml:space="preserve"><value>Size</value></data>
   <data name="Col_Take" xml:space="preserve"><value>Take</value></data>
   <data name="Col_Time" xml:space="preserve"><value>Time</value></data>
   <data name="Common_Browse" xml:space="preserve"><value>Browse...</value></data>
@@ -85,6 +104,7 @@
   <data name="Matrix_UiSave" xml:space="preserve"><value>UI state. The game changes it by itself; only on request.</value></data>
   <data name="Matrix_Unknown" xml:space="preserve"><value>Unknown file; backed up, applied only on request.</value></data>
   <data name="Nav_About" xml:space="preserve"><value>About</value></data>
+  <data name="Nav_Cleanup" xml:space="preserve"><value>Clean up</value></data>
   <data name="Nav_Log" xml:space="preserve"><value>Log</value></data>
   <data name="Nav_Overview" xml:space="preserve"><value>Overview</value></data>
   <data name="Nav_Rules" xml:space="preserve"><value>Rules</value></data>
@@ -98,7 +118,7 @@
   <data name="Origin_GameExit" xml:space="preserve"><value>after playing</value></data>
   <data name="Origin_Manual" xml:space="preserve"><value>manual</value></data>
   <data name="Overview_BackupNow" xml:space="preserve"><value>Back up now</value></data>
-  <data name="Overview_ConflictCopies" xml:space="preserve"><value>{0} old conflict copies were found in the game folder. They are neither backed up nor deleted; you can remove them by hand.</value></data>
+  <data name="Overview_ConflictCopies" xml:space="preserve"><value>{0} old conflict copies were found in the game folder. They are neither backed up nor transferred; under Clean up you can look at them and move the ones you tick to the Recycle Bin.</value></data>
   <data name="Overview_DeviceName" xml:space="preserve"><value>Name</value></data>
   <data name="Overview_Devices" xml:space="preserve"><value>Devices in the sync folder</value></data>
   <data name="Overview_FolderUnavailable" xml:space="preserve"><value>The sync folder {0} is not reachable right now (a drive not connected, OneDrive not started?). The application tries again; nothing is lost. To use another folder, choose Change sync folder in the settings.</value></data>
@@ -112,6 +132,7 @@
   <data name="Overview_Receipt" xml:space="preserve"><value>Received</value></data>
   <data name="Overview_ReceivedBy" xml:space="preserve"><value>received by {0}</value></data>
   <data name="Overview_Refresh" xml:space="preserve"><value>Refresh</value></data>
+  <data name="Overview_ShowConflictCopies" xml:space="preserve"><value>Show and clean up</value></data>
   <data name="Overview_SyncFolder" xml:space="preserve"><value>Sync folder</value></data>
   <data name="Overview_ThisDevice" xml:space="preserve"><value>This device</value></data>
   <data name="Overview_Upload" xml:space="preserve"><value>Upload</value></data>
@@ -220,6 +241,7 @@
   <data name="Setup_Welcome" xml:space="preserve"><value>Welcome. XIV ConfigSync keeps the settings of the game and your Dalamud plugins the same on all your PCs, without overwriting what belongs to one PC, such as resolution or UI scale.</value></data>
   <data name="Status_Applying" xml:space="preserve"><value>Applying...</value></data>
   <data name="Status_BackingUp" xml:space="preserve"><value>Backing up...</value></data>
+  <data name="Status_Cleaning" xml:space="preserve"><value>Moving files to the Recycle Bin...</value></data>
   <data name="Status_Comparing" xml:space="preserve"><value>Comparing...</value></data>
   <data name="Status_Ready" xml:space="preserve"><value>Ready.</value></data>
   <data name="Status_Recovering" xml:space="preserve"><value>Recovering an interrupted transfer...</value></data>

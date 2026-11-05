@@ -43,51 +43,73 @@ public sealed class SetupTests
         Assert.Equal(1, completions);
         Assert.Equal(head, device.Engine.GetDevices().Single().HeadRevisionId);
     }
+}
 
-    private sealed class QuietUi : IUiServices
+/// <summary>User interface services that answer without a window; counts what was asked.</summary>
+internal sealed class QuietUi : IUiServices
+{
+    public bool ConfirmAnswer { get; set; } = true;
+
+    public int Confirmations { get; private set; }
+
+    public List<string> Informed { get; } = [];
+
+    public string? PickFolder(string title, string? initial) => null;
+
+    public bool Confirm(string title, string message)
     {
-        public string? PickFolder(string title, string? initial) => null;
-
-        public bool Confirm(string title, string message) => true;
-
-        public bool? Ask(string title, string message) => true;
-
-        public void Inform(string title, string message)
-        {
-        }
-
-        public void ShowError(string message) => throw new InvalidOperationException(message);
-
-        public void Notify(string title, string message)
-        {
-        }
-
-        public bool OnUiThread(Action action)
-        {
-            action();
-            return true;
-        }
-
-        public void OpenFolder(string path)
-        {
-        }
+        Confirmations++;
+        return ConfirmAnswer;
     }
 
-    private sealed class NoShell : IShellIntegration
+    public bool? Ask(string title, string message) => true;
+
+    public void Inform(string title, string message) => Informed.Add(message);
+
+    public void ShowError(string message) => throw new InvalidOperationException(message);
+
+    public void Notify(string title, string message)
     {
-        public bool IsAutostartEnabled => false;
-
-        public bool IsFileAssociationRegistered { get; private set; }
-
-        public void SetAutostart(bool enabled)
-        {
-        }
-
-        public void SetFileAssociation(bool enabled) => IsFileAssociationRegistered = enabled;
     }
 
-    private sealed class NoLocator : IGameLocator
+    public bool OnUiThread(Action action)
     {
-        public IReadOnlyList<string> InstallFolderCandidates() => [];
+        action();
+        return true;
+    }
+
+    public void OpenFolder(string path)
+    {
+    }
+}
+
+internal sealed class NoShell : IShellIntegration
+{
+    public bool IsAutostartEnabled => false;
+
+    public bool IsFileAssociationRegistered { get; private set; }
+
+    public void SetAutostart(bool enabled)
+    {
+    }
+
+    public void SetFileAssociation(bool enabled) => IsFileAssociationRegistered = enabled;
+}
+
+internal sealed class NoLocator : IGameLocator
+{
+    public IReadOnlyList<string> InstallFolderCandidates() => [];
+}
+
+/// <summary>A Recycle Bin that moves files into a folder of its own and records them.</summary>
+internal sealed class FakeRecycleBin(string folder) : IRecycleBin
+{
+    public List<string> Recycled { get; } = [];
+
+    public void Recycle(string fullPath)
+    {
+        Directory.CreateDirectory(folder);
+        File.Move(fullPath, Path.Combine(folder, Guid.NewGuid().ToString("N") + Path.GetExtension(fullPath)));
+        Recycled.Add(fullPath);
     }
 }

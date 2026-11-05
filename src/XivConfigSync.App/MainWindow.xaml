@@ -61,6 +61,11 @@
                     IsChecked="{Binding SelectedPage, Converter={StaticResource IndexToBool}, ConverterParameter=1}"
                     Style="{StaticResource NavButton}" />
                 <RadioButton
+                    AutomationProperties.AutomationId="NavCleanup"
+                    Content="{x:Static core:Strings.Nav_Cleanup}"
+                    IsChecked="{Binding SelectedPage, Converter={StaticResource IndexToBool}, ConverterParameter=6}"
+                    Style="{StaticResource NavButton}" />
+                <RadioButton
                     AutomationProperties.AutomationId="NavRules"
                     Content="{x:Static core:Strings.Nav_Rules}"
                     IsChecked="{Binding SelectedPage, Converter={StaticResource IndexToBool}, ConverterParameter=2}"
@@ -103,7 +108,16 @@
                     Style="{StaticResource Muted}"
                     Text="{x:Static core:Strings.Overview_Intro}" />
                 <Border Style="{StaticResource Notice}" Visibility="{Binding Notice, Converter={StaticResource TextToVisibility}}">
-                    <TextBlock Foreground="{StaticResource WarningBrush}" Text="{Binding Notice}" />
+                    <StackPanel>
+                        <TextBlock Foreground="{StaticResource WarningBrush}" Text="{Binding Notice}" />
+                        <Button
+                            AutomationProperties.AutomationId="ShowCleanup"
+                            Command="{Binding ShowCleanupCommand}"
+                            Content="{x:Static core:Strings.Overview_ShowConflictCopies}"
+                            HorizontalAlignment="Left"
+                            Margin="0,8,0,0"
+                            Visibility="{Binding HasConflictCopies, Converter={StaticResource BoolToVisibility}}" />
+                    </StackPanel>
                 </Border>
                 <Border Style="{StaticResource Card}">
                     <Grid>
@@ -360,6 +374,106 @@
                         Width="Auto" />
                     <DataGridTextColumn
                         Binding="{Binding Warnings}"
+                        Header="{x:Static core:Strings.Col_Notes}"
+                        IsReadOnly="True"
+                        Width="1.6*">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="TextWrapping" Value="Wrap" />
+                                <Setter Property="Foreground" Value="{StaticResource WarningBrush}" />
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
+                </DataGrid.Columns>
+            </DataGrid>
+        </DockPanel>
+
+        <!--  Clean up  -->
+        <DockPanel
+            DataContext="{Binding Cleanup}"
+            Grid.Column="1"
+            Margin="28,24"
+            Visibility="{Binding DataContext.SelectedPage, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource IndexToVisibility}, ConverterParameter=6}">
+            <StackPanel DockPanel.Dock="Top">
+                <TextBlock Style="{StaticResource PageTitle}" Text="{x:Static core:Strings.Cleanup_Title}" />
+                <TextBlock
+                    Margin="0,0,0,14"
+                    Style="{StaticResource Muted}"
+                    Text="{x:Static core:Strings.Cleanup_Intro}" />
+            </StackPanel>
+            <StackPanel
+                DockPanel.Dock="Bottom"
+                Margin="0,10,0,0"
+                Orientation="Vertical">
+                <TextBlock
+                    AutomationProperties.AutomationId="CleanupSummary"
+                    Margin="0,0,0,8"
+                    Style="{StaticResource Muted}"
+                    Text="{Binding Summary}" />
+                <WrapPanel>
+                    <Button
+                        AutomationProperties.AutomationId="RemoveSelected"
+                        Command="{Binding RemoveSelectedCommand}"
+                        Content="{x:Static core:Strings.Cleanup_Remove}"
+                        IsEnabled="{Binding HasSelection}"
+                        Margin="0,0,8,6"
+                        Style="{StaticResource PrimaryButton}" />
+                    <Button
+                        AutomationProperties.AutomationId="CleanupSelectAll"
+                        Command="{Binding SelectAllCommand}"
+                        Content="{x:Static core:Strings.Cleanup_SelectAll}"
+                        IsEnabled="{Binding HasRows}"
+                        Margin="0,0,8,6" />
+                    <Button
+                        Command="{Binding SelectNoneCommand}"
+                        Content="{x:Static core:Strings.Transfer_SelectNone}"
+                        IsEnabled="{Binding HasRows}"
+                        Margin="0,0,8,6" />
+                    <Button
+                        AutomationProperties.AutomationId="CleanupRefresh"
+                        Command="{Binding LoadCommand}"
+                        Content="{x:Static core:Strings.Cleanup_Refresh}"
+                        Margin="0,0,8,6" />
+                </WrapPanel>
+            </StackPanel>
+            <DataGrid
+                AutomationProperties.AutomationId="CleanupRows"
+                AutomationProperties.Name="{x:Static core:Strings.Cleanup_Title}"
+                ItemsSource="{Binding Rows}">
+                <DataGrid.Columns>
+                    <DataGridTemplateColumn Header="{x:Static core:Strings.Col_Remove}" Width="Auto">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <CheckBox
+                                    AutomationProperties.Name="{Binding DisplayPath}"
+                                    HorizontalAlignment="Center"
+                                    IsChecked="{Binding IsSelected, UpdateSourceTrigger=PropertyChanged}"
+                                    IsEnabled="{Binding Selectable}" />
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    <DataGridTextColumn
+                        Binding="{Binding DisplayPath}"
+                        Header="{x:Static core:Strings.Col_File}"
+                        IsReadOnly="True"
+                        Width="2*" />
+                    <DataGridTextColumn
+                        Binding="{Binding Original}"
+                        Header="{x:Static core:Strings.Col_CopyOf}"
+                        IsReadOnly="True"
+                        Width="1.6*" />
+                    <DataGridTextColumn
+                        Binding="{Binding ModifiedText}"
+                        Header="{x:Static core:Strings.Col_Modified}"
+                        IsReadOnly="True"
+                        Width="Auto" />
+                    <DataGridTextColumn
+                        Binding="{Binding SizeText}"
+                        Header="{x:Static core:Strings.Col_Size}"
+                        IsReadOnly="True"
+                        Width="Auto" />
+                    <DataGridTextColumn
+                        Binding="{Binding Note}"
                         Header="{x:Static core:Strings.Col_Notes}"
                         IsReadOnly="True"
                         Width="1.6*">
