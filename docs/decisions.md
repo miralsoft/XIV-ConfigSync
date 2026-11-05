@@ -307,3 +307,28 @@ Append-only. Never edit or delete past entries; a later entry may supersede an e
   found nothing new locally. Rejected: excluding the file from the analysis or allowing the fault
   in it, which gives up the check (R-23); a further series of CI reruns to measure, which the
   owner does not want.
+- (2026-11-05) Supersedes the entry before: the analyzer worker searches the full module path
+  again. Measured locally the same day, 15 fresh processes each: with the restricted path the
+  "Get-Command is not recognized" fault came in 5, with the full path in none. The green CI run
+  after the change was chance. What was found instead:
+  - The fault comes from the analyzer itself. Its rules run in parallel and look commands up
+    through one runspace pool; now and then a lookup runs in a runspace that has no `Get-Command`.
+    The command cache keeps each lookup as a `Lazy` value, which keeps a thrown exception too, so
+    every later lookup of that name in the process fails the same way. That is why the fault
+    spoils the rest of a process and a fresh process is the only cure.
+  - Analysing the file once more in the same process, the form foundation 5.2.1 uses, cleared the
+    other form (`NullReferenceException`) every time and the `Get-Command` form in 1 of 39 cases
+    measured. Reported to the owner for the foundation.
+  - The worker now recognises the fault by its exception (`CommandNotFoundException` for
+    `Get-Command`), not by the English text: on a German Windows the message did not match and the
+    fault failed the gate at once instead of starting a fresh worker.
+  Rejected: limiting the analyzer's runspace pool to one runspace by reflection, which hung the
+  analysis with a busy processor (stopped after hours); running the worker on one processor core,
+  1 fault in 15 runs against 3 in 10 at more than twice the time.
+- (2026-11-05) The set-up wizard reports completion once, after it stopped working. Found in the
+  owner's first real set-up: the window refuses to close while the set-up works (review 3), and
+  Completed was raised before the working flag was cleared, so the window stayed open while the
+  overview and the tray icon opened behind it; a second click on Finish opened both a second time.
+  Now the flag is cleared first, Finish does nothing once the set-up is complete or while it works,
+  and the application opens at most one overview and one tray icon per process. A test covers it;
+  it fails when either half of the fix is taken out.

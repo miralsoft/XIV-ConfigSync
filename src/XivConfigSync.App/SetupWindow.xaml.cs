@@ -11,7 +11,7 @@ public partial class SetupWindow : Window
         Closing += (_, e) =>
         {
             // Not while the set-up writes into the sync folder (review 3, finding 3).
-            if (DataContext is Core.ViewModels.SetupViewModel { Working: true })
+            if (!Completed && DataContext is Core.ViewModels.SetupViewModel { Working: true })
             {
                 e.Cancel = true;
             }

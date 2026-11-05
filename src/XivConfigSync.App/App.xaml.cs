@@ -178,6 +178,11 @@ public partial class App : Application
         var window = new SetupWindow { DataContext = model };
         model.Completed += (_, _) =>
         {
+            if (window.Completed)
+            {
+                return;
+            }
+
             window.Completed = true;
             window.Close();
             ShowMain(startHidden: false);
@@ -204,6 +209,13 @@ public partial class App : Application
 
     private void ShowMain(bool startHidden)
     {
+        // One overview and one tray icon per process: a second call only brings the window forward.
+        if (mainWindow is not null)
+        {
+            ShowMainWindow();
+            return;
+        }
+
         var shell = new ShellIntegration(Environment.ProcessPath!, Strings.SyncFile_TypeName);
         mainModel = new MainViewModel(engine!, ui!, log, game!, shell, new GameLocator());
         mainModel.LogPage.Folder = local!.LogsFolder;

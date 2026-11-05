@@ -54,8 +54,11 @@ public sealed partial class SetupViewModel : ObservableObject
         }
     }
 
-    /// <summary>Raised when the set-up is complete.</summary>
+    /// <summary>Raised once, when the set-up is complete.</summary>
     public event EventHandler? Completed;
+
+    /// <summary>Whether the set-up is complete; it does not run again from this wizard.</summary>
+    public bool IsFinished { get; private set; }
 
     public ObservableCollection<ExistingDevice> ExistingDevices { get; } = [];
 
@@ -302,6 +305,12 @@ public sealed partial class SetupViewModel : ObservableObject
 
     private async Task FinishAsync()
     {
+        // Runs once: a second click while it works, or after it finished, does nothing.
+        if (Working || IsFinished)
+        {
+            return;
+        }
+
         var settings = engine.Settings;
         settings.GameConfigFolder = GameFolder;
         settings.PluginConfigFolder = string.IsNullOrWhiteSpace(PluginFolder) ? null : PluginFolder;
@@ -384,6 +393,11 @@ public sealed partial class SetupViewModel : ObservableObject
                 done = Text.Format(Strings.Setup_DoneNoBackup, backupProblem);
             }
 
+            // Finished and no longer working before anyone hears of it: the window refuses to close
+            // while the set-up works, so raising Completed first left it open, and a second click
+            // on Finish opened the overview and the tray icon a second time.
+            IsFinished = true;
+            Working = false;
             ui.Inform(Strings.Setup_Title, done);
             Completed?.Invoke(this, EventArgs.Empty);
         }

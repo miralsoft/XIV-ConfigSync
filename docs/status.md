@@ -8,10 +8,15 @@
   on in one run that night. Release 0.1 is implemented and tested on one machine with generated
   data and with copies of real data. **Open:** the test on two real devices, the Dalamud test
   with a running game, and the owner's review. Not released.
-- CI (2026-11-05): the .NET workflow passed its first run. The PowerShell job failed twice on the
-  analyzer fault "Get-Command is not recognized"; the analyzer worker now searches only the
-  Windows PowerShell and pinned modules (`decisions.md`). Whether that ends the fault shows in the
-  next CI run.
+- First real set-up by the owner (2026-11-05): a second click on Finish opened a second overview
+  and tray icon; fixed with a test (`decisions.md`).
+- CI (2026-11-05): the .NET workflow passed its first run. The analyzer fault "Get-Command is not
+  recognized" is now understood (a cached failed lookup inside PSScriptAnalyzer spoils its
+  process) and reproduced locally; a fresh worker stays the cure, and the fault is now recognised
+  in any language. It still fails the PowerShell job when one file needs more than three workers,
+  as twice on 2026-11-05. Foundation 5.2.1's same-process retry does not clear this form
+  (measured); 5.2.2's fix for `PublicKeyToken` in `.resx` applies here. The project still
+  declares foundation 5.2.0.
 
 ## Product (`src/`, `tests/`)
 

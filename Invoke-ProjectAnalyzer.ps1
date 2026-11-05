@@ -82,19 +82,6 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
 if ($PSCmdlet.ParameterSetName -eq 'Worker') {
-    # The analyzer looks up every command a script calls. A name it cannot resolve, such as a
-    # function from the project's own module, makes it search every module on the module path. In
-    # CI the fault hit the file with the most such names, tests/XivInventory.Tests.ps1, in every
-    # failed run and in every fresh worker (docs/decisions.md, 2026-11-05), so it is taken to come
-    # from a module of the runner image that this search touches. The worker searches only the
-    # modules of Windows PowerShell itself and the pinned ones restored for this repository, which
-    # also makes the analysis the same on every machine. Set before the analyzer is loaded: its
-    # runspaces read the variable from this process. The folder of the pinned modules is three
-    # levels above the analyzer's manifest (.modules\PSScriptAnalyzer\<version>\), found without
-    # Split-Path, which is not loaded yet.
-    $pinnedModules = [System.IO.Path]::GetDirectoryName([System.IO.Path]::GetDirectoryName([System.IO.Path]::GetDirectoryName($ModulePath)))
-    $env:PSModulePath = '{0}\Modules;{1}' -f $PSHOME, $pinnedModules
-
     # Loaded by path, so the worker's own commands need no command discovery: with an empty module
     # analysis cache, discovery scans every module on the machine, which took about 20 s per
     # worker on the CI runner (2026-11-04). The path is built without Join-Path, which lives in
@@ -118,6 +105,26 @@ function Test-TransientError {
 
     $other = @($Message | Where-Object { -not $_.StartsWith($transient, [System.StringComparison]::Ordinal) })
     $Message.Count -gt 0 -and $other.Count -eq 0
+}
+
+function ConvertTo-ErrorText {
+    [CmdletBinding()]
+    [OutputType([string])]
+    param (
+        [Parameter(Mandatory = $true)]
+        [object] $ErrorRecord
+    )
+
+    # The known fault is recognised by its exception, not by its text, which Windows shows in the
+    # language of the machine: on a German one the message did not match and the fault failed the
+    # gate at once (2026-11-05). It is reported under the one English text the caller looks for.
+    $exception = $null
+    if ($ErrorRecord -is [System.Management.Automation.ErrorRecord]) { $exception = $ErrorRecord.Exception }
+    if ($exception -is [System.Management.Automation.CommandNotFoundException] -and
+        ($exception.CommandName -eq 'Get-Command' -or $exception.Message -match '\WGet-Command\W')) {
+        return ('{0} ({1})' -f $transient, $exception.Message)
+    }
+    [string]$ErrorRecord
 }
 
 function Add-ResultLine {
@@ -145,7 +152,7 @@ function Invoke-FakeWorker {
         [string] $ResultPath
     )
 
-    # Plays one entry of the plan per worker start: Mode is ok, transient, other, finding,
+    # Plays one entry of the plan per worker start: Mode is ok, transient, localised, other, finding,
     # unexplained, crash, hang or fatal; At is the position in this worker's list where it happens.
     # Windows PowerShell 5.1 passes a JSON array on as one object; ForEach-Object unrolls it.
     $plan = @(ConvertFrom-Json -InputObject ([System.IO.File]::ReadAllText($env:XIVCS_ANALYZER_FAKE, $utf8)) | ForEach-Object { $_ })
@@ -154,7 +161,6 @@ function Invoke-FakeWorker {
     if (Test-Path -LiteralPath $counter) { $attempt = @([System.IO.File]::ReadAllLines($counter, $utf8)).Count }
     [System.IO.File]::AppendAllText($counter, ((@($File | ForEach-Object { Split-Path -Path $_ -Leaf }) -join ',') + "`n"), $utf8)
     [System.IO.File]::AppendAllText($env:XIVCS_ANALYZER_FAKE + '.cache', ([string]$env:PSModuleAnalysisCachePath + "`n"), $utf8)
-    [System.IO.File]::AppendAllText($env:XIVCS_ANALYZER_FAKE + '.modulepath', ([string]$env:PSModulePath + "`n"), $utf8)
     $step = $plan[[System.Math]::Min($attempt, $plan.Count - 1)]
     $at = 0
     if ($step.PSObject.Properties['At']) { $at = [int]$step.At }
@@ -170,6 +176,12 @@ function Invoke-FakeWorker {
             switch ($step.Mode) {
                 'crash' { exit 5 }
                 'transient' { $record.Errors = @("$transient as the name of a cmdlet (fake)") }
+                'localised' {
+                    # The fault as a German Windows reports it, through the same conversion as a real
+                    # worker.
+                    $exception = [System.Management.Automation.CommandNotFoundException]::new('Die Benennung "Get-Command" wurde nicht als Name eines Cmdlet erkannt. (fake)')
+                    $record.Errors = @(ConvertTo-ErrorText -ErrorRecord ([System.Management.Automation.ErrorRecord]::new($exception, 'RULE_ERROR', 'ObjectNotFound', $null)))
+                }
                 'other' { if ($i -eq $at) { $record.Errors = @('Object reference not set to an instance of an object. (fake)') } }
                 'finding' { if ($i -eq $at) { $record.Findings = @([ordered]@{ Line = 1; RuleName = 'FakeRule'; Severity = 'Warning'; Message = 'fake' }) } }
                 'unexplained' { if ($i -eq $at) { $record.Unexplained = @([ordered]@{ Line = 1; RuleName = 'FakeRule' }) } }
@@ -224,7 +236,7 @@ function Invoke-Worker {
                 File        = $file
                 Findings    = @($found | ForEach-Object { [ordered]@{ Line = $_.Line; RuleName = $_.RuleName; Severity = [string]$_.Severity; Message = $_.Message } })
                 Unexplained = @($suppressed | Where-Object { [string]::IsNullOrWhiteSpace($_.Justification) } | ForEach-Object { [ordered]@{ Line = $_.Line; RuleName = $_.RuleName } })
-                Errors      = @(@($mainErrors) + @($suppressedErrors) | Where-Object { $_ } | ForEach-Object { [string]$_ })
+                Errors      = @(@($mainErrors) + @($suppressedErrors) | Where-Object { $_ } | ForEach-Object { ConvertTo-ErrorText -ErrorRecord $_ })
             })
     }
     exit 0
