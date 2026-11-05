@@ -9,8 +9,18 @@ public static class Roots
     /// <summary>Dalamud's plugin configuration folder.</summary>
     public const string Plugins = "plugins";
 
+    /// <summary>
+    /// The files directly in Dalamud's own folder (the parent of the plugin folder): its settings,
+    /// window layout and the launcher's settings. Only the top level is read; the subfolders hold
+    /// plugin settings (their own root), programs, downloads and logs.
+    /// </summary>
+    public const string Dalamud = "dalamud";
+
     /// <summary>All roots in a fixed order.</summary>
-    public static IReadOnlyList<string> All { get; } = [Game, Plugins];
+    public static IReadOnlyList<string> All { get; } = [Game, Plugins, Dalamud];
+
+    /// <summary>Roots read without their subfolders.</summary>
+    public static bool IsTopLevelOnly(string root) => root == Dalamud;
 }
 
 /// <summary>Flags a scan sets on a file.</summary>

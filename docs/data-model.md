@@ -57,12 +57,18 @@ set up again under its old ID; other devices do not carry a common state across 
   "display": { "width": 2560, "height": 1600, "scalePercent": 150 },
   "roots": {
     "game": { "files": [ { "path": "FFXIV_CHR.../HOTBAR.DAT", "hash": "...", "size": 204832, "flags": [] } ] },
-    "plugins": { "files": [ { "path": "SomePlugin.json", "hash": "...", "size": 1063, "flags": ["credential"] } ] }
+    "plugins": { "files": [ { "path": "SomePlugin.json", "hash": "...", "size": 1063, "flags": ["credential"] } ] },
+    "dalamud": { "files": [ { "path": "dalamudConfig.json", "hash": "...", "size": 83564, "flags": [] } ] }
   },
   "excluded": [ { "root": "plugins", "path": "SomePlugin/cache", "reason": "cache rule" } ]
 }
 ```
 
+- `roots`: `game` (the game's configuration folder), `plugins` (Dalamud's `pluginConfigs`) and
+  `dalamud` (the files directly in Dalamud's own folder, the parent of `pluginConfigs`; its
+  subfolders are not read). A manifest with any other root is rejected, so a device with an
+  older version of the application rejects revisions that carry `dalamud`: all devices need the
+  same version.
 - `origin`: `game-exit`, `manual`, `app-start`, `before-apply` (the backup taken right after an
   apply).
 - `path` is relative to its root, with `/` as separator, validated on read: no empty segment, no

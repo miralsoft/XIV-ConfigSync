@@ -82,6 +82,15 @@ public static class FileMatrix
 
         // Plugins: always on request (specification 6.2).
         new(Roots.Plugins, "**", FileClass.Unknown, ApplyRule.OnRequest, Evidence.Unconfirmed, "Matrix_Plugin"),
+
+        // Dalamud's own folder: backed up, never applied from another device (decisions,
+        // 2026-11-04 and 2026-11-05). Plugin profiles in dalamudConfig.json refer to plugins by an ID
+        // made per installation; the repository list is merged separately.
+        new(Roots.Dalamud, "dalamudConfig.json", FileClass.Mixed, ApplyRule.Never, Evidence.Confirmed, "Matrix_DalamudConfig"),
+        new(Roots.Dalamud, "dalamudUI.ini", FileClass.Device, ApplyRule.Never, Evidence.Unconfirmed, "Matrix_DalamudUi"),
+        new(Roots.Dalamud, "launcherConfigV3.json", FileClass.Device, ApplyRule.Never, Evidence.Confirmed, "Matrix_LauncherConfig"),
+        new(Roots.Dalamud, "accountsList.json", FileClass.Sensitive, ApplyRule.Never, Evidence.Unconfirmed, "Matrix_Accounts"),
+        new(Roots.Dalamud, "**", FileClass.Device, ApplyRule.Never, Evidence.Unknown, "Matrix_DalamudOther"),
     ];
 
     /// <summary>
@@ -112,6 +121,18 @@ public static class FileMatrix
         (Roots.Plugins, new Glob("**/*.db-journal"), "Exclude_Lock"),
         (Roots.Plugins, new Glob("**/*.db-wal"), "Exclude_Lock"),
         (Roots.Plugins, new Glob("**/*.db-shm"), "Exclude_Lock"),
+        (Roots.Dalamud, new Glob("*.log"), "Exclude_Log"),
+        (Roots.Dalamud, new Glob("*.dmp"), "Exclude_Log"),
+        (Roots.Dalamud, new Glob("*.tspack"), "Exclude_Log"),
+        (Roots.Dalamud, new Glob("dalamud.troubleshooting.json"), "Exclude_Log"),
+        (Roots.Dalamud, new Glob("uidCache.json"), "Exclude_Cache"),
+        // Dalamud's shadow copy of its and the plugins' settings, about 12 MB and changed on every
+        // run: a new object per backup. The settings themselves are backed up (decisions, 2026-11-05).
+        (Roots.Dalamud, new Glob("dalamudVfs.db"), "Exclude_Shadow"),
+        (Roots.Dalamud, new Glob("*.db-journal"), "Exclude_Lock"),
+        (Roots.Dalamud, new Glob("*.db-wal"), "Exclude_Lock"),
+        (Roots.Dalamud, new Glob("*.db-shm"), "Exclude_Lock"),
+        (Roots.Dalamud, new Glob("*.tmp"), "Exclude_Temp"),
     ];
 
     /// <summary>A single file above this size is left out and reported (cache rule by size).</summary>

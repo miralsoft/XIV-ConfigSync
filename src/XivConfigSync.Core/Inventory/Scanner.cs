@@ -36,7 +36,9 @@ public static class Scanner
     /// As <see cref="Walk"/>, but also returns what was skipped and why ("Exclude_Link",
     /// "Exclude_Unreadable"), so a backup can show it instead of losing it silently (review 2, finding 9).
     /// </summary>
-    public static IEnumerable<(string FullPath, string? Reason)> WalkWithSkipped(string folder)
+    /// <param name="folder">The folder to walk.</param>
+    /// <param name="recursive">False to list only the files directly in the folder.</param>
+    public static IEnumerable<(string FullPath, string? Reason)> WalkWithSkipped(string folder, bool recursive = true)
     {
         var pending = new Stack<DirectoryInfo>();
         pending.Push(new DirectoryInfo(folder));
@@ -83,7 +85,10 @@ public static class Scanner
                 }
                 else if (entry is DirectoryInfo sub)
                 {
-                    pending.Push(sub);
+                    if (recursive)
+                    {
+                        pending.Push(sub);
+                    }
                 }
                 else if (!entry.Attributes.HasFlag(FileAttributes.Device))
                 {
@@ -106,7 +111,7 @@ public static class Scanner
                 continue;
             }
 
-            foreach (var (full, skipped) in WalkWithSkipped(folder))
+            foreach (var (full, skipped) in WalkWithSkipped(folder, !Roots.IsTopLevelOnly(root)))
             {
                 if (!RelativePath.TryNormalize(Path.GetRelativePath(folder, full), out var relative))
                 {

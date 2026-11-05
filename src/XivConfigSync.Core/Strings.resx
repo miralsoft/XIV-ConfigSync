@@ -69,6 +69,7 @@
   <data name="Exclude_Log" xml:space="preserve"><value>log file</value></data>
   <data name="Exclude_NotConfig" xml:space="preserve"><value>not configuration</value></data>
   <data name="Exclude_Old" xml:space="preserve"><value>the game&apos;s own previous copy</value></data>
+  <data name="Exclude_Shadow" xml:space="preserve"><value>Dalamud&apos;s shadow copy of the settings</value></data>
   <data name="Exclude_Temp" xml:space="preserve"><value>temporary file</value></data>
   <data name="Exclude_TooLarge" xml:space="preserve"><value>larger than 64 MB</value></data>
   <data name="Exclude_Unreadable" xml:space="preserve"><value>cannot be read</value></data>
@@ -82,6 +83,7 @@
   <data name="Level_Info" xml:space="preserve"><value>Info</value></data>
   <data name="Level_Warning" xml:space="preserve"><value>Warning</value></data>
   <data name="Log_OpenFolder" xml:space="preserve"><value>Open log folder</value></data>
+  <data name="Matrix_Accounts" xml:space="preserve"><value>The launcher&apos;s list of accounts (names, no passwords). Belongs to this device.</value></data>
   <data name="Matrix_Acq" xml:space="preserve"><value>Acquaintance list and related character data.</value></data>
   <data name="Matrix_Addon" xml:space="preserve"><value>HUD layout. The game changes this file by itself on every login, so it is only applied on request.</value></data>
   <data name="Matrix_BootCfg" xml:space="preserve"><value>Launcher settings of this device.</value></data>
@@ -90,6 +92,9 @@
   <data name="Matrix_Common" xml:space="preserve"><value>Character settings (chat, name plates, camera). Not yet confirmed by a transfer.</value></data>
   <data name="Matrix_Control0" xml:space="preserve"><value>Mouse and keyboard mode settings, including HUD info display. Confirmed by a transfer.</value></data>
   <data name="Matrix_Control1" xml:space="preserve"><value>Game pad mode settings. Not yet confirmed by a transfer.</value></data>
+  <data name="Matrix_DalamudConfig" xml:space="preserve"><value>Dalamud&apos;s own settings: plugin repositories, which plugins are on, profiles, fonts. Never applied from another device as a whole; the repository list can be merged on the Transfer page.</value></data>
+  <data name="Matrix_DalamudOther" xml:space="preserve"><value>Another file in Dalamud&apos;s folder. Belongs to this device.</value></data>
+  <data name="Matrix_DalamudUi" xml:space="preserve"><value>Positions of Dalamud&apos;s windows; valid only at this screen size.</value></data>
   <data name="Matrix_FfxivCfg" xml:space="preserve"><value>Graphics, resolution, UI scale and sound of this device. Never applied from another device as a whole.</value></data>
   <data name="Matrix_Gearset" xml:space="preserve"><value>Gear sets. Not yet confirmed by a transfer.</value></data>
   <data name="Matrix_Gs" xml:space="preserve"><value>Further character data. Not yet confirmed by a transfer.</value></data>
@@ -97,6 +102,7 @@
   <data name="Matrix_ItemFinder" xml:space="preserve"><value>Item finder data. Not yet confirmed by a transfer.</value></data>
   <data name="Matrix_ItemOrder" xml:space="preserve"><value>Inventory order. The game changes it by itself; only on request.</value></data>
   <data name="Matrix_Keybind" xml:space="preserve"><value>Key bindings. Confirmed by a transfer.</value></data>
+  <data name="Matrix_LauncherConfig" xml:space="preserve"><value>Settings of XIVLauncher on this device: game path, patch path, window.</value></data>
   <data name="Matrix_LogFilter" xml:space="preserve"><value>Chat log filters. Not yet confirmed by a transfer.</value></data>
   <data name="Matrix_Macro" xml:space="preserve"><value>Character macros. Not yet confirmed by a transfer.</value></data>
   <data name="Matrix_MacroSys" xml:space="preserve"><value>Macros shared by all characters. Confirmed by a transfer.</value></data>
@@ -153,18 +159,22 @@
   <data name="Refuse_AlreadySyncFolder" xml:space="preserve"><value>This folder is already a sync folder. Choose it to join it instead of creating a new one.</value></data>
   <data name="Refuse_Busy" xml:space="preserve"><value>Another operation is running. Please try again in a moment.</value></data>
   <data name="Refuse_ChangedSincePlan" xml:space="preserve"><value>Some files changed since the comparison, for example because the game ran. Nothing was written. Please compare again.</value></data>
+  <data name="Refuse_DalamudSettingsUnknown" xml:space="preserve"><value>Dalamud&apos;s settings have a form this application does not know. Nothing was changed.</value></data>
   <data name="Refuse_Damaged" xml:space="preserve"><value>Some files of this backup are missing or damaged, possibly because OneDrive has not finished downloading them. Nothing was applied. Try again later.</value></data>
   <data name="Refuse_FolderChanged" xml:space="preserve"><value>The game or plugin folder was changed in the settings since this was saved. Set the folder back to finish or undo it.</value></data>
   <data name="Refuse_FolderMissing" xml:space="preserve"><value>The game settings folder of this device cannot be found. Check the folder in the settings; nothing is transferred into a folder that is not there.</value></data>
   <data name="Refuse_GameRunning" xml:space="preserve"><value>The game is running. Nothing is written to its files while it runs; this happens after you close it.</value></data>
   <data name="Refuse_GameVersion" xml:space="preserve"><value>The game version differs between the two devices. Please update the game on both devices first.</value></data>
+  <data name="Refuse_NoDalamudSettings" xml:space="preserve"><value>Dalamud&apos;s settings (dalamudConfig.json) were not found on this device. Check the plugin folder in the settings, and that plugins are backed up.</value></data>
   <data name="Refuse_NoRevision" xml:space="preserve"><value>This device has no backup yet.</value></data>
   <data name="Refuse_NoSnapshot" xml:space="preserve"><value>This transfer can no longer be undone.</value></data>
   <data name="Refuse_NoSyncFolder" xml:space="preserve"><value>No sync folder is set up.</value></data>
   <data name="Refuse_NothingSelected" xml:space="preserve"><value>No file is selected.</value></data>
   <data name="Refuse_OpenJournal" xml:space="preserve"><value>An interrupted transfer or undo must be finished or rolled back first. Close the game if it runs, then press Refresh on the overview to be asked.</value></data>
+  <data name="Refuse_SourceNoDalamudSettings" xml:space="preserve"><value>The latest backup of that device has no Dalamud settings yet. It needs this version of the application and one backup.</value></data>
   <data name="Refuse_SyncFolderUnavailable" xml:space="preserve"><value>The sync folder is not reachable right now. Connect the drive or start OneDrive, then try again.</value></data>
   <data name="Refuse_UnknownDevice" xml:space="preserve"><value>This device is not in the sync folder.</value></data>
+  <data name="Root_Dalamud" xml:space="preserve"><value>Dalamud</value></data>
   <data name="Root_Game" xml:space="preserve"><value>Game</value></data>
   <data name="Root_Plugins" xml:space="preserve"><value>Plugins</value></data>
   <data name="Rule_Always" xml:space="preserve"><value>Always</value></data>
@@ -243,6 +253,7 @@
   <data name="Status_BackingUp" xml:space="preserve"><value>Backing up...</value></data>
   <data name="Status_Cleaning" xml:space="preserve"><value>Moving files to the Recycle Bin...</value></data>
   <data name="Status_Comparing" xml:space="preserve"><value>Comparing...</value></data>
+  <data name="Status_Merging" xml:space="preserve"><value>Merging plugin repositories...</value></data>
   <data name="Status_Ready" xml:space="preserve"><value>Ready.</value></data>
   <data name="Status_Recovering" xml:space="preserve"><value>Recovering an interrupted transfer...</value></data>
   <data name="Status_Refreshing" xml:space="preserve"><value>Checking the sync folder...</value></data>
@@ -259,6 +270,11 @@
   <data name="Transfer_Latest" xml:space="preserve"><value>Latest backup</value></data>
   <data name="Transfer_NothingToUndo" xml:space="preserve"><value>There is no transfer to undo.</value></data>
   <data name="Transfer_NotInSource" xml:space="preserve"><value>{0} files on this device do not exist in the source. They are not deleted.</value></data>
+  <data name="Transfer_Repositories" xml:space="preserve"><value>Merge plugin repositories</value></data>
+  <data name="Transfer_RepositoriesConfirm" xml:space="preserve"><value>These {0} plugin repositories of {1} are added to Dalamud&apos;s settings on this device:{2}Repositories already there and all other settings stay as they are. You can undo it with &quot;Undo last transfer&quot;.</value></data>
+  <data name="Transfer_RepositoriesDone" xml:space="preserve"><value>{0} plugin repositories were added. Dalamud uses them from its next start.</value></data>
+  <data name="Transfer_RepositoriesHint" xml:space="preserve"><value>{0} plugin repositories of this device are missing here; &quot;Merge plugin repositories&quot; adds them.</value></data>
+  <data name="Transfer_RepositoriesNone" xml:space="preserve"><value>{0} has no plugin repositories that this device lacks.</value></data>
   <data name="Transfer_Revision" xml:space="preserve"><value>Backup</value></data>
   <data name="Transfer_RevisionLabel" xml:space="preserve"><value>{0} ({1}, {2} files)</value></data>
   <data name="Transfer_SelectNone" xml:space="preserve"><value>Select none</value></data>

@@ -285,6 +285,9 @@
                 <Border Style="{StaticResource Notice}" Visibility="{Binding Messages, Converter={StaticResource TextToVisibility}}">
                     <TextBlock Foreground="{StaticResource WarningBrush}" Text="{Binding Messages}" />
                 </Border>
+                <Border Style="{StaticResource Notice}" Visibility="{Binding RepositoryHint, Converter={StaticResource TextToVisibility}}">
+                    <TextBlock AutomationProperties.AutomationId="RepositoryHint" Text="{Binding RepositoryHint}" />
+                </Border>
             </StackPanel>
             <StackPanel
                 DockPanel.Dock="Bottom"
@@ -317,6 +320,11 @@
                         AutomationProperties.AutomationId="Undo"
                         Command="{Binding UndoLastCommand}"
                         Content="{x:Static core:Strings.Transfer_Undo}"
+                        Margin="0,0,8,6" />
+                    <Button
+                        AutomationProperties.AutomationId="MergeRepositories"
+                        Command="{Binding MergeRepositoriesCommand}"
+                        Content="{x:Static core:Strings.Transfer_Repositories}"
                         Margin="0,0,8,6" />
                     <CheckBox
                         Content="{x:Static core:Strings.Transfer_ShowSkipped}"

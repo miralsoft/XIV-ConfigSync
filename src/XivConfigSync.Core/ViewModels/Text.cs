@@ -16,6 +16,15 @@ public static class Text
     public static string ForError(Exception ex) =>
         ex is RefusedException refused ? Get(refused.ReasonKey) : Format(Strings.Error_Generic, ex.Message);
 
+    /// <summary>The name of a backup area as the user sees it.</summary>
+    public static string RootName(string root) => root switch
+    {
+        Model.Roots.Game => Strings.Root_Game,
+        Model.Roots.Plugins => Strings.Root_Plugins,
+        Model.Roots.Dalamud => Strings.Root_Dalamud,
+        _ => root,
+    };
+
     /// <summary>A time in the user's culture, local time.</summary>
     public static string Time(DateTimeOffset? time) =>
         time is null ? Strings.Common_Never : time.Value.ToLocalTime().ToString("g", CultureInfo.CurrentCulture);

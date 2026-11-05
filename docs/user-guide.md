@@ -56,6 +56,11 @@ one. Tick what you want from the other PC, or use **Take all conflicts from the 
 - Files with the rule "never" are not offered from another PC.
 - **Take selected** saves the current files first, then replaces them. **Undo last transfer**
   puts the saved files back.
+- **Merge plugin repositories:** adds the custom plugin repositories of the chosen PC that this
+  PC lacks to Dalamud's settings here. You see the list and confirm it first. Repositories
+  already there and every other Dalamud setting stay as they are; nothing is removed. After
+  **Compare**, a note says how many are missing. **Undo last transfer** takes it back. Dalamud
+  uses the new repositories from its next start.
 - Nothing is written while the game runs.
 
 ## 5. Rules

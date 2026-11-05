@@ -102,12 +102,12 @@ position.
 | Plugin logs (`*.ahlog`), lock files (`*.lock`), `*.bak`, `*_backup.json` | Ignore | confirmed (existence) | |
 | Plugin data exports (`*.csv`) | unknown | confirmed (existence) | Inventory and market data; possibly per character, not per device |
 | A plugin configuration holding an API key | Sensitive | confirmed | Found on device A. A synced copy puts the key into the cloud folder |
-| `dalamudConfig.json` | Device in 0.1 | confirmed (mixed), source code (profiles) | Plugin profiles refer to plugins by an ID made per installation, so copied profiles do not match the other device's plugins. Also holds device paths, UI scale and fonts |
-| `dalamudUI.ini` | Device | unconfirmed (launcher FAQ) | Window layout; valid only at the same resolution |
-| `dalamudVfs.db` | Device | source code | Shadow copy of the Dalamud and plugin settings. A missing or unreadable settings file is silently restored from it, so an applied file must always be complete and valid |
+| `dalamudConfig.json` | Device in 0.1 (backed up, root `dalamud`, rule never) | confirmed (mixed), source code (profiles) | Plugin profiles refer to plugins by an ID made per installation, so copied profiles do not match the other device's plugins. Also holds device paths, UI scale and fonts. The custom repository list (`ThirdRepoList`) is merged between devices on request: missing entries are appended, nothing else changes (FR-072) |
+| `dalamudUI.ini` | Device (backed up, rule never) | unconfirmed (launcher FAQ) | Window layout; valid only at the same resolution |
+| `dalamudVfs.db` | Not backed up (about 12 MB, changed on every run) | source code | Shadow copy of the Dalamud and plugin settings. A missing or unreadable settings file is silently restored from it, so an applied file must always be complete and valid |
 | `dalamudUserData\` | location | source code | Newer launch mode moves all of the above here; the sync has to detect which location is live |
-| `launcherConfigV3.json` | Device | confirmed (keys) | Game path, patch path, window placement |
-| `accountsList.json`, `uidCache.json` | Sensitive | confirmed (existence) | Account names; passwords are in the Windows credential store |
+| `launcherConfigV3.json` | Device (backed up, rule never) | confirmed (keys) | Game path, patch path, window placement |
+| `accountsList.json`, `uidCache.json` | Sensitive (`accountsList.json` backed up, rule never; `uidCache.json` not backed up) | confirmed (existence) | Account names; passwords are in the Windows credential store |
 | `installedPlugins\` | Ignore | unconfirmed (launcher FAQ) | Must not be copied; the launcher installs plugins itself |
 | `*.log`, `*.dmp`, `*.tspack` | Ignore | confirmed | |
 

@@ -345,3 +345,32 @@ Append-only. Never edit or delete past entries; a later entry may supersede an e
   be removed, since it may be the only version. Tested with a fake Recycle Bin, with each
   safeguard taken out once to see a test fail, in the interface on a copy of the game folder
   (refused there because the game was running), and with the real Recycle Bin on a scratch file.
+- (2026-11-05) Dalamud's own folder becomes a third backup area, `dalamud`: the files directly in
+  the parent of `pluginConfigs` (`dalamudConfig.json`, `dalamudUI.ini`, `launcherConfigV3.json`,
+  `accountsList.json` and any other file there), with the rule "never" for every file (FR-072).
+  Rationale: the owner noticed that the folder holds more than plugin settings, and the gate 2
+  decision to back up everything, with these files restorable only on their own device, had been
+  implemented for `pluginConfigs` alone, which was a gap in the implementation, not a decision.
+  The folder is derived from the plugin folder only when that is named `pluginConfigs`, so a
+  folder chosen by hand never makes its parent a backup root. Left out: subfolders (programs,
+  downloads, plugins, which Dalamud installs itself, and `pluginConfigs`, already its own area),
+  logs, crash dumps of about 165 MB each, `uidCache.json`, and `dalamudVfs.db`: Dalamud's shadow
+  copy of the settings, about 12 MB and changed on every run, so 50 kept revisions could hold
+  600 MB of it, while the settings it mirrors are backed up themselves. A device with an older
+  version rejects revisions with the new area, so all devices need this version.
+- (2026-11-05) The custom plugin repositories (`ThirdRepoList` in `dalamudConfig.json`) are merged
+  between devices on request, at the owner's request: the repositories the chosen device has and
+  this one lacks are appended, copied entry by entry from its latest backup; existing entries and
+  every other setting stay as they are, and nothing is removed. The user sees the list and
+  confirms. The merged file is stored as an object in this device's part and written through the
+  applier, so it has a verified snapshot, a journal and an undo, and is refused while the game
+  runs. The structure was read from the owner's file (an object with `$type` and `$values`, each
+  entry with `$type`, `Url` and `IsEnabled`); a file of any other shape is refused and left
+  untouched. Checked on a copy of the owner's real file: the merged file differs only by the five
+  lines of the new entry; this check found that .NET 10 already writes CRLF on Windows, which a
+  conversion on top doubled, fixed and covered by a test. Whether Dalamud keeps a settings file
+  written from outside is the open Dalamud test; until then the merge is unverified in the game.
+  Rejected: applying `dalamudConfig.json` as a whole, which would carry profiles with
+  installation-specific plugin IDs and device paths; merging in both directions or removing
+  repositories, which the owner did not ask for and which could drop a repository on purpose;
+  merging automatically, which would add code sources to Dalamud without the user seeing them.

@@ -1,5 +1,6 @@
 using System.Reflection;
 using XivConfigSync.Core.Apply;
+using XivConfigSync.Core.Dalamud;
 using XivConfigSync.Core.Discovery;
 using XivConfigSync.Core.IO;
 using XivConfigSync.Core.Inventory;
@@ -88,6 +89,7 @@ public sealed class SyncEngine
     {
         [Model.Roots.Game] = Settings.GameConfigFolder,
         [Model.Roots.Plugins] = Settings.BackUpPlugins ? Settings.PluginConfigFolder : null,
+        [Model.Roots.Dalamud] = Settings.BackUpPlugins ? GameFolders.DalamudFolderOf(Settings.PluginConfigFolder) : null,
     };
 
     /// <summary>The game version on this device, if it can be read.</summary>
@@ -406,9 +408,12 @@ public sealed class SyncEngine
             throw new RefusedException("Refuse_FolderMissing");
         }
 
-        if (roots.TryGetValue(Model.Roots.Plugins, out var pluginFolder) && pluginFolder is not null && !Directory.Exists(pluginFolder))
+        foreach (var optional in new[] { Model.Roots.Plugins, Model.Roots.Dalamud })
         {
-            roots = new Dictionary<string, string?>(roots) { [Model.Roots.Plugins] = null };
+            if (roots.TryGetValue(optional, out var optionalFolder) && optionalFolder is not null && !Directory.Exists(optionalFolder))
+            {
+                roots = new Dictionary<string, string?>(roots) { [optional] = null };
+            }
         }
 
         var id = revisionId ?? store.ReadHead(sourceDeviceId) ?? throw new RefusedException("Refuse_NoRevision");
@@ -653,6 +658,92 @@ public sealed class SyncEngine
 
     /// <summary>A scan of this device without storing anything; for diagnostics.</summary>
     public ScanResult ScanOnly() => Scanner.Scan(Roots, Rules);
+
+    /// <summary>
+    /// The custom plugin repositories in the latest backup of a device that this device's Dalamud
+    /// settings lack. Read-only.
+    /// </summary>
+    public IReadOnlyList<PluginRepository> MissingRepositories(string sourceDeviceId)
+    {
+        var (local, source, _, _) = ReadRepositorySettings(sourceDeviceId);
+        return RepositoryMerge.Missing(local, source);
+    }
+
+    /// <summary>
+    /// Appends the repositories another device has and this one lacks to this device's
+    /// <c>dalamudConfig.json</c>. The merged file is written like any apply: stored as an object in
+    /// this device's part first, then applied with a verified snapshot and a journal, so it can be
+    /// undone on the transfer page and survives an interruption. Refused while the game runs.
+    /// Returns the repositories added.
+    /// </summary>
+    public IReadOnlyList<PluginRepository> MergeRepositories(string sourceDeviceId)
+    {
+        var correlation = Correlation();
+        if (game.IsRunning)
+        {
+            throw new RefusedException("Refuse_GameRunning");
+        }
+
+        string snapshotId;
+        IReadOnlyList<PluginRepository> added;
+        using (TakeLock())
+        {
+            var (local, source, store, sourceRevision) = ReadRepositorySettings(sourceDeviceId);
+            added = RepositoryMerge.Missing(local, source);
+            var merged = RepositoryMerge.Merge(local, source);
+            if (merged is null || added.Count == 0)
+            {
+                return [];
+            }
+
+            var hash = FileOps.HashBytes(merged);
+            store.PutObject(Settings.DeviceId, merged, hash);
+            var applier = NewApplier(store);
+            snapshotId = applier.Apply(
+                Settings.DeviceId,
+                sourceRevision,
+                [new ApplyTarget(Model.Roots.Dalamud, RepositoryMerge.FileName, hash, FileOps.HashBytes(local))]);
+            PruneSnapshots(applier, correlation);
+            log.Info(correlation, $"Plugin repositories merged from another device: {added.Count} added; snapshot {snapshotId}.");
+        }
+
+        BackupAfterChange(correlation);
+        return added;
+    }
+
+    private (byte[] Local, byte[] Source, SyncStore Store, string SourceRevision) ReadRepositorySettings(string sourceDeviceId)
+    {
+        var folder = Roots[Model.Roots.Dalamud];
+        var localPath = folder is null ? null : Path.Combine(folder, RepositoryMerge.FileName);
+        if (localPath is null || !File.Exists(localPath))
+        {
+            throw new RefusedException("Refuse_NoDalamudSettings");
+        }
+
+        var store = OpenStore();
+        var revision = store.ReadHead(sourceDeviceId) ?? throw new RefusedException("Refuse_NoRevision");
+        var manifest = store.ReadRevision(sourceDeviceId, revision);
+        var entry = manifest.AllFiles().FirstOrDefault(f => f.Root == Model.Roots.Dalamud && f.File.Path == RepositoryMerge.FileName);
+        if (entry.File is null)
+        {
+            throw new RefusedException("Refuse_SourceNoDalamudSettings");
+        }
+
+        var source = store.ReadObject(sourceDeviceId, entry.File.Hash);
+        var (local, _) = FileOps.ReadStable(localPath);
+        try
+        {
+            // Both are checked before anything is offered: a file of another shape is never written.
+            _ = RepositoryMerge.Read(local);
+            _ = RepositoryMerge.Read(source);
+        }
+        catch (InvalidDataException ex)
+        {
+            throw new RefusedException("Refuse_DalamudSettingsUnknown", ex);
+        }
+
+        return (local, source, store, revision);
+    }
 
     /// <summary>The conflict copies in the game folder, read-only.</summary>
     public IReadOnlyList<ConflictCopy> ListConflictCopies() => ConflictCopies.Find(Settings.GameConfigFolder, Rules);

@@ -26,6 +26,24 @@ public static partial class GameFolders
         return Directory.Exists(classic) ? classic : null;
     }
 
+    /// <summary>
+    /// Dalamud's own folder, which holds <c>dalamudConfig.json</c>: the parent of the plugin
+    /// folder, when that is Dalamud's <c>pluginConfigs</c>. Any other plugin folder has none, so a
+    /// folder chosen by hand never makes its parent a backup root.
+    /// </summary>
+    public static string? DalamudFolderOf(string? pluginConfigFolder)
+    {
+        if (string.IsNullOrWhiteSpace(pluginConfigFolder))
+        {
+            return null;
+        }
+
+        var trimmed = Path.TrimEndingDirectorySeparator(pluginConfigFolder);
+        return string.Equals(Path.GetFileName(trimmed), "pluginConfigs", StringComparison.OrdinalIgnoreCase)
+            ? Path.GetDirectoryName(trimmed)
+            : null;
+    }
+
     /// <summary>The character folders (<c>FFXIV_CHR*</c>) in a game configuration folder.</summary>
     public static IReadOnlyList<string> FindCharacterFolders(string? gameConfigFolder)
     {

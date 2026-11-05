@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using XivConfigSync.Core.Dalamud;
 using XivConfigSync.Core.Engine;
 using XivConfigSync.Core.Model;
 using XivConfigSync.Core.Planning;
@@ -28,7 +29,7 @@ public sealed partial class PlanRow : ObservableObject
 
     public string DisplayPath { get; }
 
-    public string Root => Item.Root == Roots.Game ? Strings.Root_Game : Strings.Root_Plugins;
+    public string Root => Text.RootName(Item.Root);
 
     public string ActionText => Item.Action switch
     {
@@ -99,6 +100,10 @@ public sealed partial class TransferViewModel : ObservableObject
     [ObservableProperty]
     public partial string Messages { get; set; } = string.Empty;
 
+    /// <summary>Shown after a comparison when the chosen device has plugin repositories this one lacks.</summary>
+    [ObservableProperty]
+    public partial string RepositoryHint { get; set; } = string.Empty;
+
     [ObservableProperty]
     public partial bool HasPlan { get; set; }
 
@@ -153,10 +158,72 @@ public sealed partial class TransferViewModel : ObservableObject
         ApplyPlan? built = null;
         var deviceId = Source.DeviceId;
         var revisionId = Revision?.RevisionId;
-        if (await main.RunAsync(Strings.Status_Comparing, () => built = main.Engine.Plan(deviceId, revisionId)).ConfigureAwait(true))
+        IReadOnlyList<PluginRepository> missing = [];
+        if (await main.RunAsync(Strings.Status_Comparing, () =>
+        {
+            built = main.Engine.Plan(deviceId, revisionId);
+            missing = MissingRepositoriesOrNone(deviceId);
+        }).ConfigureAwait(true))
         {
             plan = built;
             Fill();
+            RepositoryHint = missing.Count > 0 ? Text.Format(Strings.Transfer_RepositoriesHint, missing.Count) : string.Empty;
+        }
+    }
+
+    /// <summary>
+    /// Adds the plugin repositories of the chosen device that this device lacks to Dalamud's
+    /// settings here, after the user confirmed the list. Nothing else in the file changes.
+    /// </summary>
+    [RelayCommand]
+    public async Task MergeRepositoriesAsync()
+    {
+        if (Source is null)
+        {
+            return;
+        }
+
+        var source = Source;
+        IReadOnlyList<PluginRepository> missing = [];
+        if (!await main.RunAsync(Strings.Status_Comparing, () => missing = main.Engine.MissingRepositories(source.DeviceId)).ConfigureAwait(true))
+        {
+            return;
+        }
+
+        if (missing.Count == 0)
+        {
+            RepositoryHint = string.Empty;
+            ui.Inform(Strings.Transfer_Title, Text.Format(Strings.Transfer_RepositoriesNone, source.Name));
+            return;
+        }
+
+        var list = Environment.NewLine + Environment.NewLine
+            + string.Join(Environment.NewLine, missing.Select(r => "  " + r.Url))
+            + Environment.NewLine + Environment.NewLine;
+        if (!ui.Confirm(Strings.Transfer_Title, Text.Format(Strings.Transfer_RepositoriesConfirm, missing.Count, source.Name, list)))
+        {
+            return;
+        }
+
+        IReadOnlyList<PluginRepository> added = [];
+        if (await main.RunAsync(Strings.Status_Merging, () => added = main.Engine.MergeRepositories(source.DeviceId)).ConfigureAwait(true))
+        {
+            RepositoryHint = string.Empty;
+            ui.Inform(Strings.Transfer_Title, Text.Format(Strings.Transfer_RepositoriesDone, added.Count));
+            await main.RefreshAsync().ConfigureAwait(true);
+        }
+    }
+
+    /// <summary>The hint after a comparison: quiet when either side has no Dalamud settings to compare.</summary>
+    private IReadOnlyList<PluginRepository> MissingRepositoriesOrNone(string deviceId)
+    {
+        try
+        {
+            return main.Engine.MissingRepositories(deviceId);
+        }
+        catch (RefusedException)
+        {
+            return [];
         }
     }
 
@@ -295,6 +362,7 @@ public sealed partial class TransferViewModel : ObservableObject
 
     private void ResetForSource(SourceOption? value)
     {
+        RepositoryHint = string.Empty;
         Revisions.Clear();
         plan = null;
         Rows.Clear();

@@ -69,6 +69,7 @@
   <data name="Exclude_Log" xml:space="preserve"><value>Logdatei</value></data>
   <data name="Exclude_NotConfig" xml:space="preserve"><value>keine Konfiguration</value></data>
   <data name="Exclude_Old" xml:space="preserve"><value>die eigene Vorgängerkopie des Spiels</value></data>
+  <data name="Exclude_Shadow" xml:space="preserve"><value>Dalamuds Schattenkopie der Einstellungen</value></data>
   <data name="Exclude_Temp" xml:space="preserve"><value>temporäre Datei</value></data>
   <data name="Exclude_TooLarge" xml:space="preserve"><value>größer als 64 MB</value></data>
   <data name="Exclude_Unreadable" xml:space="preserve"><value>nicht lesbar</value></data>
@@ -82,6 +83,7 @@
   <data name="Level_Info" xml:space="preserve"><value>Info</value></data>
   <data name="Level_Warning" xml:space="preserve"><value>Warnung</value></data>
   <data name="Log_OpenFolder" xml:space="preserve"><value>Protokollordner öffnen</value></data>
+  <data name="Matrix_Accounts" xml:space="preserve"><value>Die Kontenliste des Launchers (Namen, keine Passwörter). Gehört zu diesem Gerät.</value></data>
   <data name="Matrix_Acq" xml:space="preserve"><value>Bekanntschaftsliste und weitere Charakterdaten.</value></data>
   <data name="Matrix_Addon" xml:space="preserve"><value>HUD-Layout. Das Spiel ändert diese Datei bei jedem Login von selbst, deshalb wird sie nur auf Anforderung übertragen.</value></data>
   <data name="Matrix_BootCfg" xml:space="preserve"><value>Launcher-Einstellungen dieses Geräts.</value></data>
@@ -90,6 +92,9 @@
   <data name="Matrix_Common" xml:space="preserve"><value>Charaktereinstellungen (Chat, Namensschilder, Kamera). Noch nicht durch eine Übertragung belegt.</value></data>
   <data name="Matrix_Control0" xml:space="preserve"><value>Einstellungen für Maus und Tastatur, auch die HUD-Infoanzeige. Durch eine Übertragung belegt.</value></data>
   <data name="Matrix_Control1" xml:space="preserve"><value>Einstellungen für den Gamepad-Modus. Noch nicht durch eine Übertragung belegt.</value></data>
+  <data name="Matrix_DalamudConfig" xml:space="preserve"><value>Dalamuds eigene Einstellungen: Plugin-Quellen, welche Plugins an sind, Profile, Schriften. Wird nie als Ganzes von einem anderen Gerät übertragen; die Plugin-Quellen lassen sich auf der Seite „Übertragen“ abgleichen.</value></data>
+  <data name="Matrix_DalamudOther" xml:space="preserve"><value>Eine weitere Datei in Dalamuds Ordner. Gehört zu diesem Gerät.</value></data>
+  <data name="Matrix_DalamudUi" xml:space="preserve"><value>Positionen der Dalamud-Fenster; gilt nur bei dieser Bildschirmgröße.</value></data>
   <data name="Matrix_FfxivCfg" xml:space="preserve"><value>Grafik, Auflösung, UI-Skalierung und Ton dieses Geräts. Wird nie als Ganzes von einem anderen Gerät übernommen.</value></data>
   <data name="Matrix_Gearset" xml:space="preserve"><value>Ausrüstungssets. Noch nicht durch eine Übertragung belegt.</value></data>
   <data name="Matrix_Gs" xml:space="preserve"><value>Weitere Charakterdaten. Noch nicht durch eine Übertragung belegt.</value></data>
@@ -97,6 +102,7 @@
   <data name="Matrix_ItemFinder" xml:space="preserve"><value>Daten der Gegenstandssuche. Noch nicht durch eine Übertragung belegt.</value></data>
   <data name="Matrix_ItemOrder" xml:space="preserve"><value>Sortierung des Inventars. Das Spiel ändert sie von selbst; nur auf Anforderung.</value></data>
   <data name="Matrix_Keybind" xml:space="preserve"><value>Tastenbelegung. Durch eine Übertragung belegt.</value></data>
+  <data name="Matrix_LauncherConfig" xml:space="preserve"><value>Einstellungen von XIVLauncher auf diesem Gerät: Spielpfad, Patchpfad, Fenster.</value></data>
   <data name="Matrix_LogFilter" xml:space="preserve"><value>Chatlog-Filter. Noch nicht durch eine Übertragung belegt.</value></data>
   <data name="Matrix_Macro" xml:space="preserve"><value>Charaktermakros. Noch nicht durch eine Übertragung belegt.</value></data>
   <data name="Matrix_MacroSys" xml:space="preserve"><value>Makros für alle Charaktere. Durch eine Übertragung belegt.</value></data>
@@ -153,18 +159,22 @@
   <data name="Refuse_AlreadySyncFolder" xml:space="preserve"><value>Dieser Ordner ist schon ein Sync-Ordner. Wähle ihn, um ihm beizutreten, statt einen neuen anzulegen.</value></data>
   <data name="Refuse_Busy" xml:space="preserve"><value>Ein anderer Vorgang läuft gerade. Bitte versuche es gleich noch einmal.</value></data>
   <data name="Refuse_ChangedSincePlan" xml:space="preserve"><value>Einige Dateien haben sich seit dem Vergleich geändert, zum Beispiel weil das Spiel lief. Es wurde nichts geschrieben. Bitte vergleiche noch einmal.</value></data>
+  <data name="Refuse_DalamudSettingsUnknown" xml:space="preserve"><value>Dalamuds Einstellungen haben eine Form, die dieses Programm nicht kennt. Es wurde nichts geändert.</value></data>
   <data name="Refuse_Damaged" xml:space="preserve"><value>Einige Dateien dieser Sicherung fehlen oder sind beschädigt, vielleicht weil OneDrive sie noch nicht vollständig heruntergeladen hat. Es wurde nichts übertragen. Versuche es später noch einmal.</value></data>
   <data name="Refuse_FolderChanged" xml:space="preserve"><value>Der Spiel- oder Plugin-Ordner wurde in den Einstellungen geändert, seit dies gesichert wurde. Stelle den Ordner zurück, um es abzuschließen oder rückgängig zu machen.</value></data>
   <data name="Refuse_FolderMissing" xml:space="preserve"><value>Der Ordner der Spieleinstellungen dieses Geräts ist nicht da. Prüfe den Ordner in den Einstellungen; in einen fehlenden Ordner wird nichts übertragen.</value></data>
   <data name="Refuse_GameRunning" xml:space="preserve"><value>Das Spiel läuft. Solange es läuft, wird nichts in seine Dateien geschrieben; das passiert, nachdem du es beendet hast.</value></data>
   <data name="Refuse_GameVersion" xml:space="preserve"><value>Die Spielversion ist auf beiden Geräten verschieden. Bitte aktualisiere das Spiel zuerst auf beiden Geräten.</value></data>
+  <data name="Refuse_NoDalamudSettings" xml:space="preserve"><value>Dalamuds Einstellungen (dalamudConfig.json) wurden auf diesem Gerät nicht gefunden. Prüfe den Plugin-Ordner in den Einstellungen und ob Plugins gesichert werden.</value></data>
   <data name="Refuse_NoRevision" xml:space="preserve"><value>Dieses Gerät hat noch keine Sicherung.</value></data>
   <data name="Refuse_NoSnapshot" xml:space="preserve"><value>Diese Übertragung lässt sich nicht mehr rückgängig machen.</value></data>
   <data name="Refuse_NoSyncFolder" xml:space="preserve"><value>Es ist kein Sync-Ordner eingerichtet.</value></data>
   <data name="Refuse_NothingSelected" xml:space="preserve"><value>Es ist keine Datei ausgewählt.</value></data>
   <data name="Refuse_OpenJournal" xml:space="preserve"><value>Eine unterbrochene Übertragung oder ein unterbrochenes Rückgängigmachen muss zuerst abgeschlossen oder zurückgesetzt werden. Schließe das Spiel, falls es läuft, und drücke dann auf der Übersicht Aktualisieren.</value></data>
+  <data name="Refuse_SourceNoDalamudSettings" xml:space="preserve"><value>Die letzte Sicherung dieses Geräts enthält noch keine Dalamud-Einstellungen. Dafür braucht es diese Programmversion und eine Sicherung.</value></data>
   <data name="Refuse_SyncFolderUnavailable" xml:space="preserve"><value>Der Sync-Ordner ist gerade nicht erreichbar. Verbinde das Laufwerk oder starte OneDrive und versuche es dann noch einmal.</value></data>
   <data name="Refuse_UnknownDevice" xml:space="preserve"><value>Dieses Gerät ist nicht im Sync-Ordner.</value></data>
+  <data name="Root_Dalamud" xml:space="preserve"><value>Dalamud</value></data>
   <data name="Root_Game" xml:space="preserve"><value>Spiel</value></data>
   <data name="Root_Plugins" xml:space="preserve"><value>Plugins</value></data>
   <data name="Rule_Always" xml:space="preserve"><value>Immer</value></data>
@@ -243,6 +253,7 @@
   <data name="Status_BackingUp" xml:space="preserve"><value>Sichere...</value></data>
   <data name="Status_Cleaning" xml:space="preserve"><value>Verschiebe Dateien in den Papierkorb...</value></data>
   <data name="Status_Comparing" xml:space="preserve"><value>Vergleiche...</value></data>
+  <data name="Status_Merging" xml:space="preserve"><value>Gleiche Plugin-Quellen ab...</value></data>
   <data name="Status_Ready" xml:space="preserve"><value>Bereit.</value></data>
   <data name="Status_Recovering" xml:space="preserve"><value>Stelle eine unterbrochene Übertragung wieder her...</value></data>
   <data name="Status_Refreshing" xml:space="preserve"><value>Prüfe den Sync-Ordner...</value></data>
@@ -259,6 +270,11 @@
   <data name="Transfer_Latest" xml:space="preserve"><value>Neueste Sicherung</value></data>
   <data name="Transfer_NothingToUndo" xml:space="preserve"><value>Es gibt keine Übertragung, die sich rückgängig machen lässt.</value></data>
   <data name="Transfer_NotInSource" xml:space="preserve"><value>{0} Dateien auf diesem Gerät gibt es in der Quelle nicht. Sie werden nicht gelöscht.</value></data>
+  <data name="Transfer_Repositories" xml:space="preserve"><value>Plugin-Quellen abgleichen</value></data>
+  <data name="Transfer_RepositoriesConfirm" xml:space="preserve"><value>Diese {0} Plugin-Quellen von {1} werden in die Dalamud-Einstellungen dieses Geräts eingetragen:{2}Vorhandene Quellen und alle anderen Einstellungen bleiben unverändert. Rückgängig machen kannst du es mit „Letzte Übertragung rückgängig“.</value></data>
+  <data name="Transfer_RepositoriesDone" xml:space="preserve"><value>{0} Plugin-Quellen wurden eingetragen. Dalamud nutzt sie ab dem nächsten Start.</value></data>
+  <data name="Transfer_RepositoriesHint" xml:space="preserve"><value>{0} Plugin-Quellen dieses Geräts fehlen hier; „Plugin-Quellen abgleichen“ trägt sie ein.</value></data>
+  <data name="Transfer_RepositoriesNone" xml:space="preserve"><value>{0} hat keine Plugin-Quellen, die hier fehlen.</value></data>
   <data name="Transfer_Revision" xml:space="preserve"><value>Sicherung</value></data>
   <data name="Transfer_RevisionLabel" xml:space="preserve"><value>{0} ({1}, {2} Dateien)</value></data>
   <data name="Transfer_SelectNone" xml:space="preserve"><value>Auswahl aufheben</value></data>

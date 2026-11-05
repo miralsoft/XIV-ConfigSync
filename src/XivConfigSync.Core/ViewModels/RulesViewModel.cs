@@ -25,7 +25,7 @@ public sealed partial class RuleRow : ObservableObject
 
     public MatrixEntry Entry { get; }
 
-    public string Root => Entry.Root == Roots.Game ? Strings.Root_Game : Strings.Root_Plugins;
+    public string Root => Text.RootName(Entry.Root);
 
     public string Pattern => Entry.Pattern == "**"
         ? Strings.Rules_AllFiles
@@ -83,7 +83,7 @@ public sealed partial class RulesViewModel : ObservableObject
 
     public ObservableCollection<ExclusionRow> Exclusions { get; } = [];
 
-    public IReadOnlyList<string> RootChoices { get; } = [Strings.Root_Game, Strings.Root_Plugins];
+    public IReadOnlyList<string> RootChoices { get; } = [.. Roots.All.Select(Text.RootName)];
 
     [ObservableProperty]
     public partial string NewExclusionPattern { get; set; } = string.Empty;
@@ -131,7 +131,7 @@ public sealed partial class RulesViewModel : ObservableObject
             return;
         }
 
-        var root = NewExclusionRoot == 0 ? Roots.Game : Roots.Plugins;
+        var root = Roots.All[Math.Clamp(NewExclusionRoot, 0, Roots.All.Count - 1)];
         if (await main.RunAsync(Strings.Rules_Title, () => main.Engine.UpdateRules(main.Engine.Rules.WithExclusion(root, pattern, true))).ConfigureAwait(true))
         {
             NewExclusionPattern = string.Empty;
@@ -167,7 +167,7 @@ public sealed partial class RulesViewModel : ObservableObject
         Exclusions.Clear();
         foreach (var exclusion in main.Engine.Rules.File.Exclusions)
         {
-            Exclusions.Add(new ExclusionRow(exclusion.Root, exclusion.Pattern, exclusion.Root == Roots.Game ? Strings.Root_Game : Strings.Root_Plugins));
+            Exclusions.Add(new ExclusionRow(exclusion.Root, exclusion.Pattern, Text.RootName(exclusion.Root)));
         }
     }
 }
