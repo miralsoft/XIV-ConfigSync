@@ -34,7 +34,7 @@ BeforeAll {
             [switch] $InCi
         )
         $planPath = Join-Path -Path $TestDrive -ChildPath 'plan.json'
-        Remove-Item -LiteralPath ($planPath + '.count'), ($planPath + '.cache') -ErrorAction SilentlyContinue
+        Remove-Item -LiteralPath ($planPath + '.count'), ($planPath + '.cache'), ($planPath + '.modulepath') -ErrorAction SilentlyContinue
         [System.IO.File]::WriteAllText($planPath, (ConvertTo-Json -InputObject @($Plan) -Depth 3))
         # The tests run in CI too, where the script refuses the fake unless told otherwise here.
         $savedCi = $env:GITHUB_ACTIONS
@@ -94,6 +94,14 @@ Describe 'Invoke-ProjectAnalyzer.ps1 with a fake worker' {
         $caches[1] | Should -Match 'worker2\.analysiscache$'
         $caches[2] | Should -Match 'worker3\.analysiscache$'
         [string]$env:PSModuleAnalysisCachePath | Should -Be $shared
+    }
+
+    It 'lets every worker search only the modules of Windows PowerShell and the pinned ones' {
+        $own = $env:PSModulePath
+        { Invoke-Fake -Plan @(@{ Mode = 'transient'; At = 1 }, @{ Mode = 'ok' }) } | Should -Not -Throw
+        $expected = '{0}\Modules;{1}' -f $PSHOME, (Join-Path -Path $root -ChildPath '.modules')
+        Get-Content -LiteralPath (Join-Path -Path $TestDrive -ChildPath 'plan.json.modulepath') | Should -Be @($expected, $expected)
+        $env:PSModulePath | Should -Be $own
     }
 
     It 'analyses again what a crashed worker did not report' {

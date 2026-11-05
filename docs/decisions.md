@@ -293,3 +293,17 @@ Append-only. Never edit or delete past entries; a later entry may supersede an e
     announced to screen readers.
   - Known limitation for the release check (gate 5): the colours are fixed and do not follow the
     Windows high-contrast themes.
+- (2026-11-05) The analyzer worker searches only the modules of Windows PowerShell itself and the
+  pinned modules restored for this repository (`PSModulePath` set in the worker before the
+  analyzer loads). Rationale: after the push of the gate 3 and 4 work, the "Get-Command is not
+  recognized" fault failed the PowerShell job twice in a row, in all three workers each time, on
+  the same runner image as the last green run. In every failed CI run so far it hit the same file,
+  `tests/XivInventory.Tests.ps1`, the file that calls the most commands the analyzer cannot
+  resolve (functions of the project's own module); each such name makes it search every module on
+  the module path, and the runner image carries hundreds that a developer machine does not. So the
+  fault is taken to come from that search, not from chance; this is the best-supported reading,
+  not a proven cause, and the next CI runs show it. A fresh worker and an empty module analysis
+  cache stay as they are. The restriction also makes the analysis the same on every machine; it
+  found nothing new locally. Rejected: excluding the file from the analysis or allowing the fault
+  in it, which gives up the check (R-23); a further series of CI reruns to measure, which the
+  owner does not want.

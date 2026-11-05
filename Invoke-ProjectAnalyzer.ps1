@@ -82,6 +82,19 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
 if ($PSCmdlet.ParameterSetName -eq 'Worker') {
+    # The analyzer looks up every command a script calls. A name it cannot resolve, such as a
+    # function from the project's own module, makes it search every module on the module path. In
+    # CI the fault hit the file with the most such names, tests/XivInventory.Tests.ps1, in every
+    # failed run and in every fresh worker (docs/decisions.md, 2026-11-05), so it is taken to come
+    # from a module of the runner image that this search touches. The worker searches only the
+    # modules of Windows PowerShell itself and the pinned ones restored for this repository, which
+    # also makes the analysis the same on every machine. Set before the analyzer is loaded: its
+    # runspaces read the variable from this process. The folder of the pinned modules is three
+    # levels above the analyzer's manifest (.modules\PSScriptAnalyzer\<version>\), found without
+    # Split-Path, which is not loaded yet.
+    $pinnedModules = [System.IO.Path]::GetDirectoryName([System.IO.Path]::GetDirectoryName([System.IO.Path]::GetDirectoryName($ModulePath)))
+    $env:PSModulePath = '{0}\Modules;{1}' -f $PSHOME, $pinnedModules
+
     # Loaded by path, so the worker's own commands need no command discovery: with an empty module
     # analysis cache, discovery scans every module on the machine, which took about 20 s per
     # worker on the CI runner (2026-11-04). The path is built without Join-Path, which lives in
@@ -141,6 +154,7 @@ function Invoke-FakeWorker {
     if (Test-Path -LiteralPath $counter) { $attempt = @([System.IO.File]::ReadAllLines($counter, $utf8)).Count }
     [System.IO.File]::AppendAllText($counter, ((@($File | ForEach-Object { Split-Path -Path $_ -Leaf }) -join ',') + "`n"), $utf8)
     [System.IO.File]::AppendAllText($env:XIVCS_ANALYZER_FAKE + '.cache', ([string]$env:PSModuleAnalysisCachePath + "`n"), $utf8)
+    [System.IO.File]::AppendAllText($env:XIVCS_ANALYZER_FAKE + '.modulepath', ([string]$env:PSModulePath + "`n"), $utf8)
     $step = $plan[[System.Math]::Min($attempt, $plan.Count - 1)]
     $at = 0
     if ($step.PSObject.Properties['At']) { $at = [int]$step.At }

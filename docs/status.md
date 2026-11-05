@@ -7,8 +7,11 @@
 - Gates 3 and 4 (prototype of the critical paths, core functions): approved 2026-11-04 and worked
   on in one run that night. Release 0.1 is implemented and tested on one machine with generated
   data and with copies of real data. **Open:** the test on two real devices, the Dalamud test
-  with a running game, the owner's review, and the first CI run of the .NET workflow (needs a
-  push). Not released.
+  with a running game, and the owner's review. Not released.
+- CI (2026-11-05): the .NET workflow passed its first run. The PowerShell job failed twice on the
+  analyzer fault "Get-Command is not recognized"; the analyzer worker now searches only the
+  Windows PowerShell and pinned modules (`decisions.md`). Whether that ends the fault shows in the
+  next CI run.
 
 ## Product (`src/`, `tests/`)
 
@@ -24,7 +27,7 @@
   executable of 67 MB that starts in about 1.5 s.
 - **Tests:** 98 xUnit tests (unit, two- and three-device flows, a simulated crash at every step
   of an apply, damaged and incomplete revisions, localisation completeness, one test per finding
-  of the independent review), 40 Pester tests for the analysis tools. Deliberately planted
+  of the independent review), 41 Pester tests for the analysis tools and the analyzer wrapper. Deliberately planted
   defects were caught by the tests, twice before and three times after the review fixes.
 - **Independent reviews (2026-11-05):** three rounds (code, the fixes, daily use and the interface)
   with 16, 12 and 12 findings; all fixed, the logic ones with tests; see `decisions.md`.
