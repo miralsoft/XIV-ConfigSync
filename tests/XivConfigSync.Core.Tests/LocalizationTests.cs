@@ -45,6 +45,9 @@ public sealed partial class LocalizationTests
         keys.AddRange(Enum.GetNames<Evidence>().Select(n => "Evidence_" + n));
         keys.AddRange(Enum.GetNames<RevisionOrigin>().Select(n => "Origin_" + n));
         keys.AddRange(Enum.GetNames<Logging.LogLevel>().Select(n => "Level_" + n));
+        keys.AddRange(Areas.All.SelectMany(a => new[] { a.NameKey, a.DescriptionKey }));
+        keys.AddRange(["Area_" + Areas.Repositories, "Area_" + Areas.Repositories + "_Hint"]);
+        keys.AddRange(SettingParts.All.Select(p => p.NameKey));
 
         // Refusal and warning keys are written as literals in the code; find them there.
         var source = Path.Combine(FindRepositoryRoot(), "src");

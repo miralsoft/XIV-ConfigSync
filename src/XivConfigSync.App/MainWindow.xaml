@@ -533,6 +533,26 @@
                                                     Style="{StaticResource Muted}"
                                                     Text="{Binding Hint}"
                                                     TextWrapping="Wrap" />
+                                                <ItemsControl
+                                                    IsEnabled="{Binding IsOn}"
+                                                    ItemsSource="{Binding Parts}"
+                                                    Margin="0,8,0,0"
+                                                    Visibility="{Binding HasParts, Converter={StaticResource BoolToVisibility}}">
+                                                    <ItemsControl.ItemsPanel>
+                                                        <ItemsPanelTemplate>
+                                                            <WrapPanel />
+                                                        </ItemsPanelTemplate>
+                                                    </ItemsControl.ItemsPanel>
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate>
+                                                            <CheckBox
+                                                                AutomationProperties.Name="{Binding Name}"
+                                                                Content="{Binding Name}"
+                                                                IsChecked="{Binding IsOn}"
+                                                                Margin="0,2,18,2" />
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
                                             </StackPanel>
                                         </DockPanel>
                                     </Border>

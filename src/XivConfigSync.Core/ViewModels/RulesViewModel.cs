@@ -114,13 +114,19 @@ public sealed partial class AreaRow : ObservableObject
     private readonly RulesViewModel owner;
     private bool loading = true;
 
-    public AreaRow(RulesViewModel owner, string key, bool on)
+    public AreaRow(RulesViewModel owner, string key, bool on, IEnumerable<PartRow> parts)
     {
         this.owner = owner;
         Key = key;
         IsOn = on;
+        Parts = [.. parts];
         loading = false;
     }
+
+    /// <summary>The groups of settings that can be switched on their own; empty for most areas.</summary>
+    public IReadOnlyList<PartRow> Parts { get; }
+
+    public bool HasParts => Parts.Count > 0;
 
     public string Key { get; }
 
@@ -137,6 +143,39 @@ public sealed partial class AreaRow : ObservableObject
         if (!loading)
         {
             owner.ChangeArea(Key, value);
+        }
+    }
+
+    public override string ToString() => Name;
+}
+
+/// <summary>A group of settings under an area, such as the chat's font size.</summary>
+public sealed partial class PartRow : ObservableObject
+{
+    private readonly RulesViewModel owner;
+    private bool loading = true;
+
+    public PartRow(RulesViewModel owner, SettingPart part, bool on)
+    {
+        this.owner = owner;
+        Key = part.Key;
+        Name = Text.Get(part.NameKey);
+        IsOn = on;
+        loading = false;
+    }
+
+    public string Key { get; }
+
+    public string Name { get; }
+
+    [ObservableProperty]
+    public partial bool IsOn { get; set; }
+
+    partial void OnIsOnChanged(bool value)
+    {
+        if (!loading)
+        {
+            owner.ChangePart(Key, value);
         }
     }
 
@@ -228,6 +267,10 @@ public sealed partial class RulesViewModel : ObservableObject
         ReloadFiles();
     }
 
+    /// <summary>Switches a part of a settings file.</summary>
+    public void ChangePart(string key, bool on) =>
+        _ = main.RunAsync(Strings.Rules_Title, () => main.Engine.UpdateRules(main.Engine.Rules.WithPart(key, on)));
+
     /// <summary>Sets a plugin's own rule, through the operation queue like every rule change.</summary>
     public void ChangePlugin(string name, ApplyRule? rule) =>
         _ = main.RunAsync(Strings.Rules_Title, () => main.Engine.UpdateRules(PluginRules.WithRule(main.Engine.Rules, name, rule)));
@@ -291,7 +334,11 @@ public sealed partial class RulesViewModel : ObservableObject
         AreaRows.Clear();
         foreach (var key in Areas.Keys)
         {
-            AreaRows.Add(new AreaRow(this, key, main.Engine.Rules.IsAreaOn(key)));
+            AreaRows.Add(new AreaRow(
+                this,
+                key,
+                main.Engine.Rules.IsAreaOn(key),
+                SettingParts.OfArea(key).Select(p => new PartRow(this, p, main.Engine.Rules.IsPartSwitchOn(p.Key)))));
         }
 
         ReloadFiles();

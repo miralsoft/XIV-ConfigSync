@@ -57,7 +57,7 @@ public static class Areas
     /// <summary>All areas that are sets of files, in the order shown.</summary>
     public static IReadOnlyList<Area> All { get; } =
     [
-        new(Hotbars, Game(Chr + "HOTBAR.DAT", Chr + "MACRO.DAT", "MACROSYS.dat"), ConflictPolicy.Ask),
+        new(Hotbars, Game(Chr + "HOTBAR.DAT", Chr + "MACRO.DAT", "MACROSYS.dat", Chr + CommonFile), ConflictPolicy.Ask),
         new(Controls, Game(Chr + "KEYBIND.DAT", Chr + "CONTROL0.DAT", Chr + "CONTROL1.DAT"), ConflictPolicy.Ask),
         new(Gearsets, Game(Chr + "GEARSET.DAT", Chr + "GS.DAT"), ConflictPolicy.Ask),
         new(Character, Game(Chr + CommonFile, Chr + "ACQ.DAT", Chr + "ITEMFDR.DAT", "FFXIV_CHARA_*.dat"), ConflictPolicy.Ask),
@@ -73,19 +73,8 @@ public static class Areas
     /// <summary>Every area is on unless the user turned it off on this device.</summary>
     public static bool DefaultOn(string key) => true;
 
-    /// <summary>The areas a file belongs to; two only for <see cref="CommonFile"/>.</summary>
+    /// <summary>The areas a file belongs to; several only for <see cref="CommonFile"/>, whose settings are split by part.</summary>
     public static IReadOnlyList<Area> Of(string root, string path) => [.. All.Where(a => a.Contains(root, path))];
-
-    /// <summary>Whether a file is the shared character settings file.</summary>
-    public static bool IsCommonFile(string root, string path) =>
-        root == Roots.Game && string.Equals(System.IO.Path.GetFileName(path), CommonFile, StringComparison.OrdinalIgnoreCase)
-        && path.StartsWith("FFXIV_CHR", StringComparison.OrdinalIgnoreCase);
-
-    /// <summary>Whether a setting in <see cref="CommonFile"/> belongs to the chat area: the chat window's font, filters, tabs and channels.</summary>
-    public static bool IsChatKey(string key) =>
-        key.StartsWith("Log", StringComparison.Ordinal)
-        || key.StartsWith("IsLog", StringComparison.Ordinal)
-        || key == "ChatType";
 
     private static IReadOnlyList<(string Root, Glob Glob)> Game(params string[] patterns) =>
         [.. patterns.Select(p => (Roots.Game, new Glob(p)))];

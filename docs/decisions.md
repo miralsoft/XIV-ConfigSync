@@ -439,3 +439,24 @@ Append-only. Never edit or delete past entries; a later entry may supersede an e
     that fails one leaves its area before release.
   - Rejected: a choice "never take this file" on each row of the transfer page. It keeps the user
     thinking in files, which is what the owner wanted to leave behind.
+- (2026-11-06) Single settings within an area (FR-082). The owner asked whether single settings
+  could be chosen, "nur Schriftgröße aber nicht die Positionen", and for plugins too if it works.
+  Decided for the game first:
+  - Measured on device A: `COMMON.DAT`, `CONTROL0.DAT` and `CONTROL1.DAT` are named
+    `Key<TAB>Value` lines. They are split into groups by the start of the setting's name; the
+    first group that matches takes a setting, and the last group of each file takes the rest, so a
+    setting a later game version adds is never lost. The split of 2026-11-06 (chat or not) became
+    one case of this. Two corrections came out of the inventory: the chat colours (`Color...`)
+    belong to the chat, and the hotbar display settings in `COMMON.DAT` (`Hotbar...`) to the area
+    hotbars, which therefore also covers `COMMON.DAT`.
+  - Checked against copies of all 15 real files of device A, in every pairing and for every group:
+    the merged file has the source's lines and order, and only the switched-off group's values.
+    The check found that `COMMON.DAT` holds `LockonDefaultZoom` twice with different values, so a
+    repeated setting is matched by its occurrence, not only by its name.
+  - Not possible: single window positions (`ADDON.DAT`), single hotbars, macros, key bindings or
+    gear sets. Their formats are binary and not known, and changing them by guessed positions is
+    ruled out.
+  - Plugins next, after the Dalamud test: most keep JSON, so their fields could be chosen
+    generically, with fields that look like positions, sizes or paths suggested to stay. Deferred
+    because the field names are the developers' own and because it is not yet known whether
+    Dalamud keeps a settings file written from outside.

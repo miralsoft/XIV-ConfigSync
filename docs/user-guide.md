@@ -82,11 +82,13 @@ names: switch an area on or off, and the application knows which files belong to
 | Key bindings and controls | Key bindings, mouse and keyboard, game pad |
 | Gear sets | Your saved gear sets |
 | Character settings | Name plates, camera, battle effects and the other character settings, without the chat |
-| Chat | Font size, transparency, tabs, filters and channels of the chat window |
+| Chat | Font size and transparency, time stamps, chat bubbles, colours, tabs, filters and channels of the chat window |
 | HUD layout | Size and position of every window on screen, the chat window included |
 | Inventory order | The order of items in inventory, saddlebag and retainers |
 | Plugin settings | The settings of your Dalamud plugins |
 | Plugin sources | Custom plugin repositories another PC has and this one lacks |
+
+Some areas can be opened further: under **Chat**, **Character settings**, **Hotbars and macros** and **Key bindings and controls**, single groups of settings can be switched, for example only the chat's font size and transparency. This works where the game keeps its settings as named text. Window positions, the contents of hotbars, macros, key bindings and gear sets can only be taken whole.
 
 All areas are on at first. The switches apply to this PC only: if the chat is too large on your
 laptop, switch **Chat** off there, and the laptop keeps its own chat settings while everything else

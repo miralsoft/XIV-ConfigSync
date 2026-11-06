@@ -135,13 +135,14 @@ logs\                rotated log files
     { "root": "plugins", "pattern": "SomePlugin.json", "rule": "never" }
   ],
   "exclusions": [ { "root": "plugins", "pattern": "SomePlugin/cache/**" } ],
-  "areas": { "chat": false, "hud": true }
+  "areas": { "chat": false, "hud": true },
+  "parts": { "chat.font": false }
 }
 ```
 
-`areas` holds the switches per area (FR-077); an area not listed is on. A rule in `overrides`
+`areas` holds the switches per area (FR-077); an area not listed is on. `parts` holds the switches of groups of settings within an area (FR-082); a group not listed is on, and it is taken only when its area is on too. A rule in `overrides`
 wins over the area of its files. In `bases\<sourceDeviceId>.json`, a value beginning with `cmp:`
-is the hash of the part of `COMMON.DAT` compared when one of its two areas is off (FR-078), not of
+is the hash of the part of a split settings file (`COMMON.DAT`, `CONTROL0.DAT`, `CONTROL1.DAT`) compared when some of its groups are off (FR-078, FR-082), not of
 the whole file.
 
 The built-in matrix ships with the application and is not stored here; an override wins over it,

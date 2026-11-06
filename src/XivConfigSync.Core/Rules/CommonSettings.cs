@@ -24,21 +24,37 @@ public static class CommonSettings
             return null;
         }
 
-        var localValues = new Dictionary<string, string>(StringComparer.Ordinal);
+        // A setting can occur more than once (measured: LockonDefaultZoom, with two values); the
+        // n-th occurrence in the source takes the n-th occurrence here.
+        var localValues = new Dictionary<string, List<string>>(StringComparer.Ordinal);
         foreach (var line in localLines)
         {
             if (line.Key is not null)
             {
-                localValues.TryAdd(line.Key, line.Value!);
+                if (!localValues.TryGetValue(line.Key, out var values))
+                {
+                    values = [];
+                    localValues[line.Key] = values;
+                }
+
+                values.Add(line.Value!);
             }
         }
 
+        var seen = new Dictionary<string, int>(StringComparer.Ordinal);
         var output = new StringBuilder(source.Length);
         foreach (var line in sourceLines)
         {
-            if (line.Key is not null && keepLocal(line.Key) && localValues.TryGetValue(line.Key, out var value))
+            var occurrence = 0;
+            if (line.Key is not null)
             {
-                output.Append(line.Key).Append('\t').Append(value).Append(line.End);
+                occurrence = seen.GetValueOrDefault(line.Key);
+                seen[line.Key] = occurrence + 1;
+            }
+
+            if (line.Key is not null && keepLocal(line.Key) && localValues.TryGetValue(line.Key, out var values) && occurrence < values.Count)
+            {
+                output.Append(line.Key).Append('\t').Append(values[occurrence]).Append(line.End);
             }
             else
             {

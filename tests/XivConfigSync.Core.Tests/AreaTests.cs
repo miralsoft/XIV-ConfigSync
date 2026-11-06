@@ -38,8 +38,8 @@ public sealed class AreaTests
     public void DeviceFilesBelongToNoArea(string root, string path) => Assert.Empty(Areas.Of(root, path));
 
     [Fact]
-    public void TheCharacterSettingsFileBelongsToTwoAreas() =>
-        Assert.Equal([Areas.Character, Areas.Chat], Areas.Of(Roots.Game, Common).Select(a => a.Key));
+    public void TheCharacterSettingsFileBelongsToThreeAreas() =>
+        Assert.Equal([Areas.Hotbars, Areas.Character, Areas.Chat], Areas.Of(Roots.Game, Common).Select(a => a.Key));
 
     [Fact]
     public void AnAreaSwitchedOffIsNeverTaken()
@@ -88,7 +88,7 @@ public sealed class AreaTests
         Assert.False(keepRest("LogFontSize"));
         Assert.True(keepRest("WeaponAutoPutAway"));
 
-        var neither = Defaults.WithArea(Areas.Chat, false).WithArea(Areas.Character, false);
+        var neither = Defaults.WithArea(Areas.Chat, false).WithArea(Areas.Character, false).WithArea(Areas.Hotbars, false);
         Assert.Null(neither.KeepLocalKeys(Roots.Game, Common));
         Assert.Equal(ApplyRule.Never, neither.RuleFor(Roots.Game, Common));
     }
@@ -101,14 +101,18 @@ public sealed class AreaTests
     [InlineData("PlayGuideLoginDisp", false)]
     [InlineData("AchievementAppealLoginDisp", false)]
     [InlineData("BattleEffectSelf", false)]
-    public void ChatSettingsAreFoundByTheirName(string key, bool chat) => Assert.Equal(chat, Areas.IsChatKey(key));
+    [InlineData("ColorTell", true)]
+    [InlineData("LogChatBubbleSayFontColor", true)]
+    [InlineData("LogNamePlateDispEnemyCast", false)]
+    [InlineData("HotbarLock", false)]
+    public void ChatSettingsAreFoundByTheirName(string key, bool chat) => Assert.Equal(chat, IsChat(key));
 
     [Fact]
     public void MergingKeepsTheChosenValuesAndEverythingElseOfTheSource()
     {
         var source = CommonFile(font: "12", effect: "1");
         var local = CommonFile(font: "18", effect: "0");
-        var merged = CommonSettings.Merge(source, local, Areas.IsChatKey);
+        var merged = CommonSettings.Merge(source, local, IsChat);
         Assert.Equal(CommonFile(font: "18", effect: "1"), merged);
 
         // Keeping nothing gives the source back byte for byte.
@@ -116,11 +120,20 @@ public sealed class AreaTests
     }
 
     [Fact]
+    public void ASettingThatOccursTwiceKeepsBothValuesInOrder()
+    {
+        var file = Encoding.Latin1.GetBytes("<Game Camera Settings>\r\nLockonDefaultZoom\t1.5\r\nLockonDefaultZoom\t3.0\r\n");
+        var other = Encoding.Latin1.GetBytes("<Game Camera Settings>\r\nLockonDefaultZoom\t2.0\r\nLockonDefaultZoom\t4.0\r\n");
+        Assert.Equal(file, CommonSettings.Merge(file, file, _ => true));
+        Assert.Equal(other, CommonSettings.Merge(file, other, _ => true));
+    }
+
+    [Fact]
     public void TheComparablePartLeavesOutTheKeptSettings()
     {
-        var one = CommonSettings.Comparable(CommonFile(font: "12", effect: "1"), Areas.IsChatKey);
-        var two = CommonSettings.Comparable(CommonFile(font: "18", effect: "1"), Areas.IsChatKey);
-        var three = CommonSettings.Comparable(CommonFile(font: "12", effect: "0"), Areas.IsChatKey);
+        var one = CommonSettings.Comparable(CommonFile(font: "12", effect: "1"), IsChat);
+        var two = CommonSettings.Comparable(CommonFile(font: "18", effect: "1"), IsChat);
+        var three = CommonSettings.Comparable(CommonFile(font: "12", effect: "0"), IsChat);
         Assert.Equal(one, two);
         Assert.NotEqual(one, three);
     }
@@ -132,8 +145,8 @@ public sealed class AreaTests
     public void AFileOfAnotherShapeIsNeverMerged(string line)
     {
         var odd = Encoding.Latin1.GetBytes("<UI Settings>\r\n" + line);
-        Assert.Null(CommonSettings.Merge(odd, CommonFile("12", "1"), Areas.IsChatKey));
-        Assert.Null(CommonSettings.Comparable(odd, Areas.IsChatKey));
+        Assert.Null(CommonSettings.Merge(odd, CommonFile("12", "1"), IsChat));
+        Assert.Null(CommonSettings.Comparable(odd, IsChat));
     }
 
     [Fact]
@@ -242,6 +255,90 @@ public sealed class AreaTests
         Assert.Equal(
             [Areas.Hotbars, Areas.Hud],
             SyncEngine.AreaKeysOf([Plan(Addon), Plan(Hotbar), Plan("MACROSYS.dat"), Plan("FFXIV.cfg")]));
+
+    [Theory]
+    [InlineData("LogFontSize", "chat.font")]
+    [InlineData("LogPermeationRateLog3", "chat.font")]
+    [InlineData("LogTimeDispLog2", "chat.time")]
+    [InlineData("LogChatBubbleTellFontColor", "chat.bubbles")]
+    [InlineData("ColorSysErr", "chat.colors")]
+    [InlineData("LogColorRoleTank", "chat.colors")]
+    [InlineData("LogTabFilter1", "chat.tabs")]
+    [InlineData("IsLogCwls3", "chat.tabs")]
+    [InlineData("ChatType", "chat.tabs")]
+    [InlineData("LogNamePlateDispEnemyCast", "character.nameplates")]
+    [InlineData("NamePlateColorTank", "character.nameplates")]
+    [InlineData("HotbarCrossLock", "hotbars.display")]
+    [InlineData("ThirdPersonDefaultZoom", "character.camera")]
+    [InlineData("GPoseInitCameraFocus", "character.camera")]
+    [InlineData("BattleEffectParty", "character.battle")]
+    [InlineData("SolBahamutSize", "character.pets")]
+    [InlineData("MapDispSize", "character.sizes")]
+    [InlineData("TelepoTicketGilSetting", "character.other")]
+    [InlineData("SomeSettingOfALaterGameVersion", "character.other")]
+    public void EverySettingOfTheCharacterFileHasItsPart(string setting, string part) =>
+        Assert.Equal(part, SettingParts.PartOf(Common, setting).Key);
+
+    [Theory]
+    [InlineData("MouseTpsYReverse", "controls.camera")]
+    [InlineData("FlyingControlType", "controls.camera")]
+    [InlineData("CircleSheathedEnemy", "controls.target")]
+    [InlineData("AutoLockOn", "controls.target")]
+    [InlineData("NaviMapDisp", "controls.display")]
+    [InlineData("HotbarDisp", "controls.display")]
+    public void BothControlFilesHaveTheSameParts(string setting, string part)
+    {
+        Assert.Equal(part, SettingParts.PartOf(Device.Chr + "/CONTROL0.DAT", setting).Key);
+        Assert.Equal(part, SettingParts.PartOf(Device.Chr + "/CONTROL1.DAT", setting).Key);
+    }
+
+    [Fact]
+    public void APartSwitchedOffKeepsOnlyItsOwnSettings()
+    {
+        var rules = Defaults.WithPart("chat.font", false);
+        var keep = rules.KeepLocalKeys(Roots.Game, Common);
+        Assert.NotNull(keep);
+        Assert.True(keep("LogFontSize"));
+        Assert.True(keep("LogPermeationRate"));
+        Assert.False(keep("LogTabFilter0"));
+        Assert.False(keep("ColorTell"));
+        Assert.False(keep("NamePlateColorTank"));
+        Assert.Equal(ApplyRule.Always, rules.RuleFor(Roots.Game, Common));
+
+        // The part's own switch stays when its area is turned off and on again.
+        var again = rules.WithArea(Areas.Chat, false).WithArea(Areas.Chat, true);
+        Assert.False(again.IsPartSwitchOn("chat.font"));
+        Assert.True(again.KeepLocalKeys(Roots.Game, Common)!("LogFontSize"));
+    }
+
+    [Fact]
+    public void TheControlFilesAreSplitByPartToo()
+    {
+        var control = Device.Chr + "/CONTROL1.DAT";
+        Assert.Null(Defaults.KeepLocalKeys(Roots.Game, control));
+        var keep = Defaults.WithPart("controls.display", false).KeepLocalKeys(Roots.Game, control);
+        Assert.NotNull(keep);
+        Assert.True(keep("NaviMapDisp"));
+        Assert.False(keep("AutoLockOn"));
+        Assert.Null(Defaults.KeepLocalKeys(Roots.Game, Hotbar));
+    }
+
+    [Fact]
+    public void AControlFileOfTheRealShapeIsMergedByPart()
+    {
+        var source = Encoding.Latin1.GetBytes("\r\n<Charcter Settings>\r\nMouseTpsYReverse\t1\r\n\r\n<Target Settings>\r\nAutoLockOn\t1\r\nNaviMapDisp\t1\r\n\0\r\n");
+        var local = Encoding.Latin1.GetBytes("\r\n<Charcter Settings>\r\nMouseTpsYReverse\t0\r\n\r\n<Target Settings>\r\nAutoLockOn\t0\r\nNaviMapDisp\t0\r\n\0\r\n");
+        var keep = Defaults.WithPart("controls.display", false).KeepLocalKeys(Roots.Game, Device.Chr + "/CONTROL0.DAT")!;
+        Assert.Equal(
+            Encoding.Latin1.GetBytes("\r\n<Charcter Settings>\r\nMouseTpsYReverse\t1\r\n\r\n<Target Settings>\r\nAutoLockOn\t1\r\nNaviMapDisp\t0\r\n\0\r\n"),
+            CommonSettings.Merge(source, local, keep));
+    }
+
+    [Fact]
+    public void EveryAreaPartIsShownOnce() =>
+        Assert.Equal(["controls.camera", "controls.target", "controls.display"], SettingParts.OfArea(Areas.Controls).Select(p => p.Key));
+
+    private static bool IsChat(string setting) => SettingParts.PartOf(Common, setting).AreaKey == Areas.Chat;
 
     private static PlanItem Plan(string path) => new()
     {

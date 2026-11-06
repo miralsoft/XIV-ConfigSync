@@ -11,15 +11,15 @@
   <data name="Action_Skip" xml:space="preserve"><value>Nothing to do</value></data>
   <data name="App_Title" xml:space="preserve"><value>XIV ConfigSync</value></data>
   <data name="Area_character" xml:space="preserve"><value>Character settings</value></data>
-  <data name="Area_character_Hint" xml:space="preserve"><value>Name plates, camera, battle effects and the other character settings, without the chat. Also the friend list data, the item search and appearance presets from character creation.</value></data>
+  <data name="Area_character_Hint" xml:space="preserve"><value>Name plates, camera, battle effects, pets and the other character settings, without the chat. Also the friend list data, the item search and appearance presets from character creation.</value></data>
   <data name="Area_chat" xml:space="preserve"><value>Chat</value></data>
-  <data name="Area_chat_Hint" xml:space="preserve"><value>Font size, transparency, tabs, filters and channels of the chat window. The size and position of the chat window belong to the HUD layout.</value></data>
+  <data name="Area_chat_Hint" xml:space="preserve"><value>Font size, transparency, tabs, filters, channels, colours and chat bubbles of the chat window. Each can be switched on its own. The size and position of the chat window belong to the HUD layout.</value></data>
   <data name="Area_controls" xml:space="preserve"><value>Key bindings and controls</value></data>
-  <data name="Area_controls_Hint" xml:space="preserve"><value>Key bindings and the settings for mouse and keyboard and for the game pad.</value></data>
+  <data name="Area_controls_Hint" xml:space="preserve"><value>Key bindings and the settings for mouse and keyboard and for the game pad: camera, targeting and what the HUD shows.</value></data>
   <data name="Area_gearsets" xml:space="preserve"><value>Gear sets</value></data>
   <data name="Area_gearsets_Hint" xml:space="preserve"><value>Your saved gear sets.</value></data>
   <data name="Area_hotbars" xml:space="preserve"><value>Hotbars and macros</value></data>
-  <data name="Area_hotbars_Hint" xml:space="preserve"><value>Hotbars, cross hotbars, character macros and shared macros.</value></data>
+  <data name="Area_hotbars_Hint" xml:space="preserve"><value>Hotbars, cross hotbars, character macros and shared macros, and how the hotbars are shown.</value></data>
   <data name="Area_hud" xml:space="preserve"><value>HUD layout</value></data>
   <data name="Area_hud_Hint" xml:space="preserve"><value>Size and position of all windows on screen, the chat window included. The game rewrites this file on every login, so when both PCs changed it, the state backed up last wins.</value></data>
   <data name="Area_inventory" xml:space="preserve"><value>Inventory order</value></data>
@@ -167,6 +167,21 @@
   <data name="Overview_SyncFolder" xml:space="preserve"><value>Sync folder</value></data>
   <data name="Overview_ThisDevice" xml:space="preserve"><value>This device</value></data>
   <data name="Overview_Upload" xml:space="preserve"><value>Upload</value></data>
+  <data name="Part_character_battle" xml:space="preserve"><value>Battle effects and targeting</value></data>
+  <data name="Part_character_camera" xml:space="preserve"><value>Camera and group pose</value></data>
+  <data name="Part_character_nameplates" xml:space="preserve"><value>Name plates</value></data>
+  <data name="Part_character_other" xml:space="preserve"><value>Other character settings</value></data>
+  <data name="Part_character_pets" xml:space="preserve"><value>Pets (appearance and size)</value></data>
+  <data name="Part_character_sizes" xml:space="preserve"><value>Sizes of map, tooltips, flying text and inventory</value></data>
+  <data name="Part_chat_bubbles" xml:space="preserve"><value>Chat bubbles</value></data>
+  <data name="Part_chat_colors" xml:space="preserve"><value>Colours</value></data>
+  <data name="Part_chat_font" xml:space="preserve"><value>Font size and transparency</value></data>
+  <data name="Part_chat_tabs" xml:space="preserve"><value>Tabs, filters and channels</value></data>
+  <data name="Part_chat_time" xml:space="preserve"><value>Time stamps</value></data>
+  <data name="Part_controls_camera" xml:space="preserve"><value>Camera and movement</value></data>
+  <data name="Part_controls_display" xml:space="preserve"><value>What the HUD shows</value></data>
+  <data name="Part_controls_target" xml:space="preserve"><value>Targeting</value></data>
+  <data name="Part_hotbars_display" xml:space="preserve"><value>Hotbar display and cross hotbar settings</value></data>
   <data name="Reason_BothChanged" xml:space="preserve"><value>Changed on both devices since they last matched. Both versions are kept; you decide.</value></data>
   <data name="Reason_LocalChangedOnly" xml:space="preserve"><value>Only changed here; the source still has the common state.</value></data>
   <data name="Reason_LocalNewerState" xml:space="preserve"><value>Both changed it; the game rewrites this file by itself. This PC&apos;s state is the later one and stays.</value></data>

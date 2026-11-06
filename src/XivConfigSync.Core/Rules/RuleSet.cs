@@ -31,6 +31,9 @@ public sealed class RuleFile
 
     /// <summary>Per area key, whether it is taken from other devices; a missing key means on (owner's request, 2026-11-06).</summary>
     public Dictionary<string, bool> Areas { get; set; } = [];
+
+    /// <summary>Per part of a settings file ("chat.font"), whether it is taken; a missing key means on (owner's request, 2026-11-06).</summary>
+    public Dictionary<string, bool> Parts { get; set; } = [];
 }
 
 /// <summary>The effective rules: the built-in matrix with the user's overrides and exclusions.</summary>
@@ -110,6 +113,7 @@ public sealed class RuleSet
         var copy = new RuleFile
         {
             Areas = new(File.Areas),
+            Parts = new(File.Parts),
             Overrides = File.Overrides.Where(o => !(o.Root == root && string.Equals(o.Pattern, pattern, StringComparison.OrdinalIgnoreCase))).ToList(),
             Exclusions = [.. File.Exclusions],
         };
@@ -127,6 +131,7 @@ public sealed class RuleSet
         var copy = new RuleFile
         {
             Areas = new(File.Areas),
+            Parts = new(File.Parts),
             Overrides = [.. File.Overrides],
             Exclusions = File.Exclusions.Where(e => !(e.Root == root && string.Equals(e.Pattern, pattern, StringComparison.OrdinalIgnoreCase))).ToList(),
         };
@@ -164,6 +169,7 @@ public sealed class RuleSet
         var copy = new RuleFile
         {
             Areas = new(File.Areas) { [key] = on },
+            Parts = new(File.Parts),
             Overrides = File.Overrides
                 .Where(o => area is null || !area.Patterns.Any(p => p.Root == o.Root && string.Equals(p.Glob.Pattern, o.Pattern.Replace('\\', '/'), StringComparison.OrdinalIgnoreCase)))
                 .ToList(),
@@ -172,25 +178,36 @@ public sealed class RuleSet
         return new RuleSet(copy);
     }
 
+    /// <summary>Whether a part of a settings file is taken: its area and the part itself are on.</summary>
+    public bool IsPartOn(SettingPart part) => IsAreaOn(part.AreaKey) && IsPartSwitchOn(part.Key);
+
+    /// <summary>The part's own switch, regardless of its area.</summary>
+    public bool IsPartSwitchOn(string key) => !File.Parts.TryGetValue(key, out var on) || on;
+
+    /// <summary>Switches a part of a settings file.</summary>
+    public RuleSet WithPart(string key, bool on) => new(new RuleFile
+    {
+        Areas = new(File.Areas),
+        Parts = new(File.Parts) { [key] = on },
+        Overrides = [.. File.Overrides],
+        Exclusions = [.. File.Exclusions],
+    });
+
     /// <summary>
-    /// For the character settings file when only one of its two areas is on: which settings keep
-    /// this device's values. Null when the file is taken whole or not at all.
+    /// For a settings file split by part (<see cref="SettingParts"/>) when some of its parts are
+    /// off: which settings keep this device's values. Null when the file is taken whole, not at
+    /// all, or a rule on the file decides.
     /// </summary>
     public Func<string, bool>? KeepLocalKeys(string root, string relativePath)
     {
-        if (!Rules.Areas.IsCommonFile(root, relativePath) || HasOverride(root, relativePath))
+        if (!SettingParts.IsSplitFile(root, relativePath) || HasOverride(root, relativePath)
+            || SettingParts.OfFile(relativePath).All(IsPartOn)
+            || !SettingParts.OfFile(relativePath).Any(IsPartOn))
         {
             return null;
         }
 
-        var character = IsAreaOn(Rules.Areas.Character);
-        var chat = IsAreaOn(Rules.Areas.Chat);
-        return (character, chat) switch
-        {
-            (true, false) => Rules.Areas.IsChatKey,
-            (false, true) => k => !Rules.Areas.IsChatKey(k),
-            _ => null,
-        };
+        return setting => !IsPartOn(SettingParts.PartOf(relativePath, setting));
     }
 
     private bool HasOverride(string root, string relativePath) => overrides.Any(o => o.Override.Root == root && o.Glob.IsMatch(relativePath));
