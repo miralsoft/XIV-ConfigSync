@@ -34,6 +34,13 @@ public sealed class RuleFile
 
     /// <summary>Per part of a settings file ("chat.font"), whether it is taken; a missing key means on (owner's request, 2026-11-06).</summary>
     public Dictionary<string, bool> Parts { get; set; } = [];
+
+    /// <summary>
+    /// Per single setting of a split settings file ("COMMON.DAT/LogFontSize"), whether it is taken
+    /// (true) or keeps this device's value (false); a missing key follows its part (owner's
+    /// request, 2026-11-06).
+    /// </summary>
+    public Dictionary<string, bool> Settings { get; set; } = [];
 }
 
 /// <summary>The effective rules: the built-in matrix with the user's overrides and exclusions.</summary>
@@ -114,6 +121,7 @@ public sealed class RuleSet
         {
             Areas = new(File.Areas),
             Parts = new(File.Parts),
+            Settings = new(File.Settings),
             Overrides = File.Overrides.Where(o => !(o.Root == root && string.Equals(o.Pattern, pattern, StringComparison.OrdinalIgnoreCase))).ToList(),
             Exclusions = [.. File.Exclusions],
         };
@@ -132,6 +140,7 @@ public sealed class RuleSet
         {
             Areas = new(File.Areas),
             Parts = new(File.Parts),
+            Settings = new(File.Settings),
             Overrides = [.. File.Overrides],
             Exclusions = File.Exclusions.Where(e => !(e.Root == root && string.Equals(e.Pattern, pattern, StringComparison.OrdinalIgnoreCase))).ToList(),
         };
@@ -170,6 +179,7 @@ public sealed class RuleSet
         {
             Areas = new(File.Areas) { [key] = on },
             Parts = new(File.Parts),
+            Settings = new(File.Settings),
             Overrides = File.Overrides
                 .Where(o => area is null || !area.Patterns.Any(p => p.Root == o.Root && string.Equals(p.Glob.Pattern, o.Pattern.Replace('\\', '/'), StringComparison.OrdinalIgnoreCase)))
                 .ToList(),
@@ -189,25 +199,76 @@ public sealed class RuleSet
     {
         Areas = new(File.Areas),
         Parts = new(File.Parts) { [key] = on },
+        Settings = new(File.Settings),
+        Overrides = [.. File.Overrides],
+        Exclusions = [.. File.Exclusions],
+    });
+
+    /// <summary>The key of a single setting in <see cref="RuleFile.Settings"/>: the file's name and the setting.</summary>
+    public static string SettingKey(string relativePath, string setting) =>
+        System.IO.Path.GetFileName(relativePath).ToUpperInvariant() + "/" + setting;
+
+    /// <summary>The user's choice for a single setting: taken, kept here, or null when it follows its part.</summary>
+    public bool? SettingChoice(string relativePath, string setting) =>
+        File.Settings.TryGetValue(SettingKey(relativePath, setting), out var taken) ? taken : null;
+
+    /// <summary>Sets the choice for a single setting; null lets it follow its part again.</summary>
+    public RuleSet WithSetting(string relativePath, string setting, bool? taken)
+    {
+        var settings = new Dictionary<string, bool>(File.Settings);
+        var key = SettingKey(relativePath, setting);
+        if (taken is null)
+        {
+            settings.Remove(key);
+        }
+        else
+        {
+            settings[key] = taken.Value;
+        }
+
+        return new RuleSet(new RuleFile
+        {
+            Areas = new(File.Areas),
+            Parts = new(File.Parts),
+            Settings = settings,
+            Overrides = [.. File.Overrides],
+            Exclusions = [.. File.Exclusions],
+        });
+    }
+
+    /// <summary>Removes every choice on a single setting, so each follows its part again.</summary>
+    public RuleSet WithoutSettingChoices() => new(new RuleFile
+    {
+        Areas = new(File.Areas),
+        Parts = new(File.Parts),
         Overrides = [.. File.Overrides],
         Exclusions = [.. File.Exclusions],
     });
 
     /// <summary>
-    /// For a settings file split by part (<see cref="SettingParts"/>) when some of its parts are
-    /// off: which settings keep this device's values. Null when the file is taken whole, not at
-    /// all, or a rule on the file decides.
+    /// For a settings file split by part (<see cref="SettingParts"/>): which settings keep this
+    /// device's values, from the parts switched off and the choices on single settings, a choice
+    /// winning over its part. Null when the file is taken whole, not at all, or a rule on the file
+    /// decides.
     /// </summary>
     public Func<string, bool>? KeepLocalKeys(string root, string relativePath)
     {
         if (!SettingParts.IsSplitFile(root, relativePath) || HasOverride(root, relativePath)
-            || SettingParts.OfFile(relativePath).All(IsPartOn)
-            || !SettingParts.OfFile(relativePath).Any(IsPartOn))
+            || RuleFor(root, relativePath) == ApplyRule.Never)
         {
             return null;
         }
 
-        return setting => !IsPartOn(SettingParts.PartOf(relativePath, setting));
+        var prefix = System.IO.Path.GetFileName(relativePath).ToUpperInvariant() + "/";
+        var choices = File.Settings
+            .Where(c => c.Key.StartsWith(prefix, StringComparison.Ordinal))
+            .ToDictionary(c => c.Key[prefix.Length..], c => c.Value, StringComparer.Ordinal);
+        if (SettingParts.OfFile(relativePath).All(IsPartOn) && choices.Values.All(taken => taken))
+        {
+            return null;
+        }
+
+        return setting => choices.TryGetValue(setting, out var taken) ? !taken : !IsPartOn(SettingParts.PartOf(relativePath, setting));
     }
 
     private bool HasOverride(string root, string relativePath) => overrides.Any(o => o.Override.Root == root && o.Glob.IsMatch(relativePath));

@@ -338,6 +338,89 @@ public sealed class AreaTests
     public void EveryAreaPartIsShownOnce() =>
         Assert.Equal(["controls.camera", "controls.target", "controls.display"], SettingParts.OfArea(Areas.Controls).Select(p => p.Key));
 
+    [Fact]
+    public void ASingleSettingCanStayHereWhileItsPartIsTaken()
+    {
+        var rules = Defaults.WithSetting(Common, "LogFontSize", false);
+        var keep = rules.KeepLocalKeys(Roots.Game, Common);
+        Assert.NotNull(keep);
+        Assert.True(keep("LogFontSize"));
+        Assert.False(keep("LogPermeationRate"));
+        Assert.False(keep("WeaponAutoPutAway"));
+        Assert.Equal(ApplyRule.Always, rules.RuleFor(Roots.Game, Common));
+        Assert.False(rules.SettingChoice(Device.Chr + "/common.dat", "LogFontSize"));
+
+        // The choice is per file: the control files are not touched by it.
+        Assert.Null(rules.KeepLocalKeys(Roots.Game, Device.Chr + "/CONTROL0.DAT"));
+    }
+
+    [Fact]
+    public void ASingleSettingCanBeTakenWhileItsPartStaysHere()
+    {
+        var rules = Defaults.WithPart("chat.font", false).WithSetting(Common, "LogFontSize", true);
+        var keep = rules.KeepLocalKeys(Roots.Game, Common)!;
+        Assert.False(keep("LogFontSize"));
+        Assert.True(keep("LogPermeationRate"));
+
+        // Back to following its part.
+        var back = rules.WithSetting(Common, "LogFontSize", null);
+        Assert.Null(back.SettingChoice(Common, "LogFontSize"));
+        Assert.True(back.KeepLocalKeys(Roots.Game, Common)!("LogFontSize"));
+    }
+
+    [Fact]
+    public void ChoicesThatOnlyTakeChangeNothingWhenEveryPartIsOn() =>
+        Assert.Null(Defaults.WithSetting(Common, "LogFontSize", true).KeepLocalKeys(Roots.Game, Common));
+
+    [Fact]
+    public void AnAreaWithEveryPartOffKeepsTheWholeFileHere()
+    {
+        var control = Device.Chr + "/CONTROL0.DAT";
+        var rules = Defaults.WithPart("controls.camera", false).WithPart("controls.target", false).WithPart("controls.display", false);
+        Assert.Equal(ApplyRule.Always, rules.RuleFor(Roots.Game, control));
+        var keep = rules.KeepLocalKeys(Roots.Game, control)!;
+        Assert.True(keep("MouseTpsYReverse"));
+        Assert.True(keep("AutoLockOn"));
+        Assert.True(keep("NaviMapDisp"));
+
+        // Unless one setting of it is chosen.
+        Assert.False(rules.WithSetting(control, "AutoLockOn", true).KeepLocalKeys(Roots.Game, control)!("AutoLockOn"));
+    }
+
+    [Fact]
+    public void SettingChoicesSurviveSavingAndOtherRuleChanges()
+    {
+        using var temp = new TempFolder();
+        var path = Path.Combine(temp.Sub("rules"), "rules.json");
+        Defaults.WithSetting(Common, "LogFontSize", false).WithArea(Areas.Hud, false).WithPart("chat.tabs", false)
+            .WithOverride(Roots.Game, "FFXIV_CHR*/ADDON.DAT", ApplyRule.OnRequest).WithExclusion(Roots.Game, "x", true)
+            .Save(path);
+        Assert.False(RuleSet.Load(path).SettingChoice(Common, "LogFontSize"));
+    }
+
+    [Fact]
+    public void ASettingKeptHereStaysThroughTheAutomaticTransfer()
+    {
+        using var temp = new TempFolder();
+        var (a, b) = TwoDevices(temp);
+        a.WriteGame(Common, CommonFile(font: "12", effect: "1"));
+        b.WriteGame(Common, CommonFile(font: "18", effect: "1"));
+        a.Engine.Backup(RevisionOrigin.Manual);
+        b.Engine.UpdateRules(b.Engine.Rules.WithSetting(Common, "LogFontSize", false));
+        Assert.Equal(PlanAction.Skip, Item(b.Engine.Plan(a.Settings.DeviceId, null), Common).Action);
+        Assert.True(Assert.Single(b.Engine.CompareSettings(b.Engine.Plan(a.Settings.DeviceId, null), Item(b.Engine.Plan(a.Settings.DeviceId, null), Common)).Differences).StaysHere);
+
+        a.WriteGame(Common, CommonFile(font: "14", effect: "0"));
+        a.Engine.Backup(RevisionOrigin.GameExit);
+        Assert.True(b.Engine.ResolveFirstContact(a.Settings.DeviceId, takeSource: true) > 0);
+        Assert.Equal(CommonFile(font: "18", effect: "0"), b.ReadGame(Common));
+
+        a.WriteGame(Common, CommonFile(font: "10", effect: "1"));
+        a.Engine.Backup(RevisionOrigin.GameExit);
+        b.Engine.AutoApply(a.Settings.DeviceId);
+        Assert.Equal(CommonFile(font: "18", effect: "1"), b.ReadGame(Common));
+    }
+
     private static bool IsChat(string setting) => SettingParts.PartOf(Common, setting).AreaKey == Areas.Chat;
 
     private static PlanItem Plan(string path) => new()

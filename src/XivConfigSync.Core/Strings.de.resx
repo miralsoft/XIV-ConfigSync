@@ -77,6 +77,10 @@
   <data name="Common_Browse" xml:space="preserve"><value>Durchsuchen...</value></data>
   <data name="Common_Never" xml:space="preserve"><value>noch nie</value></data>
   <data name="Common_Unknown" xml:space="preserve"><value>unbekannt</value></data>
+  <data name="Diff_ChoiceGroup" xml:space="preserve"><value>wie die Gruppe</value></data>
+  <data name="Diff_ChoiceHint" xml:space="preserve"><value>Für jede Einstellung kannst du wählen, ob sie übernommen wird oder auf diesem PC bleibt; die Wahl gilt für jede Übertragung, auch die automatische.</value></data>
+  <data name="Diff_ChoiceKeep" xml:space="preserve"><value>immer hier behalten</value></data>
+  <data name="Diff_ChoiceTake" xml:space="preserve"><value>immer übernehmen</value></data>
   <data name="Diff_ColHere" xml:space="preserve"><value>Auf diesem PC</value></data>
   <data name="Diff_ColOutcome" xml:space="preserve"><value>Beim Übernehmen</value></data>
   <data name="Diff_ColSetting" xml:space="preserve"><value>Einstellung</value></data>
@@ -89,10 +93,12 @@
   <data name="Diff_Missing" xml:space="preserve"><value>(fehlt)</value></data>
   <data name="Diff_NeverTaken" xml:space="preserve"><value>Diese Datei gehört zu einem PC und wird nie übernommen; die Liste zeigt nur, worin sich die PCs unterscheiden.</value></data>
   <data name="Diff_None" xml:space="preserve"><value>Die Einstellungen sind gleich; die Datei unterscheidet sich nur im Aufbau.</value></data>
+  <data name="Diff_NothingLeft" xml:space="preserve"><value>Aus dieser Datei bleibt nichts mehr zu übernehmen. Um sie wieder zu sehen, setze den Haken bei „Auch Dateien ohne Handlungsbedarf zeigen“.</value></data>
   <data name="Diff_OutcomeNever" xml:space="preserve"><value>nie übernommen</value></data>
   <data name="Diff_OutcomeStays" xml:space="preserve"><value>bleibt hier</value></data>
   <data name="Diff_OutcomeTaken" xml:space="preserve"><value>wird übernommen</value></data>
-  <data name="Diff_PartsStay" xml:space="preserve"><value>Einige Gruppen sind auf der Seite „Bereiche“ ausgeschaltet: Ihre Einstellungen bleiben auf diesem PC, wie sie sind.</value></data>
+  <data name="Diff_PartsStay" xml:space="preserve"><value>Einige Einstellungen bleiben auf diesem PC, wie sie sind: Ihre Gruppe ist auf der Seite „Bereiche“ ausgeschaltet, oder sie sind auf „immer hier behalten“ gestellt.</value></data>
+  <data name="Diff_Same" xml:space="preserve"><value>Die Datei ist auf beiden PCs gleich.</value></data>
   <data name="Diff_Title" xml:space="preserve"><value>Was sich unterscheidet: {0}, {1}</value></data>
   <data name="Diff_Unreadable" xml:space="preserve"><value>Die Datei unterscheidet sich, aber ihr Format ist binär und nicht bekannt, deshalb lassen sich keine einzelnen Einstellungen zeigen. Sie wird ganz oder gar nicht übernommen.</value></data>
   <data name="Error_Generic" xml:space="preserve"><value>{0}</value></data>
@@ -254,6 +260,9 @@
   <data name="Rules_Remove" xml:space="preserve"><value>Entfernen</value></data>
   <data name="Rules_Reset" xml:space="preserve"><value>Alle Regeln zurücksetzen</value></data>
   <data name="Rules_ResetConfirm" xml:space="preserve"><value>Alle Bereiche einschalten und alle Regeln auf den Standard zurücksetzen? Deine Ausschlüsse bleiben.</value></data>
+  <data name="Rules_SettingChoices" xml:space="preserve"><value>{0} einzelne Einstellungen haben eine eigene Wahl, getroffen auf der Seite „Übertragen“.</value></data>
+  <data name="Rules_SettingChoicesOne" xml:space="preserve"><value>Eine einzelne Einstellung hat eine eigene Wahl, getroffen auf der Seite „Übertragen“.</value></data>
+  <data name="Rules_SettingChoicesReset" xml:space="preserve"><value>Wieder den Gruppen folgen lassen</value></data>
   <data name="Rules_TabAreas" xml:space="preserve"><value>Bereiche</value></data>
   <data name="Rules_TabFiles" xml:space="preserve"><value>Dateien (erweitert)</value></data>
   <data name="Rules_TabPlugins" xml:space="preserve"><value>Plugins (erweitert)</value></data>

@@ -356,7 +356,7 @@
                                 <ColumnDefinition Width="2*" />
                                 <ColumnDefinition Width="1.4*" />
                                 <ColumnDefinition Width="1.4*" />
-                                <ColumnDefinition Width="1*" />
+                                <ColumnDefinition Width="1.4*" />
                             </Grid.ColumnDefinitions>
                             <TextBlock FontWeight="SemiBold" Text="{x:Static core:Strings.Diff_ColSetting}" />
                             <TextBlock
@@ -373,7 +373,7 @@
                                 Text="{x:Static core:Strings.Diff_ColOutcome}" />
                         </Grid>
                     </StackPanel>
-                    <ScrollViewer MaxHeight="180" VerticalScrollBarVisibility="Auto">
+                    <ScrollViewer MaxHeight="240" VerticalScrollBarVisibility="Auto">
                         <ItemsControl AutomationProperties.AutomationId="DiffGroups" ItemsSource="{Binding DiffGroups}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
@@ -390,7 +390,7 @@
                                                             <ColumnDefinition Width="2*" />
                                                             <ColumnDefinition Width="1.4*" />
                                                             <ColumnDefinition Width="1.4*" />
-                                                            <ColumnDefinition Width="1*" />
+                                                            <ColumnDefinition Width="1.4*" />
                                                         </Grid.ColumnDefinitions>
                                                         <StackPanel Margin="0,0,8,0">
                                                             <TextBlock Text="{Binding Name}" TextWrapping="Wrap" />
@@ -413,10 +413,15 @@
                                                             Margin="0,0,8,0"
                                                             Text="{Binding There}"
                                                             TextWrapping="Wrap" />
-                                                        <TextBlock
-                                                            Grid.Column="3"
-                                                            Text="{Binding Outcome}"
-                                                            TextWrapping="Wrap" />
+                                                        <StackPanel Grid.Column="3">
+                                                            <TextBlock Text="{Binding Outcome}" TextWrapping="Wrap" />
+                                                            <ComboBox
+                                                                AutomationProperties.Name="{Binding Name}"
+                                                                ItemsSource="{x:Static vm:DiffRow.Choices}"
+                                                                Margin="0,2,0,2"
+                                                                SelectedIndex="{Binding ChoiceIndex, UpdateSourceTrigger=PropertyChanged}"
+                                                                Visibility="{Binding CanChoose, Converter={StaticResource BoolToVisibility}}" />
+                                                        </StackPanel>
                                                     </Grid>
                                                 </DataTemplate>
                                             </ItemsControl.ItemTemplate>
@@ -608,55 +613,75 @@
             </StackPanel>
             <TabControl AutomationProperties.AutomationId="RuleTabs">
                 <TabItem AutomationProperties.AutomationId="RuleTabAreas" Header="{x:Static core:Strings.Rules_TabAreas}">
-                    <ScrollViewer VerticalScrollBarVisibility="Auto">
-                        <ItemsControl
-                            AutomationProperties.AutomationId="AreaRows"
-                            ItemsSource="{Binding AreaRows}"
-                            Margin="0,10,0,0">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <Border Margin="0,0,0,8" Style="{StaticResource Card}">
-                                        <DockPanel>
-                                            <CheckBox
-                                                AutomationProperties.HelpText="{Binding Hint}"
-                                                AutomationProperties.Name="{Binding Name}"
-                                                DockPanel.Dock="Left"
-                                                IsChecked="{Binding IsOn}"
-                                                Margin="0,2,12,0"
-                                                VerticalAlignment="Top" />
-                                            <StackPanel>
-                                                <TextBlock FontWeight="SemiBold" Text="{Binding Name}" />
-                                                <TextBlock
-                                                    Style="{StaticResource Muted}"
-                                                    Text="{Binding Hint}"
-                                                    TextWrapping="Wrap" />
-                                                <ItemsControl
-                                                    IsEnabled="{Binding IsOn}"
-                                                    ItemsSource="{Binding Parts}"
-                                                    Margin="0,8,0,0"
-                                                    Visibility="{Binding HasParts, Converter={StaticResource BoolToVisibility}}">
-                                                    <ItemsControl.ItemsPanel>
-                                                        <ItemsPanelTemplate>
-                                                            <WrapPanel />
-                                                        </ItemsPanelTemplate>
-                                                    </ItemsControl.ItemsPanel>
-                                                    <ItemsControl.ItemTemplate>
-                                                        <DataTemplate>
-                                                            <CheckBox
-                                                                AutomationProperties.Name="{Binding Name}"
-                                                                Content="{Binding Name}"
-                                                                IsChecked="{Binding IsOn}"
-                                                                Margin="0,2,18,2" />
-                                                        </DataTemplate>
-                                                    </ItemsControl.ItemTemplate>
-                                                </ItemsControl>
-                                            </StackPanel>
-                                        </DockPanel>
-                                    </Border>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-                    </ScrollViewer>
+                    <DockPanel>
+                        <Border
+                            DockPanel.Dock="Bottom"
+                            Margin="0,8,0,0"
+                            Style="{StaticResource Card}"
+                            Visibility="{Binding SettingChoicesText, Converter={StaticResource TextToVisibility}}">
+                            <DockPanel>
+                                <Button
+                                    AutomationProperties.AutomationId="ResetSettingChoices"
+                                    Command="{Binding ResetSettingChoicesCommand}"
+                                    Content="{x:Static core:Strings.Rules_SettingChoicesReset}"
+                                    DockPanel.Dock="Right"
+                                    Margin="12,0,0,0" />
+                                <TextBlock
+                                    Text="{Binding SettingChoicesText}"
+                                    TextWrapping="Wrap"
+                                    VerticalAlignment="Center" />
+                            </DockPanel>
+                        </Border>
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                            <ItemsControl
+                                AutomationProperties.AutomationId="AreaRows"
+                                ItemsSource="{Binding AreaRows}"
+                                Margin="0,10,0,0">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Margin="0,0,0,8" Style="{StaticResource Card}">
+                                            <DockPanel>
+                                                <CheckBox
+                                                    AutomationProperties.HelpText="{Binding Hint}"
+                                                    AutomationProperties.Name="{Binding Name}"
+                                                    DockPanel.Dock="Left"
+                                                    IsChecked="{Binding IsOn}"
+                                                    Margin="0,2,12,0"
+                                                    VerticalAlignment="Top" />
+                                                <StackPanel>
+                                                    <TextBlock FontWeight="SemiBold" Text="{Binding Name}" />
+                                                    <TextBlock
+                                                        Style="{StaticResource Muted}"
+                                                        Text="{Binding Hint}"
+                                                        TextWrapping="Wrap" />
+                                                    <ItemsControl
+                                                        IsEnabled="{Binding IsOn}"
+                                                        ItemsSource="{Binding Parts}"
+                                                        Margin="0,8,0,0"
+                                                        Visibility="{Binding HasParts, Converter={StaticResource BoolToVisibility}}">
+                                                        <ItemsControl.ItemsPanel>
+                                                            <ItemsPanelTemplate>
+                                                                <WrapPanel />
+                                                            </ItemsPanelTemplate>
+                                                        </ItemsControl.ItemsPanel>
+                                                        <ItemsControl.ItemTemplate>
+                                                            <DataTemplate>
+                                                                <CheckBox
+                                                                    AutomationProperties.Name="{Binding Name}"
+                                                                    Content="{Binding Name}"
+                                                                    IsChecked="{Binding IsOn}"
+                                                                    Margin="0,2,18,2" />
+                                                            </DataTemplate>
+                                                        </ItemsControl.ItemTemplate>
+                                                    </ItemsControl>
+                                                </StackPanel>
+                                            </DockPanel>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </DockPanel>
                 </TabItem>
                 <TabItem AutomationProperties.AutomationId="RuleTabPlugins" Header="{x:Static core:Strings.Rules_TabPlugins}">
                     <DockPanel>

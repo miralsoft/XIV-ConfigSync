@@ -476,3 +476,18 @@ Append-only. Never edit or delete past entries; a later entry may supersede an e
     login and similar) are shown as dots; long values are shortened; at most 400 differences are
     listed.
   - Binary files (hotbars, macros, HUD layout, key bindings) only say that they differ.
+- (2026-11-06) Choosing single settings (FR-084). The owner asked to take only certain values of a
+  file, for example only one setting of a group. Decided:
+  - Only for the game's split text files (`COMMON.DAT`, `CONTROL0.DAT`, `CONTROL1.DAT`), whose
+    merge already works by setting name (FR-078, FR-082). Each setting can follow its group, be
+    always taken, or always keep this device's value. The choice wins over the group switch, a
+    rule on the file wins over the choice.
+  - The choice is made where the difference is seen, in the differences of the transfer page, and
+    stored per device in `rules.json` under the file name and setting, so it holds for every
+    character. It is permanent, not for one transfer, because the owner wants the transfer to run
+    by itself; the automatic transfer uses it. The areas page counts the choices and can reset them.
+  - An area that is on with all its groups switched off now keeps the whole file here; before, the
+    file was then taken whole.
+  - Rejected: a choice for one transfer only (the automatic transfer would undo it next time);
+    `FFXIV.cfg` (belongs to one device and is never taken); plugin JSON fields (after the Dalamud
+    test, as agreed); binary files (no field may be changed by a guessed position).

@@ -328,9 +328,28 @@ public sealed partial class RulesViewModel : ObservableObject
         Reload();
     }
 
+    /// <summary>How many single settings have their own choice from the transfer page; empty when none.</summary>
+    [ObservableProperty]
+    public partial string SettingChoicesText { get; set; } = string.Empty;
+
+    /// <summary>Lets every single setting follow its group again.</summary>
+    [RelayCommand]
+    public async Task ResetSettingChoicesAsync()
+    {
+        await main.RunAsync(Strings.Rules_Title, () => main.Engine.UpdateRules(main.Engine.Rules.WithoutSettingChoices())).ConfigureAwait(true);
+        Reload();
+    }
+
     /// <summary>Rebuilds the lists from the effective rules.</summary>
     public void Reload()
     {
+        var choices = main.Engine.Rules.File.Settings.Count;
+        SettingChoicesText = choices switch
+        {
+            0 => string.Empty,
+            1 => Strings.Rules_SettingChoicesOne,
+            _ => Text.Format(Strings.Rules_SettingChoices, choices),
+        };
         AreaRows.Clear();
         foreach (var key in Areas.Keys)
         {

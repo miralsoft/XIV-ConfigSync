@@ -136,11 +136,12 @@ logs\                rotated log files
   ],
   "exclusions": [ { "root": "plugins", "pattern": "SomePlugin/cache/**" } ],
   "areas": { "chat": false, "hud": true },
-  "parts": { "chat.font": false }
+  "parts": { "chat.font": false },
+  "settings": { "COMMON.DAT/LogFontSize": false }
 }
 ```
 
-`areas` holds the switches per area (FR-077); an area not listed is on. `parts` holds the switches of groups of settings within an area (FR-082); a group not listed is on, and it is taken only when its area is on too. A rule in `overrides`
+`areas` holds the switches per area (FR-077); an area not listed is on. `parts` holds the switches of groups of settings within an area (FR-082); a group not listed is on, and it is taken only when its area is on too. `settings` holds the choices on single settings of a split settings file, keyed by file name and setting (FR-084): `true` always taken, `false` always kept here, not listed follows its group. A rule in `overrides`
 wins over the area of its files. In `bases\<sourceDeviceId>.json`, a value beginning with `cmp:`
 is the hash of the part of a split settings file (`COMMON.DAT`, `CONTROL0.DAT`, `CONTROL1.DAT`) compared when some of its groups are off (FR-078, FR-082), not of
 the whole file.

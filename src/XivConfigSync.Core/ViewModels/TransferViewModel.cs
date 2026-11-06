@@ -83,14 +83,58 @@ public sealed partial class PlanRow : ObservableObject
 }
 
 /// <summary>One setting that differs, as shown under the transfer list.</summary>
-/// <param name="Name">A readable name where one is known, else the setting's own name.</param>
-/// <param name="Setting">The setting's own name, shown small when <paramref name="Name"/> is a readable one; else empty.</param>
-/// <param name="Here">The value on this device.</param>
-/// <param name="There">The value on the other device.</param>
-/// <param name="Outcome">What happens to it when the file is taken.</param>
-/// <param name="IsKnown">Whether a readable name is known: such settings are the important ones and shown first.</param>
-public sealed record DiffRow(string Name, string Setting, string Here, string There, string Outcome, bool IsKnown)
+public sealed partial class DiffRow : ObservableObject
 {
+    private readonly Action<DiffRow, int>? choose;
+
+    /// <param name="name">A readable name where one is known, else the setting's own name.</param>
+    /// <param name="setting">The setting's own name, shown small when <paramref name="name"/> is a readable one; else empty.</param>
+    /// <param name="here">The value on this device.</param>
+    /// <param name="there">The value on the other device.</param>
+    /// <param name="outcome">What happens to it when the file is taken.</param>
+    /// <param name="isKnown">Whether a readable name is known: such settings are the important ones and shown first.</param>
+    /// <param name="key">The setting's own name in the file.</param>
+    /// <param name="choice">The user's choice for this setting: 0 like its group, 1 always taken, 2 always kept here.</param>
+    /// <param name="choose">Called when the user changes the choice; null where no choice is possible.</param>
+    public DiffRow(string name, string setting, string here, string there, string outcome, bool isKnown, string key = "", int choice = 0, Action<DiffRow, int>? choose = null)
+    {
+        Name = name;
+        Setting = setting;
+        Here = here;
+        There = there;
+        Outcome = outcome;
+        IsKnown = isKnown;
+        Key = key;
+        ChoiceIndex = choice;
+        this.choose = choose;
+    }
+
+    /// <summary>The choices offered for a single setting, in the order of <see cref="ChoiceIndex"/>.</summary>
+    public static IReadOnlyList<string> Choices { get; } = [Strings.Diff_ChoiceGroup, Strings.Diff_ChoiceTake, Strings.Diff_ChoiceKeep];
+
+    public string Name { get; }
+
+    public string Setting { get; }
+
+    public string Here { get; }
+
+    public string There { get; }
+
+    public string Outcome { get; }
+
+    public bool IsKnown { get; }
+
+    public string Key { get; }
+
+    /// <summary>Whether this setting can be chosen on its own (the game's character and control settings).</summary>
+    public bool CanChoose => choose is not null;
+
+    /// <summary>0 like its group, 1 always taken, 2 always kept here.</summary>
+    [ObservableProperty]
+    public partial int ChoiceIndex { get; set; }
+
+    partial void OnChoiceIndexChanged(int value) => choose?.Invoke(this, value);
+
     public override string ToString() => Name;
 }
 
@@ -189,7 +233,7 @@ public sealed partial class TransferViewModel : ObservableObject
         DiffTitle = string.Empty;
         DiffNote = string.Empty;
         var current = plan;
-        if (row is null || current is null || row.Item.Reason == PlanReason.OnlyHere || row.Item.Action == PlanAction.Skip)
+        if (row is null || current is null || row.Item.Reason == PlanReason.OnlyHere)
         {
             return;
         }
@@ -210,7 +254,7 @@ public sealed partial class TransferViewModel : ObservableObject
         }
         else if (result.Differences.Count == 0)
         {
-            notes.Add(Strings.Diff_None);
+            notes.Add(item.Action == PlanAction.Skip && item.LocalHash == item.SourceHash ? Strings.Diff_Same : Strings.Diff_None);
         }
         else
         {
@@ -228,10 +272,18 @@ public sealed partial class TransferViewModel : ObservableObject
             notes.Add(Strings.Diff_PartsStay);
         }
 
-        DiffNote = string.Join(" ", notes);
         var never = item.Rule == ApplyRule.Never && !current.IsOwnDevice;
+        var rules = main.Engine.Rules;
+        var choosable = result.Readable && !never && !current.IsOwnDevice && SettingParts.IsSplitFile(item.Root, item.Path)
+            && rules.RuleFor(item.Root, item.Path) == rules.DefaultFor(item.Root, item.Path);
+        if (choosable && result.Differences.Count > 0)
+        {
+            notes.Add(Strings.Diff_ChoiceHint);
+        }
+
+        DiffNote = string.Join(" ", notes);
         var groups = result.Differences
-            .Select(d => (Group: d.GroupKey is not null ? Text.Get(d.GroupKey) : d.GroupText.Length > 0 ? d.GroupText : Strings.Diff_GroupGeneral, Row: ToRow(d, never)))
+            .Select(d => (Group: d.GroupKey is not null ? Text.Get(d.GroupKey) : d.GroupText.Length > 0 ? d.GroupText : Strings.Diff_GroupGeneral, Row: ToRow(d, never, choosable ? (rules.SettingChoice(item.Path, d.Setting), (Action<DiffRow, int>)((r, c) => Choose(item, r, c))) : null)))
             .GroupBy(x => x.Group, StringComparer.Ordinal)
             .Select(g => (Name: g.Key, Rows: g.Select(x => x.Row).OrderByDescending(r => r.IsKnown).ToList()))
             .OrderByDescending(g => g.Rows.Any(r => r.IsKnown))
@@ -248,7 +300,7 @@ public sealed partial class TransferViewModel : ObservableObject
         }
     }
 
-    private static DiffRow ToRow(SettingDifference difference, bool never)
+    private static DiffRow ToRow(SettingDifference difference, bool never, (bool? Current, Action<DiffRow, int> Choose)? choice)
     {
         var label = Strings.ResourceManager.GetString("Setting_" + difference.Setting, System.Globalization.CultureInfo.CurrentUICulture);
         var outcome = never ? Strings.Diff_OutcomeNever : difference.StaysHere ? Strings.Diff_OutcomeStays : Strings.Diff_OutcomeTaken;
@@ -258,7 +310,37 @@ public sealed partial class TransferViewModel : ObservableObject
             difference.Here ?? Strings.Diff_Missing,
             difference.There ?? Strings.Diff_Missing,
             outcome,
-            label is not null);
+            label is not null,
+            difference.Setting,
+            choice?.Current switch { true => 1, false => 2, null => 0 },
+            choice?.Choose);
+    }
+
+    /// <summary>
+    /// Stores the choice for one setting (owner's request, 2026-11-06: take only single settings
+    /// of a file) and compares again, so the list and the differences show what is now taken.
+    /// The choice applies to every later transfer, the automatic one too.
+    /// </summary>
+    private void Choose(PlanItem item, DiffRow row, int choice) => _ = ChooseAsync(item, row.Key, choice);
+
+    private async Task ChooseAsync(PlanItem item, string setting, int choice)
+    {
+        bool? taken = choice switch { 1 => true, 2 => false, _ => null };
+        if (!await main.RunAsync(Strings.Rules_Title, () => main.Engine.UpdateRules(main.Engine.Rules.WithSetting(item.Path, setting, taken))).ConfigureAwait(true))
+        {
+            return;
+        }
+
+        var title = DiffTitle;
+        await CompareAsync().ConfigureAwait(true);
+        SelectedRow = Rows.FirstOrDefault(r => r.Item.Root == item.Root && string.Equals(r.Item.Path, item.Path, StringComparison.OrdinalIgnoreCase));
+        if (SelectedRow is null)
+        {
+            // Everything that differed now stays here: the file has nothing left to take.
+            DiffGroups.Clear();
+            DiffTitle = title;
+            DiffNote = Strings.Diff_NothingLeft;
+        }
     }
 
     /// <summary>Fills the list of devices.</summary>
