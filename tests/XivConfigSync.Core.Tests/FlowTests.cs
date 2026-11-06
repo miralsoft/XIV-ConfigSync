@@ -99,6 +99,7 @@ public sealed class FlowTests
         using var temp = new TempFolder();
         var (a, b) = TwoDevices(temp);
         AlignShared(a, b, Addon);
+        b.Engine.UpdateRules(b.Engine.Rules.WithOverride(Roots.Game, "FFXIV_CHR*/ADDON.DAT", ApplyRule.OnRequest));
 
         a.WriteGame(Addon, Device.Random());
         a.Engine.Backup(RevisionOrigin.GameExit);

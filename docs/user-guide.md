@@ -19,7 +19,7 @@ unless you choose one in the settings.
    Allagan Tools, Allagan Market), its name and, where given as text, its world are used as the
    character's name. You can rename every character in the settings.
 6. **Automatic actions:** choose what may happen without asking: a backup after playing, taking
-   "always" files from other PCs, opening `.xivsync` files with the application, starting with
+   the areas switched on from other PCs, opening `.xivsync` files with the application, starting with
    Windows. Everything can be changed later.
 7. **Finish:** the first backup is made.
 
@@ -33,10 +33,10 @@ recognises the folder and shows the PCs already in it.
 - Choose **This PC is already in the sync folder** after reinstalling Windows on a PC that was
   set up before; it takes over its old part of the sync folder and its backups.
 
-After the set-up, open **Transfer**. On the first transfer every file that differs between the
-PCs is shown as a conflict, because the application does not yet know which version is the right
-one. Tick what you want from the other PC, or use **Take all conflicts from the source**, then
-**Take selected**. From then on, changes flow by themselves according to the rules.
+On the first transfer, the application does not yet know which PC has the right settings. It asks
+once: **Yes** takes the settings of the other PC (the files here are saved first), **No** keeps the
+settings of this PC, and the other PC takes them from here, **Cancel** leaves the decision for the
+**Transfer** page. From then on, changes flow by themselves in the areas that are switched on.
 
 ## 3. Day to day
 
@@ -56,10 +56,10 @@ one. Tick what you want from the other PC, or use **Take all conflicts from the 
 - **Device** and **Backup:** where to take settings from. "Latest backup" is the normal case.
   Older backups of any PC, including this one, can be restored the same way.
 - **Compare** shows every file that differs, with a proposal:
-  - *Apply* (ticked): only the other PC changed it, and its rule is "always".
+  - *Apply* (ticked): only the other PC changed it, and its area is switched on.
   - *Offered* (not ticked): it differs, and you decide.
   - *Conflict* (not ticked): both PCs changed it. Both versions are kept until you decide.
-- Files with the rule "never" are not offered from another PC.
+- Files of an area switched off, and settings of one PC, are not offered from another PC.
 - Files that exist only on this PC, not in the chosen backup, are never deleted. A note says how
   many there are; **Also show files with nothing to do** lists them with the proposal *Only here*.
 - **Take selected** saves the current files first, then replaces them. **Undo last transfer**
@@ -71,14 +71,38 @@ one. Tick what you want from the other PC, or use **Take all conflicts from the 
   uses the new repositories from its next start.
 - Nothing is written while the game runs.
 
-## 5. Rules
+## 5. Areas
 
-The **Rules** page lists every known file with its default rule and how well it is known. Change
-a rule with the list in its row. The **Plugins** tab lists every plugin with its own rule: **As for all
-plugin files** follows the row "All plugin files", or choose always, on request or never for this
-plugin alone. **Not backed up** leaves a plugin out of the backup entirely; it then also shows
-under the exclusions, where it can be removed again. **Leave out of the backup** takes files out of the backup by a
-pattern, for example `SomePlugin/*.json`.
+The **Areas** page says what this PC takes from your other PCs. You do not need to know any file
+names: switch an area on or off, and the application knows which files belong to it.
+
+| Area | What it holds |
+|---|---|
+| Hotbars and macros | Hotbars, cross hotbars, character macros and shared macros |
+| Key bindings and controls | Key bindings, mouse and keyboard, game pad |
+| Gear sets | Your saved gear sets |
+| Character settings | Name plates, camera, battle effects and the other character settings, without the chat |
+| Chat | Font size, transparency, tabs, filters and channels of the chat window |
+| HUD layout | Size and position of every window on screen, the chat window included |
+| Inventory order | The order of items in inventory, saddlebag and retainers |
+| Plugin settings | The settings of your Dalamud plugins |
+| Plugin sources | Custom plugin repositories another PC has and this one lacks |
+
+All areas are on at first. The switches apply to this PC only: if the chat is too large on your
+laptop, switch **Chat** off there, and the laptop keeps its own chat settings while everything else
+still comes over. The size and position of the chat window belong to the HUD layout.
+
+Settings of one PC (resolution, graphics, sound, the launcher) are in no area and never taken.
+
+For the HUD layout and the inventory order, the game rewrites the files on every login. When both
+PCs changed them, the state backed up last wins instead of a question.
+
+**Plugins (advanced)** gives a single plugin its own rule: **As the area** follows the area
+"Plugin settings", or choose always, on request or never for this plugin alone. **Not backed up**
+leaves a plugin out of the backup entirely; it then also shows under the exclusions.
+**Files (advanced)** lists every known file with its rule; a rule chosen there wins over the area.
+**Leave out of the backup** takes files out of the backup by a pattern, for example
+`SomePlugin/*.json`.
 
 Why some defaults are "on request": the game changes the HUD layout (`ADDON.DAT`), `UISAVE.DAT`
 and the item order on every login by itself. Taking them automatically would overwrite a real

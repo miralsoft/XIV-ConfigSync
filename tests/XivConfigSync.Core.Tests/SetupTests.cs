@@ -48,6 +48,8 @@ public sealed class SetupTests
 /// <summary>User interface services that answer without a window; counts what was asked.</summary>
 internal sealed class QuietUi : IUiServices
 {
+    private readonly System.Threading.Lock uiThread = new();
+
     public bool ConfirmAnswer { get; set; } = true;
 
     public int Confirmations { get; private set; }
@@ -72,9 +74,14 @@ internal sealed class QuietUi : IUiServices
     {
     }
 
+    // One action at a time, like the real UI thread: the view models rely on it.
     public bool OnUiThread(Action action)
     {
-        action();
+        lock (uiThread)
+        {
+            action();
+        }
+
         return true;
     }
 

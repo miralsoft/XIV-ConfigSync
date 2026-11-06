@@ -404,3 +404,38 @@ Append-only. Never edit or delete past entries; a later entry may supersede an e
     existing rule set carries it and the exclusion list shows it. A plugin's rule wins over the
     rule for all plugin files by the patterns' specificity. Backing up everything stays the
     default.
+- (2026-11-06) Areas instead of files (FR-077 to FR-081). The owner found setting up the transfer
+  too much work: "als Spieler hast du keine Ahnung davon, es sollte immer um die Funktionen gehen",
+  and the program has to decide which files belong to what. Decided:
+  - Nine areas a player recognises, each switched on or off per device and stored in `rules.json`
+    (`areas`); all on by default. A switched-on area is the rule "always" for its files, a
+    switched-off one "never". A rule on a single file or plugin still wins, so the file and plugin
+    views stay as an advanced view; switching an area removes a rule on exactly its own pattern.
+  - Files that belong to one device stay in no area and are never taken. `UISAVE.DAT` stays
+    outside every area until its content is known.
+  - `COMMON.DAT` holds both character settings and the chat (font size, tabs, filters). With one of
+    the two areas off, the file is merged by setting name: the source's file with this device's
+    values for the kept settings. It is compared without those settings, and the shared state is
+    recorded as the hash of the compared part, marked `cmp:`. Measured on device A: the file is
+    `Key<TAB>Value` lines, section headers and one NUL; the chat settings are the 70 or so keys
+    beginning with `Log` or `IsLog`, and `ChatType`. Rejected: splitting `ADDON.DAT` to take the
+    chat window's size out of the HUD layout, since its format is not known. The size and position
+    of the chat window go with the HUD layout.
+  - HUD layout and inventory order: the game rewrites them on every login (V00), so a conflict
+    would come after nearly every session. Both changed since a shared state: the state backed up
+    later wins, the other is offered. Without a shared state this never applies: found by review
+    finding 3's test, where a device set up again would otherwise have pushed its fresh HUD layout
+    to the others.
+  - The first transfer with a device asks once (take theirs, keep mine, later) instead of showing a
+    conflict per file. "Keep mine" records the source's files as seen, so they are not asked about
+    again and the other device takes them from here.
+  - A device now also records the files it finds equal when nothing is applied. Before, the shared
+    state was only recorded on an apply, so the device that had given everything knew no shared
+    state and would have asked about the first transfer again.
+  - Automatic transfer also adds the missing plugin sources, when that area is on.
+  - Consequence for 6.2 and 6.3 of the specification: the unconfirmed character files, the plugin
+    settings and the HUD layout are taken automatically. Accepted because every transfer keeps a
+    verified snapshot and can be undone; the checks in the game stay part of gate 4, and a file
+    that fails one leaves its area before release.
+  - Rejected: a choice "never take this file" on each row of the transfer page. It keeps the user
+    thinking in files, which is what the owner wanted to leave behind.

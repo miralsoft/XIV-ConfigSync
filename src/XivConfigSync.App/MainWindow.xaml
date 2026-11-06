@@ -350,15 +350,15 @@
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
                     <DataGridTextColumn
+                        Binding="{Binding AreaText}"
+                        Header="{x:Static core:Strings.Col_Area}"
+                        IsReadOnly="True"
+                        Width="1.2*" />
+                    <DataGridTextColumn
                         Binding="{Binding DisplayPath}"
                         Header="{x:Static core:Strings.Col_File}"
                         IsReadOnly="True"
                         Width="2.2*" />
-                    <DataGridTextColumn
-                        Binding="{Binding Root}"
-                        Header="{x:Static core:Strings.Col_Area}"
-                        IsReadOnly="True"
-                        Width="0.8*" />
                     <DataGridTextColumn
                         Binding="{Binding ActionText}"
                         Header="{x:Static core:Strings.Col_Action}"
@@ -509,113 +509,37 @@
                     Style="{StaticResource Muted}"
                     Text="{x:Static core:Strings.Rules_Intro}" />
             </StackPanel>
-            <Border DockPanel.Dock="Bottom" Style="{StaticResource Card}">
-                <StackPanel>
-                    <TextBlock Style="{StaticResource SectionTitle}" Text="{x:Static core:Strings.Rules_Exclusions}" />
-                    <TextBlock
-                        Margin="0,0,0,8"
-                        Style="{StaticResource Muted}"
-                        Text="{x:Static core:Strings.Rules_ExclusionsIntro}" />
-                    <ItemsControl ItemsSource="{Binding Exclusions}" Margin="0,0,0,8">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <StackPanel Margin="0,2" Orientation="Horizontal">
-                                    <TextBlock
-                                        Text="{Binding RootText}"
-                                        VerticalAlignment="Center"
-                                        Width="80" />
-                                    <TextBlock
-                                        FontFamily="Consolas"
-                                        MinWidth="240"
-                                        Text="{Binding Pattern}"
-                                        VerticalAlignment="Center" />
-                                    <Button
-                                        Command="{Binding DataContext.RemoveExclusionCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
-                                        CommandParameter="{Binding}"
-                                        Content="{x:Static core:Strings.Rules_Remove}"
-                                        Padding="8,2" />
-                                </StackPanel>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                    <WrapPanel>
-                        <ComboBox
-                            AutomationProperties.Name="{x:Static core:Strings.Col_Area}"
-                            ItemsSource="{Binding RootChoices}"
-                            Margin="0,0,8,0"
-                            SelectedIndex="{Binding NewExclusionRoot}"
-                            Width="110" />
-                        <TextBox
-                            AutomationProperties.Name="{x:Static core:Strings.Rules_PatternHint}"
-                            FontFamily="Consolas"
-                            Margin="0,0,8,0"
-                            Text="{Binding NewExclusionPattern, UpdateSourceTrigger=PropertyChanged}"
-                            ToolTip="{x:Static core:Strings.Rules_PatternHint}"
-                            Width="280" />
-                        <Button Command="{Binding AddExclusionCommand}" Content="{x:Static core:Strings.Rules_Add}" />
-                    </WrapPanel>
-                </StackPanel>
-            </Border>
-            <StackPanel
-                DockPanel.Dock="Bottom"
-                Margin="0,0,0,10"
-                Orientation="Horizontal">
-                <Button
-                    Command="{Binding ResetAllCommand}"
-                    Content="{x:Static core:Strings.Rules_Reset}"
-                    Margin="0,10,0,0" />
-            </StackPanel>
             <TabControl AutomationProperties.AutomationId="RuleTabs">
-                <TabItem AutomationProperties.AutomationId="RuleTabFiles" Header="{x:Static core:Strings.Rules_TabFiles}">
-                    <DataGrid
-                        AutomationProperties.AutomationId="RuleRows"
-                        AutomationProperties.Name="{x:Static core:Strings.Rules_Title}"
-                        ItemsSource="{Binding Rows}">
-                        <DataGrid.Columns>
-                            <DataGridTextColumn
-                                Binding="{Binding Root}"
-                                Header="{x:Static core:Strings.Col_Area}"
-                                IsReadOnly="True"
-                                Width="Auto" />
-                            <DataGridTextColumn
-                                Binding="{Binding Pattern}"
-                                Header="{x:Static core:Strings.Col_File}"
-                                IsReadOnly="True"
-                                Width="1.3*" />
-                            <DataGridTemplateColumn Header="{x:Static core:Strings.Col_Rule}" Width="170">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <ComboBox
-                                            AutomationProperties.Name="{Binding Pattern}"
-                                            DisplayMemberPath="Name"
-                                            ItemsSource="{Binding DataContext.RuleChoices, RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                            SelectedItem="{Binding Choice, UpdateSourceTrigger=PropertyChanged}" />
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
-                            <DataGridTextColumn
-                                Binding="{Binding DefaultText}"
-                                Header="{x:Static core:Strings.Col_Default}"
-                                IsReadOnly="True"
-                                Width="Auto" />
-                            <DataGridTextColumn
-                                Binding="{Binding EvidenceText}"
-                                Header="{x:Static core:Strings.Col_Evidence}"
-                                IsReadOnly="True"
-                                Width="Auto" />
-                            <DataGridTextColumn
-                                Binding="{Binding Note}"
-                                Header="{x:Static core:Strings.Col_Notes}"
-                                IsReadOnly="True"
-                                Width="2*">
-                                <DataGridTextColumn.ElementStyle>
-                                    <Style TargetType="TextBlock">
-                                        <Setter Property="TextWrapping" Value="Wrap" />
-                                    </Style>
-                                </DataGridTextColumn.ElementStyle>
-                            </DataGridTextColumn>
-                        </DataGrid.Columns>
-                    </DataGrid>
+                <TabItem AutomationProperties.AutomationId="RuleTabAreas" Header="{x:Static core:Strings.Rules_TabAreas}">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <ItemsControl
+                            AutomationProperties.AutomationId="AreaRows"
+                            ItemsSource="{Binding AreaRows}"
+                            Margin="0,10,0,0">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Margin="0,0,0,8" Style="{StaticResource Card}">
+                                        <DockPanel>
+                                            <CheckBox
+                                                AutomationProperties.HelpText="{Binding Hint}"
+                                                AutomationProperties.Name="{Binding Name}"
+                                                DockPanel.Dock="Left"
+                                                IsChecked="{Binding IsOn}"
+                                                Margin="0,2,12,0"
+                                                VerticalAlignment="Top" />
+                                            <StackPanel>
+                                                <TextBlock FontWeight="SemiBold" Text="{Binding Name}" />
+                                                <TextBlock
+                                                    Style="{StaticResource Muted}"
+                                                    Text="{Binding Hint}"
+                                                    TextWrapping="Wrap" />
+                                            </StackPanel>
+                                        </DockPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
                 </TabItem>
                 <TabItem AutomationProperties.AutomationId="RuleTabPlugins" Header="{x:Static core:Strings.Rules_TabPlugins}">
                     <DockPanel>
@@ -660,6 +584,115 @@
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </DockPanel>
+                </TabItem>
+                <TabItem AutomationProperties.AutomationId="RuleTabFiles" Header="{x:Static core:Strings.Rules_TabFiles}">
+                    <DockPanel>
+                        <Border DockPanel.Dock="Bottom" Style="{StaticResource Card}">
+                            <StackPanel>
+                                <TextBlock Style="{StaticResource SectionTitle}" Text="{x:Static core:Strings.Rules_Exclusions}" />
+                                <TextBlock
+                                    Margin="0,0,0,8"
+                                    Style="{StaticResource Muted}"
+                                    Text="{x:Static core:Strings.Rules_ExclusionsIntro}" />
+                                <ItemsControl ItemsSource="{Binding Exclusions}" Margin="0,0,0,8">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Margin="0,2" Orientation="Horizontal">
+                                                <TextBlock
+                                                    Text="{Binding RootText}"
+                                                    VerticalAlignment="Center"
+                                                    Width="80" />
+                                                <TextBlock
+                                                    FontFamily="Consolas"
+                                                    MinWidth="240"
+                                                    Text="{Binding Pattern}"
+                                                    VerticalAlignment="Center" />
+                                                <Button
+                                                    Command="{Binding DataContext.RemoveExclusionCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                    CommandParameter="{Binding}"
+                                                    Content="{x:Static core:Strings.Rules_Remove}"
+                                                    Padding="8,2" />
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                                <WrapPanel>
+                                    <ComboBox
+                                        AutomationProperties.Name="{x:Static core:Strings.Col_Area}"
+                                        ItemsSource="{Binding RootChoices}"
+                                        Margin="0,0,8,0"
+                                        SelectedIndex="{Binding NewExclusionRoot}"
+                                        Width="110" />
+                                    <TextBox
+                                        AutomationProperties.Name="{x:Static core:Strings.Rules_PatternHint}"
+                                        FontFamily="Consolas"
+                                        Margin="0,0,8,0"
+                                        Text="{Binding NewExclusionPattern, UpdateSourceTrigger=PropertyChanged}"
+                                        ToolTip="{x:Static core:Strings.Rules_PatternHint}"
+                                        Width="280" />
+                                    <Button Command="{Binding AddExclusionCommand}" Content="{x:Static core:Strings.Rules_Add}" />
+                                </WrapPanel>
+                            </StackPanel>
+                        </Border>
+                        <StackPanel
+                            DockPanel.Dock="Bottom"
+                            Margin="0,0,0,10"
+                            Orientation="Horizontal">
+                            <Button
+                                Command="{Binding ResetAllCommand}"
+                                Content="{x:Static core:Strings.Rules_Reset}"
+                                Margin="0,10,0,0" />
+                        </StackPanel>
+                        <DataGrid
+                            AutomationProperties.AutomationId="RuleRows"
+                            AutomationProperties.Name="{x:Static core:Strings.Rules_Title}"
+                            ItemsSource="{Binding Rows}">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn
+                                    Binding="{Binding Root}"
+                                    Header="{x:Static core:Strings.Col_Area}"
+                                    IsReadOnly="True"
+                                    Width="Auto" />
+                                <DataGridTextColumn
+                                    Binding="{Binding Pattern}"
+                                    Header="{x:Static core:Strings.Col_File}"
+                                    IsReadOnly="True"
+                                    Width="1.3*" />
+                                <DataGridTemplateColumn Header="{x:Static core:Strings.Col_Rule}" Width="170">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <ComboBox
+                                                AutomationProperties.Name="{Binding Pattern}"
+                                                DisplayMemberPath="Name"
+                                                ItemsSource="{Binding DataContext.RuleChoices, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                SelectedItem="{Binding Choice, UpdateSourceTrigger=PropertyChanged}" />
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTextColumn
+                                    Binding="{Binding DefaultText}"
+                                    Header="{x:Static core:Strings.Col_Default}"
+                                    IsReadOnly="True"
+                                    Width="Auto" />
+                                <DataGridTextColumn
+                                    Binding="{Binding EvidenceText}"
+                                    Header="{x:Static core:Strings.Col_Evidence}"
+                                    IsReadOnly="True"
+                                    Width="Auto" />
+                                <DataGridTextColumn
+                                    Binding="{Binding Note}"
+                                    Header="{x:Static core:Strings.Col_Notes}"
+                                    IsReadOnly="True"
+                                    Width="2*">
+                                    <DataGridTextColumn.ElementStyle>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="TextWrapping" Value="Wrap" />
+                                        </Style>
+                                    </DataGridTextColumn.ElementStyle>
+                                </DataGridTextColumn>
                             </DataGrid.Columns>
                         </DataGrid>
                     </DockPanel>

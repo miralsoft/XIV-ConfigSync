@@ -38,6 +38,16 @@ public sealed partial class PlanRow : ObservableObject
 
     public string Root => Text.RootName(Item.Root);
 
+    /// <summary>The area a player recognises, such as "Hotbars and macros"; the root for files outside every area.</summary>
+    public string AreaText
+    {
+        get
+        {
+            var areas = Areas.Of(Item.Root, Item.Path);
+            return areas.Count == 0 ? Root : string.Join(", ", areas.Select(a => Text.Get(a.NameKey)));
+        }
+    }
+
     public string ActionText => Item.Reason == PlanReason.OnlyHere ? Strings.Action_OnlyHere : Item.Action switch
     {
         PlanAction.Apply => Strings.Action_Apply,

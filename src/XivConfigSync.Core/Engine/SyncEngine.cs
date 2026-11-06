@@ -403,12 +403,21 @@ public sealed class SyncEngine
     }
 
     /// <summary>The result of an automatic apply.</summary>
-    public sealed record AutoApplyResult(int Applied, int Waiting, string? RefusalKey);
+    /// <param name="Applied">Files applied.</param>
+    /// <param name="Waiting">Conflicts that wait for the user.</param>
+    /// <param name="RefusalKey">Why nothing could be done, if that is the case.</param>
+    /// <param name="FirstContact">
+    /// Files that differ while this device has never shared a state with the source: the first
+    /// transfer, decided once for all of them with <see cref="ResolveFirstContact"/>.
+    /// </param>
+    /// <param name="AreaKeys">The areas files were applied in, for the notification.</param>
+    /// <param name="Repositories">Plugin repositories added.</param>
+    public sealed record AutoApplyResult(int Applied, int Waiting, string? RefusalKey, int FirstContact = 0, IReadOnlyList<string>? AreaKeys = null, int Repositories = 0);
 
     /// <summary>
-    /// Applies from another device only what the rules allow without asking: files planned as
-    /// <see cref="PlanAction.Apply"/>. Reports how many were applied, how many conflicts wait, and
-    /// why nothing could be done, if that is the case.
+    /// Applies from another device what the areas switched on allow without asking: files planned
+    /// as <see cref="PlanAction.Apply"/>, and the missing plugin repositories. Reports how many were
+    /// applied, how many conflicts wait, and why nothing could be done, if that is the case.
     /// </summary>
     public AutoApplyResult AutoApply(string sourceDeviceId)
     {
@@ -416,25 +425,155 @@ public sealed class SyncEngine
 
         // Offers are not counted: the game changes some of them on every login (V00), so a
         // notification for them would come every time. They wait on the transfer page.
-        var waiting = plan.Items.Count(i => i.Action == PlanAction.Conflict && i.Rule == ApplyRule.Always);
+        var firstContact = plan.Items.Count(i => i.Action == PlanAction.Conflict && i.Reason == PlanReason.NoCommonState && i.Rule == ApplyRule.Always);
+        var waiting = plan.Items.Count(i => i.Action == PlanAction.Conflict && i.Rule == ApplyRule.Always) - firstContact;
         if (plan.Refusals.Count > 0)
         {
-            return new AutoApplyResult(0, waiting, plan.Refusals[0]);
+            return new AutoApplyResult(0, waiting, plan.Refusals[0], firstContact);
         }
 
-        if (!plan.Items.Any(i => i.Selected))
+        var applied = 0;
+        IReadOnlyList<string> areaKeys = [];
+        if (plan.Items.Any(i => i.Action == PlanAction.Apply))
         {
-            return new AutoApplyResult(0, waiting, null);
-        }
+            foreach (var item in plan.Items)
+            {
+                item.Selected = item.Action == PlanAction.Apply;
+            }
 
-        foreach (var item in plan.Items)
+            areaKeys = AreaKeysOf(plan.Selected);
+            applied = Apply(plan).Applied;
+        }
+        else
         {
-            item.Selected = item.Action == PlanAction.Apply;
+            using (TakeLock())
+            {
+                RecordShared(plan, OpenStore(), selectedToo: false);
+            }
         }
 
-        var result = Apply(plan);
-        return new AutoApplyResult(result.Applied, waiting, null);
+        return new AutoApplyResult(applied, waiting, null, firstContact, areaKeys, AutoMergeRepositories(sourceDeviceId));
     }
+
+    /// <summary>
+    /// Decides the first transfer with a device at once: take every differing file of the areas
+    /// switched on from it, or keep this device's files. Kept files are recorded as seen, so they
+    /// are not asked about again; the other device takes them from here instead. Returns the
+    /// number of files applied.
+    /// </summary>
+    public int ResolveFirstContact(string sourceDeviceId, bool takeSource)
+    {
+        var plan = Plan(sourceDeviceId, null);
+        if (plan.Refusals.Count > 0)
+        {
+            throw new RefusedException(plan.Refusals[0]);
+        }
+
+        if (takeSource)
+        {
+            foreach (var item in plan.Items)
+            {
+                item.Selected = item.Action == PlanAction.Apply
+                    || (item.Action == PlanAction.Conflict && item.Reason == PlanReason.NoCommonState && item.Rule == ApplyRule.Always);
+            }
+
+            if (plan.Selected.Any())
+            {
+                return Apply(plan).Applied;
+            }
+
+            using (TakeLock())
+            {
+                RecordShared(plan, OpenStore(), selectedToo: false);
+            }
+
+            return 0;
+        }
+
+        using (TakeLock())
+        {
+            var path = local.BasePath(sourceDeviceId);
+            var bases = BaseTable.Load(path);
+            if (bases.SourceEpoch != plan.SourceEpoch)
+            {
+                bases = new BaseTable { SourceEpoch = plan.SourceEpoch };
+            }
+
+            foreach (var item in plan.Items.Where(i => (i.Action == PlanAction.Conflict && i.Reason == PlanReason.NoCommonState) || i.Reason == PlanReason.UpToDate))
+            {
+                bases.Set(item.Root, item.Path, item.BaseValue ?? item.SourceHash);
+            }
+
+            bases.Save(path);
+            log.Info(Correlation(), "First transfer: this device's files kept.");
+        }
+
+        return 0;
+    }
+
+    /// <summary>
+    /// Records what this device shares with the source: the files applied, when
+    /// <paramref name="selectedToo"/>, and every file found equal. Recording equal files without an
+    /// apply matters after one device took everything from the other: the other then shares that
+    /// state too, so a later change on both is a conflict between known states, not a first
+    /// transfer again. Kept only for the source device's current epoch: applying an older revision
+    /// from an earlier epoch must not wipe it (review 2, finding 8).
+    /// </summary>
+    private void RecordShared(ApplyPlan plan, SyncStore store, bool selectedToo)
+    {
+        var currentEpoch = store.ListDevices().FirstOrDefault(d => d.DeviceId == plan.SourceDeviceId)?.Epoch;
+        if (plan.IsOwnDevice || currentEpoch != plan.SourceEpoch)
+        {
+            return;
+        }
+
+        var path = local.BasePath(plan.SourceDeviceId);
+        var bases = BaseTable.Load(path);
+        if (bases.SourceEpoch != plan.SourceEpoch)
+        {
+            bases = new BaseTable { SourceEpoch = plan.SourceEpoch };
+        }
+
+        var changed = false;
+        foreach (var item in plan.Items.Where(i => (selectedToo && i.Selected) || i.Reason == PlanReason.UpToDate))
+        {
+            var value = item.BaseValue ?? item.SourceHash;
+            changed |= bases.Get(item.Root, item.Path) != value;
+            bases.Set(item.Root, item.Path, value);
+        }
+
+        if (changed || selectedToo)
+        {
+            bases.Save(path);
+        }
+    }
+
+    /// <summary>The areas the files belong to, in the order shown.</summary>
+    public static IReadOnlyList<string> AreaKeysOf(IEnumerable<PlanItem> items)
+    {
+        var keys = items.SelectMany(i => Areas.Of(i.Root, i.Path)).Select(a => a.Key).ToHashSet(StringComparer.Ordinal);
+        return [.. Areas.All.Select(a => a.Key).Where(keys.Contains)];
+    }
+
+    private int AutoMergeRepositories(string sourceDeviceId)
+    {
+        if (!Rules.IsAreaOn(Areas.Repositories) || Roots[Model.Roots.Dalamud] is null)
+        {
+            return 0;
+        }
+
+        try
+        {
+            return MissingRepositories(sourceDeviceId).Count == 0 ? 0 : MergeRepositories(sourceDeviceId).Count;
+        }
+        catch (RefusedException ex)
+        {
+            // No Dalamud settings on one side, or of an unknown shape: nothing to merge.
+            log.Debug("repositories", "Not merged: " + ex.ReasonKey);
+            return 0;
+        }
+    }
+
     /// <summary>Plans applying a revision of any device (the latest when <paramref name="revisionId"/> is null).</summary>
     public ApplyPlan Plan(string sourceDeviceId, string? revisionId)
     {
@@ -532,6 +671,12 @@ public sealed class SyncEngine
             plan.Warnings.Add("Warn_PluginsOff");
         }
 
+        if (!plan.IsOwnDevice)
+        {
+            SplitCharacterSettings(plan, store, sourceDeviceId, roots, bases);
+            DecideByNewestState(plan, store, sourceDeviceId);
+        }
+
         plan.SourceEpoch = source.Epoch;
         return plan;
     }
@@ -562,30 +707,20 @@ public sealed class SyncEngine
             var store = OpenStore();
             var applier = NewApplier(store);
             log.Info(correlation, $"Apply of {plan.SourceRevisionId}: {selected.Count} files.");
+
+            // A merged character settings file is stored in this device's part first, like a merged
+            // repository list, so the applier reads and verifies it like any other object.
+            foreach (var item in selected.Where(i => i.Content is not null))
+            {
+                store.PutObject(Settings.DeviceId, item.Content, item.WriteHash);
+            }
+
             snapshotId = applier.Apply(
                 plan.SourceDeviceId,
                 plan.SourceRevisionId,
-                selected.Select(i => new ApplyTarget(i.Root, i.Path, i.SourceHash, i.LocalHash)).ToList());
+                selected.Select(i => new ApplyTarget(i.Root, i.Path, i.WriteHash, i.LocalHash, i.Content is null ? null : Settings.DeviceId)).ToList());
 
-            // The common state is only kept for the source device's current epoch: applying an older
-            // revision from an earlier epoch must not wipe it (review 2, finding 8).
-            var currentEpoch = store.ListDevices().FirstOrDefault(d => d.DeviceId == plan.SourceDeviceId)?.Epoch;
-            if (!plan.IsOwnDevice && currentEpoch == plan.SourceEpoch)
-            {
-                var path = local.BasePath(plan.SourceDeviceId);
-                var bases = BaseTable.Load(path);
-                if (bases.SourceEpoch != plan.SourceEpoch)
-                {
-                    bases = new BaseTable { SourceEpoch = plan.SourceEpoch };
-                }
-
-                foreach (var item in plan.Items.Where(i => i.Selected || i.Reason == PlanReason.UpToDate))
-                {
-                    bases.Set(item.Root, item.Path, item.SourceHash);
-                }
-
-                bases.Save(path);
-            }
+            RecordShared(plan, store, selectedToo: true);
 
             PruneSnapshots(applier, correlation);
             log.Info(correlation, $"Apply done; snapshot {snapshotId}.");
@@ -844,6 +979,113 @@ public sealed class SyncEngine
 
         log.Info(Correlation(), $"Conflict copies moved to the Recycle Bin: {moved.Count}; left: {left.Count}.");
         return (moved, left);
+    }
+
+    /// <summary>
+    /// The character settings file when only one of its two areas (character, chat) is on: the
+    /// source is compared and taken without the settings of the area that is off, and those keep
+    /// this device's values. What is recorded as shared is the hash of the compared part, marked
+    /// with "cmp:", so it is never mistaken for a whole file's hash.
+    /// </summary>
+    private void SplitCharacterSettings(ApplyPlan plan, SyncStore store, string sourceDeviceId, IReadOnlyDictionary<string, string?> roots, BaseTable bases)
+    {
+        for (var i = 0; i < plan.Items.Count; i++)
+        {
+            var item = plan.Items[i];
+            var keep = Rules.KeepLocalKeys(item.Root, item.Path);
+            if (keep is null || item.LocalHash is null || item.Rule == ApplyRule.Never || item.Reason == PlanReason.NotScanned
+                || !roots.TryGetValue(item.Root, out var folder) || folder is null)
+            {
+                continue;
+            }
+
+            byte[] source;
+            byte[] local;
+            try
+            {
+                source = store.ReadObject(sourceDeviceId, item.SourceHash);
+                local = FileOps.ReadStable(RelativePath.Combine(folder, item.Path)).Content;
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidDataException)
+            {
+                plan.Items[i] = item.With(item.Action == PlanAction.Apply ? PlanAction.Offer : item.Action, item.Reason);
+                continue;
+            }
+
+            var sourcePart = CommonSettings.Comparable(source, keep);
+            var localPart = CommonSettings.Comparable(local, keep);
+            var merged = CommonSettings.Merge(source, local, keep);
+            if (sourcePart is null || localPart is null || merged is null)
+            {
+                // Not of the known shape: never split, only offered whole.
+                plan.Items[i] = item.With(item.Action == PlanAction.Apply ? PlanAction.Offer : item.Action, item.Reason);
+                continue;
+            }
+
+            var sourceHash = "cmp:" + FileOps.HashBytes(sourcePart);
+            var localHash = "cmp:" + FileOps.HashBytes(localPart);
+            var stored = bases.Get(item.Root, item.Path);
+            var baseHash = stored is not null && stored.StartsWith("cmp:", StringComparison.Ordinal) ? stored : null;
+            var (action, reason) = sourceHash == localHash ? (PlanAction.Skip, PlanReason.UpToDate)
+                : baseHash == localHash ? (PlanAction.Apply, PlanReason.SourceNewer)
+                : baseHash == sourceHash ? (PlanAction.Offer, PlanReason.LocalChangedOnly)
+                : baseHash is null ? (PlanAction.Conflict, PlanReason.NoCommonState)
+                : (PlanAction.Conflict, PlanReason.BothChanged);
+            plan.Items[i] = item.With(action, reason, merged, sourceHash);
+        }
+    }
+
+    /// <summary>
+    /// For areas the game rewrites by itself (HUD layout, inventory order), a conflict is decided
+    /// by which state was backed up later, instead of asking after nearly every session. A local
+    /// state not in this device's latest backup is the newest. Only where both shared a state
+    /// before: without one (a device set up again) its fresh defaults never win (review finding 3).
+    /// </summary>
+    private void DecideByNewestState(ApplyPlan plan, SyncStore store, string sourceDeviceId)
+    {
+        for (var i = 0; i < plan.Items.Count; i++)
+        {
+            var item = plan.Items[i];
+            if (item.Action != PlanAction.Conflict || item.Reason != PlanReason.BothChanged || item.Rule != ApplyRule.Always || item.LocalHash is null
+                || !Areas.Of(item.Root, item.Path).Any(a => a.Conflicts == ConflictPolicy.NewestWins && Rules.IsAreaOn(a.Key)))
+            {
+                continue;
+            }
+
+            var sourceSince = StateSince(store, sourceDeviceId, plan.SourceRevisionId, item.Root, item.Path, item.SourceHash);
+            var localSince = store.ReadHead(Settings.DeviceId) is { } head ? StateSince(store, Settings.DeviceId, head, item.Root, item.Path, item.LocalHash) : null;
+            plan.Items[i] = sourceSince is not null && localSince is not null && sourceSince > localSince
+                ? item.With(PlanAction.Apply, PlanReason.SourceNewerState)
+                : item.With(PlanAction.Offer, PlanReason.LocalNewerState);
+        }
+    }
+
+    /// <summary>When a device first backed up a file with this hash, counting back from a revision without a break; null when that revision does not have it.</summary>
+    private static DateTimeOffset? StateSince(SyncStore store, string deviceId, string fromRevision, string root, string path, string hash)
+    {
+        DateTimeOffset? since = null;
+        foreach (var id in store.ListRevisions(deviceId).Where(id => string.CompareOrdinal(id, fromRevision) <= 0))
+        {
+            RevisionManifest manifest;
+            try
+            {
+                manifest = store.ReadRevision(deviceId, id);
+            }
+            catch (Exception ex) when (ex is IOException or InvalidDataException or System.Text.Json.JsonException)
+            {
+                break;
+            }
+
+            var file = manifest.AllFiles().FirstOrDefault(f => f.Root == root && string.Equals(f.File.Path, path, StringComparison.OrdinalIgnoreCase)).File;
+            if (file is null || file.Hash != hash)
+            {
+                break;
+            }
+
+            since = manifest.Created;
+        }
+
+        return since;
     }
 
     private static Dictionary<string, HashSet<string>> History(SyncStore store, string deviceId, string? before, string? epoch)

@@ -12,6 +12,7 @@
   the transfer list, XIVLauncher folder as the setting, character names from plugin data, rules
   per plugin; tested with generated data and in the interface on scratch copies. Development stays
   on device A; device B is for tests.
+- Areas instead of files (FR-077 to FR-081, 2026-11-06, owner's request): what is taken from other devices is switched per area (hotbars, chat, HUD layout and so on); `COMMON.DAT` is split by setting name between character settings and chat; HUD layout and inventory order take the state backed up last; the first transfer with a device asks once. Tested with generated data and in the interface on scratch copies; not yet tried in the game.
 - Dalamud backup area and plugin repository merge (FR-072, 2026-11-05): tested with generated
   settings, on a copy of the owner's real file and in the interface on scratch copies (merge and undo);
   not yet tried in the game.
@@ -39,7 +40,7 @@
 - **App** (`XivConfigSync.App`, WPF): set-up wizard, overview, transfer, rules, settings, log,
   about; tray icon; one instance per user with hand-over of `.xivsync` files; portable single
   executable of 67 MB that starts in about 1.5 s.
-- **Tests:** 133 xUnit tests (unit, two- and three-device flows, a simulated crash at every step
+- **Tests:** 169 xUnit tests (unit, two- and three-device flows, a simulated crash at every step
   of an apply, damaged and incomplete revisions, localisation completeness, one test per finding
   of the independent review), 41 Pester tests for the analysis tools and the analyzer wrapper. Deliberately planted
   defects were caught by the tests, twice before and three times after the review fixes.

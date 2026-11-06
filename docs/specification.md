@@ -180,6 +180,11 @@ specification makes of it and in which release. "0.1" is the first public releas
 | FR-074 | The setting is XIVLauncher's folder, not the plugin settings folder; the plugin settings and Dalamud's files are found from it, also in the sandbox mode (`dalamudUserData`). Older settings are moved over; a plugin folder chosen by hand elsewhere stays in use. Owner's request, 2026-11-05 | 0.1 |
 | FR-075 | Character names and, where given as text, worlds are suggested from plugin data (AutoRetainer, Lifestream, ICE, Allagan Tools, Allagan Market), matched by the content ID in the folder name, read-only; they replace only empty or numbered names, never one the user chose. Owner's request, 2026-11-05 | 0.1 |
 | FR-076 | Rules per plugin on the rules page: its own apply rule (or the one for all plugin files) and "not backed up", stored as overrides and exclusions on `<Name>.*` and `<Name>/**`. Owner's request, 2026-11-05 | 0.1 |
+| FR-077 | What is taken from other devices is chosen by area, not by file: hotbars and macros, key bindings and controls, gear sets, character settings, chat, HUD layout, inventory order, plugin settings, plugin sources. The application decides which files belong to which area; the user switches each area on or off per device. All are on by default. Files that belong to one device (`FFXIV.cfg`, `FFXIV_BOOT.cfg`, `cfgcopy`, Dalamud's own files) are in no area and never taken. The file and plugin rules stay as an advanced view, and a rule on a file wins over its area. Owner's request, 2026-11-06 | 0.1 |
+| FR-078 | The character settings file `COMMON.DAT` belongs to the areas character settings and chat. When only one of them is on, the file is compared and taken without the settings of the other, which keep this device's values; the settings are told apart by name only (`Log*`, `IsLog*`, `ChatType` are chat), never by position. A file of another shape is not split and only offered whole. Owner's request, 2026-11-06 | 0.1 |
+| FR-079 | For the areas the game rewrites by itself (HUD layout, inventory order), a file both devices changed since a shared state is decided by which state was backed up later, without a question. Without a shared state this never applies. Owner's request, 2026-11-06 | 0.1 |
+| FR-080 | The first transfer with a device, when files differ and no shared state is known, asks once for all of them: take the other device's settings, keep this device's, or decide later on the transfer page. Owner's request, 2026-11-06 | 0.1 |
+| FR-081 | With automatic transfer on, the areas switched on and the missing plugin sources are taken without asking, with a snapshot first; the notification names the areas, and the transfer page can undo it. The transfer list shows each file's area. Owner's request, 2026-11-06 | 0.1 |
 
 ## 5. Releases and priorities
 
@@ -212,3 +217,8 @@ that test passes, otherwise in 0.2. Backup of plugin settings ships in 0.1 eithe
 
 `MACRO.DAT`, `GEARSET.DAT`, `COMMON.DAT` and `CONTROL1.DAT` stay "on request" until one transfer
 each has been seen in the game; that check is part of gate 4 (two real devices).
+
+Changed on 2026-11-06 by the owner's request for areas (FR-077): these files, the plugin settings
+(6.2) and the HUD layout are taken automatically with their area. Every transfer keeps a verified
+snapshot and can be undone. The checks in the game stay part of gate 4; a file that fails one is
+taken out of its area before release.

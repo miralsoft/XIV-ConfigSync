@@ -37,6 +37,12 @@ public static class PlanReason
 
     /// <summary>Shown only: a file this device has and the source does not; never deleted (FR-044).</summary>
     public const string OnlyHere = "Reason_OnlyHere";
+
+    /// <summary>Both changed a file the game rewrites by itself; the source backed it up later and wins.</summary>
+    public const string SourceNewerState = "Reason_SourceNewerState";
+
+    /// <summary>Both changed a file the game rewrites by itself; this device's state is the later one and stays.</summary>
+    public const string LocalNewerState = "Reason_LocalNewerState";
 }
 
 /// <summary>One file in an apply plan.</summary>
@@ -69,6 +75,37 @@ public sealed class PlanItem
 
     /// <summary>Whether the file can be selected at all.</summary>
     public bool Selectable => Action != PlanAction.Skip;
+
+    /// <summary>
+    /// The content written when it differs from the source's file: the character settings file
+    /// with this device's values kept for an area that is off. Null writes the source's file.
+    /// </summary>
+    public byte[]? Content { get; init; }
+
+    /// <summary>The hash of what is written: of <see cref="Content"/>, else the source's.</summary>
+    public string WriteHash => Content is null ? SourceHash : IO.FileOps.HashBytes(Content);
+
+    /// <summary>What is recorded as shared with the source once applied or found equal; null records the source's hash.</summary>
+    public string? BaseValue { get; init; }
+
+    /// <summary>A copy with another decision.</summary>
+    public PlanItem With(PlanAction action, string reason, byte[]? content = null, string? baseValue = null) => new()
+    {
+        Root = Root,
+        Path = Path,
+        SourceHash = SourceHash,
+        SourceSize = SourceSize,
+        LocalHash = LocalHash,
+        BaseHash = BaseHash,
+        Rule = Rule,
+        Matrix = Matrix,
+        Action = action,
+        Reason = reason,
+        Flags = Flags,
+        Selected = action == PlanAction.Apply,
+        Content = content ?? Content,
+        BaseValue = baseValue ?? BaseValue,
+    };
 }
 
 /// <summary>The plan for applying one revision.</summary>

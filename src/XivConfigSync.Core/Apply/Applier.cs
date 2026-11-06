@@ -59,6 +59,9 @@ public sealed class JournalStep
 
     public string Hash { get; set; } = string.Empty;
 
+    /// <summary>The device whose part holds the object, when it is not the source (a merged file in this device's part).</summary>
+    public string? ObjectDevice { get; set; }
+
     public bool Done { get; set; }
 }
 
@@ -97,7 +100,12 @@ public sealed class Journal
 }
 
 /// <summary>A file to write in an apply, with the hash the file had when the plan was made (null: absent).</summary>
-public sealed record ApplyTarget(string Root, string Path, string Hash, string? ExpectedLocalHash);
+/// <param name="Root">The root.</param>
+/// <param name="Path">The path below the root.</param>
+/// <param name="Hash">The object written.</param>
+/// <param name="ExpectedLocalHash">The hash the file had when the plan was made; null: absent.</param>
+/// <param name="ObjectDevice">The device whose part holds the object, when it is not the source.</param>
+public sealed record ApplyTarget(string Root, string Path, string Hash, string? ExpectedLocalHash, string? ObjectDevice = null);
 
 /// <summary>Test seam: called before each stage, so a test can interrupt an apply anywhere.</summary>
 public interface IApplyProbe
@@ -158,7 +166,7 @@ public sealed class Applier
         var contents = new Dictionary<ApplyTarget, byte[]>();
         foreach (var target in targets)
         {
-            contents[target] = source.ReadObject(sourceDeviceId, target.Hash);
+            contents[target] = source.ReadObject(target.ObjectDevice ?? sourceDeviceId, target.Hash);
         }
 
         // Nothing may have changed since the plan was shown.
@@ -183,7 +191,7 @@ public sealed class Applier
         }
 
         var journal = NewJournal(Journal.ApplyKind, snapshot.SnapshotId, null, sourceDeviceId, sourceRevisionId);
-        journal.Steps = targets.Select(t => new JournalStep { Root = t.Root, Path = t.Path, Hash = t.Hash }).ToList();
+        journal.Steps = targets.Select(t => new JournalStep { Root = t.Root, Path = t.Path, Hash = t.Hash, ObjectDevice = t.ObjectDevice }).ToList();
         probe?.Before("journal", -1);
         FileOps.WriteJsonAtomic(journalPath, journal);
 
@@ -278,7 +286,7 @@ public sealed class Applier
             }
 
             EnsureGameClosed();
-            FileOps.WriteAtomic(TargetPath(step.Root, step.Path), source.ReadObject(journal.SourceDeviceId, step.Hash), step.Hash);
+            FileOps.WriteAtomic(TargetPath(step.Root, step.Path), source.ReadObject(step.ObjectDevice ?? journal.SourceDeviceId, step.Hash), step.Hash);
         }
 
         if (before is { Complete: true })

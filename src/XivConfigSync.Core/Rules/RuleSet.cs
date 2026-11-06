@@ -28,6 +28,9 @@ public sealed class RuleFile
     public List<RuleOverride> Overrides { get; set; } = [];
 
     public List<UserExclusion> Exclusions { get; set; } = [];
+
+    /// <summary>Per area key, whether it is taken from other devices; a missing key means on (owner's request, 2026-11-06).</summary>
+    public Dictionary<string, bool> Areas { get; set; } = [];
 }
 
 /// <summary>The effective rules: the built-in matrix with the user's overrides and exclusions.</summary>
@@ -65,7 +68,18 @@ public sealed class RuleSet
             }
         }
 
-        return best?.Override.Rule ?? FileMatrix.Lookup(root, relativePath).DefaultRule;
+        if (best is not null)
+        {
+            return best.Value.Override.Rule;
+        }
+
+        var areas = Rules.Areas.Of(root, relativePath);
+        if (areas.Count > 0)
+        {
+            return areas.Any(a => IsAreaOn(a.Key)) ? ApplyRule.Always : ApplyRule.Never;
+        }
+
+        return FileMatrix.Lookup(root, relativePath).DefaultRule;
     }
 
     /// <summary>The reason key when a file is excluded from the backup, else null.</summary>
@@ -95,6 +109,7 @@ public sealed class RuleSet
     {
         var copy = new RuleFile
         {
+            Areas = new(File.Areas),
             Overrides = File.Overrides.Where(o => !(o.Root == root && string.Equals(o.Pattern, pattern, StringComparison.OrdinalIgnoreCase))).ToList(),
             Exclusions = [.. File.Exclusions],
         };
@@ -111,6 +126,7 @@ public sealed class RuleSet
     {
         var copy = new RuleFile
         {
+            Areas = new(File.Areas),
             Overrides = [.. File.Overrides],
             Exclusions = File.Exclusions.Where(e => !(e.Root == root && string.Equals(e.Pattern, pattern, StringComparison.OrdinalIgnoreCase))).ToList(),
         };
@@ -121,4 +137,61 @@ public sealed class RuleSet
 
         return new RuleSet(copy);
     }
+
+    /// <summary>
+    /// The rule a matrix row has without a user override on it: its area's switch, or the
+    /// matrix default for files outside every area.
+    /// </summary>
+    public ApplyRule DefaultFor(string root, string pattern)
+    {
+        var sample = pattern.Replace("**", "x", StringComparison.Ordinal).Replace('*', 'x').Replace('?', 'x');
+        var areas = Rules.Areas.Of(root, sample);
+        return areas.Count > 0
+            ? (areas.Any(a => IsAreaOn(a.Key)) ? ApplyRule.Always : ApplyRule.Never)
+            : FileMatrix.Lookup(root, sample).DefaultRule;
+    }
+
+    /// <summary>Whether an area is taken from other devices on this device.</summary>
+    public bool IsAreaOn(string key) => File.Areas.TryGetValue(key, out var on) ? on : Rules.Areas.DefaultOn(key);
+
+    /// <summary>
+    /// Switches an area. An override on exactly one of its patterns is removed, so the switch is
+    /// what decides; overrides on single plugins or narrower patterns stay.
+    /// </summary>
+    public RuleSet WithArea(string key, bool on)
+    {
+        var area = Rules.Areas.All.FirstOrDefault(a => a.Key == key);
+        var copy = new RuleFile
+        {
+            Areas = new(File.Areas) { [key] = on },
+            Overrides = File.Overrides
+                .Where(o => area is null || !area.Patterns.Any(p => p.Root == o.Root && string.Equals(p.Glob.Pattern, o.Pattern.Replace('\\', '/'), StringComparison.OrdinalIgnoreCase)))
+                .ToList(),
+            Exclusions = [.. File.Exclusions],
+        };
+        return new RuleSet(copy);
+    }
+
+    /// <summary>
+    /// For the character settings file when only one of its two areas is on: which settings keep
+    /// this device's values. Null when the file is taken whole or not at all.
+    /// </summary>
+    public Func<string, bool>? KeepLocalKeys(string root, string relativePath)
+    {
+        if (!Rules.Areas.IsCommonFile(root, relativePath) || HasOverride(root, relativePath))
+        {
+            return null;
+        }
+
+        var character = IsAreaOn(Rules.Areas.Character);
+        var chat = IsAreaOn(Rules.Areas.Chat);
+        return (character, chat) switch
+        {
+            (true, false) => Rules.Areas.IsChatKey,
+            (false, true) => k => !Rules.Areas.IsChatKey(k),
+            _ => null,
+        };
+    }
+
+    private bool HasOverride(string root, string relativePath) => overrides.Any(o => o.Override.Root == root && o.Glob.IsMatch(relativePath));
 }

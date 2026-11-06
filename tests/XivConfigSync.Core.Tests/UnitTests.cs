@@ -54,12 +54,12 @@ public sealed class RuleTests
     [InlineData(Roots.Game, "FFXIV_CHR0011223344556677/HOTBAR.DAT", ApplyRule.Always)]
     [InlineData(Roots.Game, "FFXIV_CHR0011223344556677/KEYBIND.DAT", ApplyRule.Always)]
     [InlineData(Roots.Game, "FFXIV_CHR0011223344556677/CONTROL0.DAT", ApplyRule.Always)]
-    [InlineData(Roots.Game, "FFXIV_CHR0011223344556677/ADDON.DAT", ApplyRule.OnRequest)]
+    [InlineData(Roots.Game, "FFXIV_CHR0011223344556677/ADDON.DAT", ApplyRule.Always)]
     [InlineData(Roots.Game, "FFXIV_CHR0011223344556677/UISAVE.DAT", ApplyRule.OnRequest)]
-    [InlineData(Roots.Game, "FFXIV_CHR0011223344556677/MACRO.DAT", ApplyRule.OnRequest)]
+    [InlineData(Roots.Game, "FFXIV_CHR0011223344556677/MACRO.DAT", ApplyRule.Always)]
     [InlineData(Roots.Game, "something/unknown.bin", ApplyRule.OnRequest)]
-    [InlineData(Roots.Plugins, "SomePlugin.json", ApplyRule.OnRequest)]
-    [InlineData(Roots.Plugins, "Deep/Folder/x.json", ApplyRule.OnRequest)]
+    [InlineData(Roots.Plugins, "SomePlugin.json", ApplyRule.Always)]
+    [InlineData(Roots.Plugins, "Deep/Folder/x.json", ApplyRule.Always)]
     public void MatrixDefaults(string root, string path, ApplyRule expected) => Assert.Equal(expected, Defaults.RuleFor(root, path));
 
     [Theory]
@@ -85,7 +85,7 @@ public sealed class RuleTests
             .WithOverride(Roots.Game, "FFXIV_CHR*/*.DAT", ApplyRule.Never);
         Assert.Equal(ApplyRule.Always, rules.RuleFor(Roots.Game, "FFXIV_CHR0011223344556677/ADDON.DAT"));
         Assert.Equal(ApplyRule.Never, rules.RuleFor(Roots.Game, "FFXIV_CHR0011223344556677/HOTBAR.DAT"));
-        Assert.Equal(ApplyRule.OnRequest, rules.WithOverride(Roots.Game, "FFXIV_CHR*/ADDON.DAT", null).WithOverride(Roots.Game, "FFXIV_CHR*/*.DAT", null).RuleFor(Roots.Game, "FFXIV_CHR0011223344556677/ADDON.DAT"));
+        Assert.Equal(ApplyRule.Always, rules.WithOverride(Roots.Game, "FFXIV_CHR*/ADDON.DAT", null).WithOverride(Roots.Game, "FFXIV_CHR*/*.DAT", null).RuleFor(Roots.Game, "FFXIV_CHR0011223344556677/ADDON.DAT"));
     }
 
     [Fact]

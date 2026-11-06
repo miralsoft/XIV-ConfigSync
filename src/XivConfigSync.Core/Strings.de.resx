@@ -10,6 +10,24 @@
   <data name="Action_OnlyHere" xml:space="preserve"><value>Nur hier</value></data>
   <data name="Action_Skip" xml:space="preserve"><value>Nichts zu tun</value></data>
   <data name="App_Title" xml:space="preserve"><value>XIV ConfigSync</value></data>
+  <data name="Area_character" xml:space="preserve"><value>Charakter-Einstellungen</value></data>
+  <data name="Area_character_Hint" xml:space="preserve"><value>Namensschilder, Kamera, Kampfeffekte und die übrigen Charakter-Einstellungen, ohne den Chat. Dazu die Daten der Bekanntenliste, die Gegenstandssuche und Aussehensvorlagen aus der Charaktererstellung.</value></data>
+  <data name="Area_chat" xml:space="preserve"><value>Chat</value></data>
+  <data name="Area_chat_Hint" xml:space="preserve"><value>Schriftgröße, Transparenz, Reiter, Filter und Kanäle des Chatfensters. Größe und Position des Chatfensters gehören zum HUD-Layout.</value></data>
+  <data name="Area_controls" xml:space="preserve"><value>Tastenbelegung und Steuerung</value></data>
+  <data name="Area_controls_Hint" xml:space="preserve"><value>Tastenbelegung und die Einstellungen für Maus und Tastatur und für den Controller.</value></data>
+  <data name="Area_gearsets" xml:space="preserve"><value>Ausrüstungssets</value></data>
+  <data name="Area_gearsets_Hint" xml:space="preserve"><value>Deine gespeicherten Ausrüstungssets.</value></data>
+  <data name="Area_hotbars" xml:space="preserve"><value>Hotbars und Makros</value></data>
+  <data name="Area_hotbars_Hint" xml:space="preserve"><value>Hotbars, Kreuz-Hotbars, Charakter-Makros und geteilte Makros.</value></data>
+  <data name="Area_hud" xml:space="preserve"><value>HUD-Layout</value></data>
+  <data name="Area_hud_Hint" xml:space="preserve"><value>Größe und Position aller Fenster auf dem Bildschirm, auch des Chatfensters. Das Spiel schreibt diese Datei bei jedem Login neu; haben beide PCs sie geändert, gewinnt der zuletzt gesicherte Stand.</value></data>
+  <data name="Area_inventory" xml:space="preserve"><value>Inventar-Sortierung</value></data>
+  <data name="Area_inventory_Hint" xml:space="preserve"><value>Die Reihenfolge der Gegenstände in Inventar, Satteltasche und bei Gehilfen. Das Spiel ändert sie von selbst; es gewinnt der zuletzt gesicherte Stand.</value></data>
+  <data name="Area_plugins" xml:space="preserve"><value>Plugin-Einstellungen</value></data>
+  <data name="Area_plugins_Hint" xml:space="preserve"><value>Die Einstellungen deiner Dalamud-Plugins. Einzelne Plugins können auf dem Reiter „Plugins“ eine eigene Regel bekommen.</value></data>
+  <data name="Area_repositories" xml:space="preserve"><value>Plugin-Quellen</value></data>
+  <data name="Area_repositories_Hint" xml:space="preserve"><value>Eigene Plugin-Repositories, die ein anderer PC hat und dieser nicht, werden hier in Dalamud ergänzt. Keines wird entfernt, und keine andere Dalamud-Einstellung ändert sich.</value></data>
   <data name="Backup_Done" xml:space="preserve"><value>Sicherung erstellt: {0} Dateien, davon {1} neu.</value></data>
   <data name="Backup_Unchanged" xml:space="preserve"><value>Seit der letzten Sicherung hat sich nichts geändert.</value></data>
   <data name="Character_Any" xml:space="preserve"><value>Charakter</value></data>
@@ -78,6 +96,8 @@
   <data name="Exclude_TooLarge" xml:space="preserve"><value>größer als 64 MB</value></data>
   <data name="Exclude_Unreadable" xml:space="preserve"><value>nicht lesbar</value></data>
   <data name="Exclude_User" xml:space="preserve"><value>von dir ausgeschlossen</value></data>
+  <data name="FirstContact_Question" xml:space="preserve"><value>Dieser PC und {0} haben noch keine Einstellungen ausgetauscht, und {1} Dateien unterscheiden sich. Ja übernimmt die Einstellungen von {0}; die Dateien hier werden vorher gesichert. Nein behält die Einstellungen dieses PCs, und {0} übernimmt sie von hier. Abbrechen entscheidet später auf der Seite „Übertragen“.</value></data>
+  <data name="FirstContact_Title" xml:space="preserve"><value>Erste Übertragung</value></data>
   <data name="Flag_Credential" xml:space="preserve"><value>Enthält Zugangsdaten.</value></data>
   <data name="Flag_Large" xml:space="preserve"><value>Große Datei.</value></data>
   <data name="Flag_Path" xml:space="preserve"><value>Enthält Pfade des anderen Geräts.</value></data>
@@ -117,10 +137,11 @@
   <data name="Nav_Cleanup" xml:space="preserve"><value>Aufräumen</value></data>
   <data name="Nav_Log" xml:space="preserve"><value>Protokoll</value></data>
   <data name="Nav_Overview" xml:space="preserve"><value>Übersicht</value></data>
-  <data name="Nav_Rules" xml:space="preserve"><value>Regeln</value></data>
+  <data name="Nav_Rules" xml:space="preserve"><value>Bereiche</value></data>
   <data name="Nav_Settings" xml:space="preserve"><value>Einstellungen</value></data>
   <data name="Nav_Transfer" xml:space="preserve"><value>Übertragen</value></data>
   <data name="Notify_Applied" xml:space="preserve"><value>{0} Dateien von {1} übernommen.</value></data>
+  <data name="Notify_AppliedAreas" xml:space="preserve"><value>Von {1} übernommen: {0}.</value></data>
   <data name="Notify_Conflicts" xml:space="preserve"><value>{0} Dateien von {1} wurden auch hier geändert. Bitte entscheide auf der Seite „Übertragen“.</value></data>
   <data name="Notify_NotApplied" xml:space="preserve"><value>Einstellungen von {0} wurden nicht übernommen: {1}</value></data>
   <data name="Origin_AfterApply" xml:space="preserve"><value>nach einer Übertragung</value></data>
@@ -148,6 +169,7 @@
   <data name="Overview_Upload" xml:space="preserve"><value>Upload</value></data>
   <data name="Reason_BothChanged" xml:space="preserve"><value>Seit dem letzten gemeinsamen Stand auf beiden Geräten geändert. Beide Fassungen bleiben erhalten; du entscheidest.</value></data>
   <data name="Reason_LocalChangedOnly" xml:space="preserve"><value>Nur hier geändert; die Quelle hat noch den gemeinsamen Stand.</value></data>
+  <data name="Reason_LocalNewerState" xml:space="preserve"><value>Beide haben sie geändert; das Spiel schreibt diese Datei von selbst neu. Der Stand dieses PCs ist der spätere und bleibt.</value></data>
   <data name="Reason_MissingLocally" xml:space="preserve"><value>Gibt es auf diesem Gerät noch nicht.</value></data>
   <data name="Reason_NeverRule" xml:space="preserve"><value>Gehört zum Quellgerät (Regel „nie“).</value></data>
   <data name="Reason_NoCommonState" xml:space="preserve"><value>Auf beiden Geräten verschieden, und ein gemeinsamer Stand ist noch nicht bekannt (erste Übertragung). Du entscheidest.</value></data>
@@ -156,6 +178,7 @@
   <data name="Reason_OnRequestRule" xml:space="preserve"><value>Auf der Quelle neuer; wird nur auf Anforderung übertragen.</value></data>
   <data name="Reason_Restore" xml:space="preserve"><value>Weicht von der gewählten älteren Sicherung ab.</value></data>
   <data name="Reason_SourceNewer" xml:space="preserve"><value>Auf der Quelle neuer.</value></data>
+  <data name="Reason_SourceNewerState" xml:space="preserve"><value>Beide haben sie geändert; das Spiel schreibt diese Datei von selbst neu. Die Quelle hat sie später gesichert, deshalb wird ihr Stand übernommen.</value></data>
   <data name="Reason_SourceOutdated" xml:space="preserve"><value>Die Quelle hat einen älteren Stand dieser Datei.</value></data>
   <data name="Reason_UpToDate" xml:space="preserve"><value>Auf beiden Geräten gleich.</value></data>
   <data name="Recovery_LeftAlone" xml:space="preserve"><value>{0} Dateien wurden nach der Unterbrechung geändert und so gelassen, wie sie sind. Du kannst sie auf der Seite Übertragen übernehmen.</value></data>
@@ -189,19 +212,20 @@
   <data name="Rules_AllFiles" xml:space="preserve"><value>Alle Plugin-Dateien</value></data>
   <data name="Rules_Exclusions" xml:space="preserve"><value>Von der Sicherung ausschließen</value></data>
   <data name="Rules_ExclusionsIntro" xml:space="preserve"><value>Dateien, die zu diesen Mustern passen, werden nicht gesichert. * gilt innerhalb eines Ordners, ** über Ordner hinweg. Caches, Logs und Sperrdateien bleiben immer draußen.</value></data>
-  <data name="Rules_Intro" xml:space="preserve"><value>Gesichert wird alles. Diese Regeln bestimmen, was von einem anderen Gerät übernommen wird. Immer: ohne Rückfrage, wenn nur das andere Gerät die Datei geändert hat. Nur auf Anforderung: du wählst aus. Nie: gehört zu einem Gerät.</value></data>
+  <data name="Rules_Intro" xml:space="preserve"><value>Gesichert wird alles. Schalte ein, was dieser PC von deinen anderen PCs übernimmt; welche Dateien dazugehören, weiß das Programm. Übernommen wird ohne Rückfrage, was nur der andere PC geändert hat; vorher wird eine Kopie gesichert, und auf der Seite „Übertragen“ lässt es sich rückgängig machen. Die Schalter gelten nur für diesen PC.</value></data>
   <data name="Rules_NeverWarning" xml:space="preserve"><value>Vorsicht: Diese Datei enthält Einstellungen eines Geräts. Sie von einem anderen Gerät zu übernehmen, kann Auflösung, Grafik oder UI-Skalierung verändern.</value></data>
   <data name="Rules_PatternHint" xml:space="preserve"><value>Muster, zum Beispiel EinPlugin/*.json</value></data>
-  <data name="Rules_PluginDefault" xml:space="preserve"><value>Wie alle Plugin-Dateien</value></data>
+  <data name="Rules_PluginDefault" xml:space="preserve"><value>Wie der Bereich</value></data>
   <data name="Rules_PluginFiles" xml:space="preserve"><value>{0} Dateien, {1} KB</value></data>
-  <data name="Rules_PluginsIntro" xml:space="preserve"><value>Gesichert wird jedes Plugin. Hier legst du je Plugin fest, ob seine Einstellungen von einem anderen Gerät immer, auf Anforderung oder nie übernommen werden. „Wie alle Plugin-Dateien“ folgt der Zeile „Alle Plugin-Dateien“ auf dem Reiter „Dateien“. „Nicht sichern“ lässt ein Plugin aus der Sicherung heraus; es steht dann auch bei den Ausschlüssen.</value></data>
+  <data name="Rules_PluginsIntro" xml:space="preserve"><value>Gesichert wird jedes Plugin. Hier kannst du einem einzelnen Plugin eine eigene Regel geben: immer, auf Anforderung oder nie. „Wie der Bereich“ folgt dem Bereich „Plugin-Einstellungen“. „Nicht sichern“ lässt ein Plugin aus der Sicherung heraus; es steht dann auch bei den Ausschlüssen.</value></data>
   <data name="Rules_Remove" xml:space="preserve"><value>Entfernen</value></data>
   <data name="Rules_Reset" xml:space="preserve"><value>Alle Regeln zurücksetzen</value></data>
-  <data name="Rules_ResetConfirm" xml:space="preserve"><value>Alle Regeln auf den Standard zurücksetzen? Deine Ausschlüsse bleiben.</value></data>
-  <data name="Rules_TabFiles" xml:space="preserve"><value>Dateien</value></data>
-  <data name="Rules_TabPlugins" xml:space="preserve"><value>Plugins</value></data>
-  <data name="Rules_Title" xml:space="preserve"><value>Regeln</value></data>
-  <data name="Settings_AutoApply" xml:space="preserve"><value>Dateien mit der Regel „immer“ automatisch von anderen Geräten übernehmen</value></data>
+  <data name="Rules_ResetConfirm" xml:space="preserve"><value>Alle Bereiche einschalten und alle Regeln auf den Standard zurücksetzen? Deine Ausschlüsse bleiben.</value></data>
+  <data name="Rules_TabAreas" xml:space="preserve"><value>Bereiche</value></data>
+  <data name="Rules_TabFiles" xml:space="preserve"><value>Dateien (erweitert)</value></data>
+  <data name="Rules_TabPlugins" xml:space="preserve"><value>Plugins (erweitert)</value></data>
+  <data name="Rules_Title" xml:space="preserve"><value>Was von anderen PCs übernommen wird</value></data>
+  <data name="Settings_AutoApply" xml:space="preserve"><value>Eingeschaltete Bereiche automatisch von anderen PCs übernehmen (vorher wird gesichert)</value></data>
   <data name="Settings_Autostart" xml:space="preserve"><value>Mit Windows starten (im Infobereich)</value></data>
   <data name="Settings_BackupOnGameExit" xml:space="preserve"><value>Nach dem Spielen automatisch sichern</value></data>
   <data name="Settings_BackUpPlugins" xml:space="preserve"><value>Plugin-Einstellungen sichern</value></data>

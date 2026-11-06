@@ -18,15 +18,19 @@ public sealed partial class RuleRow : ObservableObject
     private readonly RulesViewModel owner;
     private bool loading = true;
 
-    public RuleRow(RulesViewModel owner, MatrixEntry entry, ApplyRule effective)
+    public RuleRow(RulesViewModel owner, MatrixEntry entry, ApplyRule defaultRule, ApplyRule effective)
     {
         this.owner = owner;
         Entry = entry;
+        DefaultRule = defaultRule;
         Choice = RulesViewModel.Choices.First(c => c.Rule == effective);
         loading = false;
     }
 
     public MatrixEntry Entry { get; }
+
+    /// <summary>The rule without an override on this row: its area's switch, or the matrix default.</summary>
+    public ApplyRule DefaultRule { get; }
 
     public string Root => Text.RootName(Entry.Root);
 
@@ -36,11 +40,11 @@ public sealed partial class RuleRow : ObservableObject
 
     public string Note => Text.Get(Entry.NoteKey);
 
-    public string DefaultText => RulesViewModel.RuleName(Entry.DefaultRule);
+    public string DefaultText => RulesViewModel.RuleName(DefaultRule);
 
     public string EvidenceText => Text.Get("Evidence_" + Entry.Evidence);
 
-    public bool IsChanged => Choice.Rule != Entry.DefaultRule;
+    public bool IsChanged => Choice.Rule != DefaultRule;
 
     [ObservableProperty]
     public partial RuleChoice Choice { get; set; }
@@ -104,6 +108,41 @@ public sealed partial class PluginRuleRow : ObservableObject
     }
 }
 
+/// <summary>One area on the rules page: what a player recognises, switched on or off for this device.</summary>
+public sealed partial class AreaRow : ObservableObject
+{
+    private readonly RulesViewModel owner;
+    private bool loading = true;
+
+    public AreaRow(RulesViewModel owner, string key, bool on)
+    {
+        this.owner = owner;
+        Key = key;
+        IsOn = on;
+        loading = false;
+    }
+
+    public string Key { get; }
+
+    public string Name => Text.Get("Area_" + Key);
+
+    public string Hint => Text.Get("Area_" + Key + "_Hint");
+
+    /// <summary>Whether the area is taken from other devices.</summary>
+    [ObservableProperty]
+    public partial bool IsOn { get; set; }
+
+    partial void OnIsOnChanged(bool value)
+    {
+        if (!loading)
+        {
+            owner.ChangeArea(Key, value);
+        }
+    }
+
+    public override string ToString() => Name;
+}
+
 /// <summary>A user exclusion in the list.</summary>
 public sealed record ExclusionRow(string Root, string Pattern, string RootText);
 
@@ -130,6 +169,9 @@ public sealed partial class RulesViewModel : ObservableObject
 
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "Bound from XAML, which needs an instance member.")]
     public IReadOnlyList<RuleChoice> RuleChoices => Choices;
+
+    /// <summary>The areas, the first thing on the page.</summary>
+    public ObservableCollection<AreaRow> AreaRows { get; } = [];
 
     public ObservableCollection<RuleRow> Rows { get; } = [];
 
@@ -173,8 +215,17 @@ public sealed partial class RulesViewModel : ObservableObject
         // (review 3, finding 8).
         var root = row.Entry.Root;
         var pattern = row.Entry.Pattern;
-        var value = rule == row.Entry.DefaultRule ? (ApplyRule?)null : rule;
+        var value = rule == row.DefaultRule ? (ApplyRule?)null : rule;
         _ = main.RunAsync(Strings.Rules_Title, () => main.Engine.UpdateRules(main.Engine.Rules.WithOverride(root, pattern, value)));
+    }
+
+    /// <summary>Switches an area, through the operation queue like every rule change; the file rows follow it.</summary>
+    public void ChangeArea(string key, bool on) => _ = ChangeAreaAsync(key, on);
+
+    private async Task ChangeAreaAsync(string key, bool on)
+    {
+        await main.RunAsync(Strings.Rules_Title, () => main.Engine.UpdateRules(main.Engine.Rules.WithArea(key, on))).ConfigureAwait(true);
+        ReloadFiles();
     }
 
     /// <summary>Sets a plugin's own rule, through the operation queue like every rule change.</summary>
@@ -237,21 +288,32 @@ public sealed partial class RulesViewModel : ObservableObject
     /// <summary>Rebuilds the lists from the effective rules.</summary>
     public void Reload()
     {
-        Rows.Clear();
-        foreach (var entry in FileMatrix.Entries)
+        AreaRows.Clear();
+        foreach (var key in Areas.Keys)
         {
-            var effective = main.Engine.Rules.File.Overrides
-                .FirstOrDefault(o => o.Root == entry.Root && string.Equals(o.Pattern, entry.Pattern, StringComparison.OrdinalIgnoreCase))?.Rule
-                ?? entry.DefaultRule;
-            Rows.Add(new RuleRow(this, entry, effective));
+            AreaRows.Add(new AreaRow(this, key, main.Engine.Rules.IsAreaOn(key)));
         }
 
+        ReloadFiles();
         ReloadExclusions();
 
         Plugins.Clear();
         foreach (var plugin in PluginRules.List(main.Engine.PluginFolder))
         {
             Plugins.Add(new PluginRuleRow(this, plugin, PluginRules.RuleOf(main.Engine.Rules, plugin.Name), PluginRules.IsExcluded(main.Engine.Rules, plugin.Name)));
+        }
+    }
+
+    private void ReloadFiles()
+    {
+        Rows.Clear();
+        foreach (var entry in FileMatrix.Entries)
+        {
+            var defaultRule = main.Engine.Rules.DefaultFor(entry.Root, entry.Pattern);
+            var effective = main.Engine.Rules.File.Overrides
+                .FirstOrDefault(o => o.Root == entry.Root && string.Equals(o.Pattern, entry.Pattern, StringComparison.OrdinalIgnoreCase))?.Rule
+                ?? defaultRule;
+            Rows.Add(new RuleRow(this, entry, defaultRule, effective));
         }
     }
 

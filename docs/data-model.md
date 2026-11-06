@@ -97,7 +97,7 @@ Written by the receiving device after every object of that revision passed its h
 
 ```
 settings.json        application settings and this device's identity
-rules.json           the user's rule overrides
+rules.json           the areas switched off, the user's rule overrides and exclusions
 bases\<sourceDeviceId>.json   per file: the hash both sides shared at the last apply or backup
 snapshots\<snapshotId>\       files saved before an apply, with snapshot.json
 journal.json         present only while an apply runs
@@ -134,9 +134,15 @@ logs\                rotated log files
     { "root": "game", "pattern": "FFXIV_CHR*/ADDON.DAT", "rule": "always" },
     { "root": "plugins", "pattern": "SomePlugin.json", "rule": "never" }
   ],
-  "exclusions": [ { "root": "plugins", "pattern": "SomePlugin/cache/**" } ]
+  "exclusions": [ { "root": "plugins", "pattern": "SomePlugin/cache/**" } ],
+  "areas": { "chat": false, "hud": true }
 }
 ```
+
+`areas` holds the switches per area (FR-077); an area not listed is on. A rule in `overrides`
+wins over the area of its files. In `bases\<sourceDeviceId>.json`, a value beginning with `cmp:`
+is the hash of the part of `COMMON.DAT` compared when one of its two areas is off (FR-078), not of
+the whole file.
 
 The built-in matrix ships with the application and is not stored here; an override wins over it,
 and the most specific pattern wins among overrides.

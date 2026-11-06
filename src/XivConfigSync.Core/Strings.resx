@@ -10,6 +10,24 @@
   <data name="Action_OnlyHere" xml:space="preserve"><value>Only here</value></data>
   <data name="Action_Skip" xml:space="preserve"><value>Nothing to do</value></data>
   <data name="App_Title" xml:space="preserve"><value>XIV ConfigSync</value></data>
+  <data name="Area_character" xml:space="preserve"><value>Character settings</value></data>
+  <data name="Area_character_Hint" xml:space="preserve"><value>Name plates, camera, battle effects and the other character settings, without the chat. Also the friend list data, the item search and appearance presets from character creation.</value></data>
+  <data name="Area_chat" xml:space="preserve"><value>Chat</value></data>
+  <data name="Area_chat_Hint" xml:space="preserve"><value>Font size, transparency, tabs, filters and channels of the chat window. The size and position of the chat window belong to the HUD layout.</value></data>
+  <data name="Area_controls" xml:space="preserve"><value>Key bindings and controls</value></data>
+  <data name="Area_controls_Hint" xml:space="preserve"><value>Key bindings and the settings for mouse and keyboard and for the game pad.</value></data>
+  <data name="Area_gearsets" xml:space="preserve"><value>Gear sets</value></data>
+  <data name="Area_gearsets_Hint" xml:space="preserve"><value>Your saved gear sets.</value></data>
+  <data name="Area_hotbars" xml:space="preserve"><value>Hotbars and macros</value></data>
+  <data name="Area_hotbars_Hint" xml:space="preserve"><value>Hotbars, cross hotbars, character macros and shared macros.</value></data>
+  <data name="Area_hud" xml:space="preserve"><value>HUD layout</value></data>
+  <data name="Area_hud_Hint" xml:space="preserve"><value>Size and position of all windows on screen, the chat window included. The game rewrites this file on every login, so when both PCs changed it, the state backed up last wins.</value></data>
+  <data name="Area_inventory" xml:space="preserve"><value>Inventory order</value></data>
+  <data name="Area_inventory_Hint" xml:space="preserve"><value>The order of items in inventory, saddlebag and retainers. The game changes it by itself, so the state backed up last wins.</value></data>
+  <data name="Area_plugins" xml:space="preserve"><value>Plugin settings</value></data>
+  <data name="Area_plugins_Hint" xml:space="preserve"><value>The settings of your Dalamud plugins. Single plugins can get their own rule on the Plugins tab.</value></data>
+  <data name="Area_repositories" xml:space="preserve"><value>Plugin sources</value></data>
+  <data name="Area_repositories_Hint" xml:space="preserve"><value>Custom plugin repositories another PC has and this one lacks are added to Dalamud here. None is removed, and no other Dalamud setting changes.</value></data>
   <data name="Backup_Done" xml:space="preserve"><value>Backup created: {0} files, {1} new.</value></data>
   <data name="Backup_Unchanged" xml:space="preserve"><value>Nothing changed since the last backup.</value></data>
   <data name="Character_Any" xml:space="preserve"><value>Character</value></data>
@@ -78,6 +96,8 @@
   <data name="Exclude_TooLarge" xml:space="preserve"><value>larger than 64 MB</value></data>
   <data name="Exclude_Unreadable" xml:space="preserve"><value>cannot be read</value></data>
   <data name="Exclude_User" xml:space="preserve"><value>excluded by you</value></data>
+  <data name="FirstContact_Question" xml:space="preserve"><value>This PC and {0} have not exchanged settings before, and {1} files differ between them. Yes takes the settings from {0}; the files here are saved first. No keeps the settings of this PC, and {0} takes them from here. Cancel decides later on the Transfer page.</value></data>
+  <data name="FirstContact_Title" xml:space="preserve"><value>First transfer</value></data>
   <data name="Flag_Credential" xml:space="preserve"><value>Contains credentials.</value></data>
   <data name="Flag_Large" xml:space="preserve"><value>Large file.</value></data>
   <data name="Flag_Path" xml:space="preserve"><value>Contains paths of the other device.</value></data>
@@ -117,10 +137,11 @@
   <data name="Nav_Cleanup" xml:space="preserve"><value>Clean up</value></data>
   <data name="Nav_Log" xml:space="preserve"><value>Log</value></data>
   <data name="Nav_Overview" xml:space="preserve"><value>Overview</value></data>
-  <data name="Nav_Rules" xml:space="preserve"><value>Rules</value></data>
+  <data name="Nav_Rules" xml:space="preserve"><value>Areas</value></data>
   <data name="Nav_Settings" xml:space="preserve"><value>Settings</value></data>
   <data name="Nav_Transfer" xml:space="preserve"><value>Transfer</value></data>
   <data name="Notify_Applied" xml:space="preserve"><value>{0} files taken over from {1}.</value></data>
+  <data name="Notify_AppliedAreas" xml:space="preserve"><value>Taken from {1}: {0}.</value></data>
   <data name="Notify_Conflicts" xml:space="preserve"><value>{0} files from {1} were also changed here. Please decide on the Transfer page.</value></data>
   <data name="Notify_NotApplied" xml:space="preserve"><value>Settings from {0} were not taken: {1}</value></data>
   <data name="Origin_AfterApply" xml:space="preserve"><value>after a transfer</value></data>
@@ -148,6 +169,7 @@
   <data name="Overview_Upload" xml:space="preserve"><value>Upload</value></data>
   <data name="Reason_BothChanged" xml:space="preserve"><value>Changed on both devices since they last matched. Both versions are kept; you decide.</value></data>
   <data name="Reason_LocalChangedOnly" xml:space="preserve"><value>Only changed here; the source still has the common state.</value></data>
+  <data name="Reason_LocalNewerState" xml:space="preserve"><value>Both changed it; the game rewrites this file by itself. This PC&apos;s state is the later one and stays.</value></data>
   <data name="Reason_MissingLocally" xml:space="preserve"><value>Does not exist on this device yet.</value></data>
   <data name="Reason_NeverRule" xml:space="preserve"><value>Belongs to the source device (rule &quot;never&quot;).</value></data>
   <data name="Reason_NoCommonState" xml:space="preserve"><value>Different on both devices and no common state is known yet (first transfer). You decide.</value></data>
@@ -156,6 +178,7 @@
   <data name="Reason_OnRequestRule" xml:space="preserve"><value>Newer on the source; applied only on request.</value></data>
   <data name="Reason_Restore" xml:space="preserve"><value>Differs from the chosen older backup.</value></data>
   <data name="Reason_SourceNewer" xml:space="preserve"><value>Newer on the source.</value></data>
+  <data name="Reason_SourceNewerState" xml:space="preserve"><value>Both changed it; the game rewrites this file by itself. The source backed it up later, so its state is taken.</value></data>
   <data name="Reason_SourceOutdated" xml:space="preserve"><value>The source has an older state of this file.</value></data>
   <data name="Reason_UpToDate" xml:space="preserve"><value>Same on both devices.</value></data>
   <data name="Recovery_LeftAlone" xml:space="preserve"><value>{0} files changed after the interruption and were left as they are. You can take them on the Transfer page.</value></data>
@@ -189,19 +212,20 @@
   <data name="Rules_AllFiles" xml:space="preserve"><value>All plugin files</value></data>
   <data name="Rules_Exclusions" xml:space="preserve"><value>Leave out of the backup</value></data>
   <data name="Rules_ExclusionsIntro" xml:space="preserve"><value>Files matching these patterns are not backed up. * matches within a folder, ** across folders. Caches, logs and lock files are always left out.</value></data>
-  <data name="Rules_Intro" xml:space="preserve"><value>Everything is backed up. These rules decide what is taken from another device. Always: without asking, when only the other device changed it. On request: you choose. Never: belongs to one device.</value></data>
+  <data name="Rules_Intro" xml:space="preserve"><value>Everything is backed up. Switch on what this PC takes from your other PCs; the application knows which files belong to what. Taken over is what only the other PC changed, without asking; a copy is saved first and the Transfer page can undo it. These switches apply to this PC only.</value></data>
   <data name="Rules_NeverWarning" xml:space="preserve"><value>Careful: this file holds settings of one device. Taking it from another device can change resolution, graphics or UI scale.</value></data>
   <data name="Rules_PatternHint" xml:space="preserve"><value>Pattern, for example SomePlugin/*.json</value></data>
-  <data name="Rules_PluginDefault" xml:space="preserve"><value>As for all plugin files</value></data>
+  <data name="Rules_PluginDefault" xml:space="preserve"><value>As the area</value></data>
   <data name="Rules_PluginFiles" xml:space="preserve"><value>{0} files, {1} KB</value></data>
-  <data name="Rules_PluginsIntro" xml:space="preserve"><value>Every plugin is backed up. Here you set per plugin whether its settings are taken from another device always, on request or never. &quot;As for all plugin files&quot; follows the row &quot;All plugin files&quot; on the Files tab. &quot;Not backed up&quot; leaves a plugin out of the backup; it then also shows under the exclusions.</value></data>
+  <data name="Rules_PluginsIntro" xml:space="preserve"><value>Every plugin is backed up. Here you can give a single plugin its own rule: always, on request or never. &quot;As the area&quot; follows the area &quot;Plugin settings&quot;. &quot;Not backed up&quot; leaves a plugin out of the backup; it then also shows under the exclusions.</value></data>
   <data name="Rules_Remove" xml:space="preserve"><value>Remove</value></data>
   <data name="Rules_Reset" xml:space="preserve"><value>Reset all rules</value></data>
-  <data name="Rules_ResetConfirm" xml:space="preserve"><value>Set every rule back to its default? Your exclusions stay.</value></data>
-  <data name="Rules_TabFiles" xml:space="preserve"><value>Files</value></data>
-  <data name="Rules_TabPlugins" xml:space="preserve"><value>Plugins</value></data>
-  <data name="Rules_Title" xml:space="preserve"><value>Rules</value></data>
-  <data name="Settings_AutoApply" xml:space="preserve"><value>Take files with the rule &quot;always&quot; from other devices automatically</value></data>
+  <data name="Rules_ResetConfirm" xml:space="preserve"><value>Switch every area on and set every rule back to its default? Your exclusions stay.</value></data>
+  <data name="Rules_TabAreas" xml:space="preserve"><value>Areas</value></data>
+  <data name="Rules_TabFiles" xml:space="preserve"><value>Files (advanced)</value></data>
+  <data name="Rules_TabPlugins" xml:space="preserve"><value>Plugins (advanced)</value></data>
+  <data name="Rules_Title" xml:space="preserve"><value>What is taken from other PCs</value></data>
+  <data name="Settings_AutoApply" xml:space="preserve"><value>Take the areas switched on from other PCs automatically (with a backup first)</value></data>
   <data name="Settings_Autostart" xml:space="preserve"><value>Start with Windows (in the notification area)</value></data>
   <data name="Settings_BackupOnGameExit" xml:space="preserve"><value>Back up automatically after playing</value></data>
   <data name="Settings_BackUpPlugins" xml:space="preserve"><value>Back up plugin settings</value></data>

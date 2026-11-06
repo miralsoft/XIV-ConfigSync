@@ -5,6 +5,7 @@ using XivConfigSync.Core.Engine;
 using XivConfigSync.Core.Logging;
 using XivConfigSync.Core.Model;
 using XivConfigSync.Core.Platform;
+using XivConfigSync.Core.Rules;
 
 namespace XivConfigSync.Core.ViewModels;
 
@@ -391,9 +392,20 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             var refusal = failure ?? result?.RefusalKey;
             if (ran && refusal is null && result is not null)
             {
-                if (result.Applied > 0)
+                if (result.Applied > 0 || result.Repositories > 0)
                 {
-                    ui.Notify(Strings.App_Title, Text.Format(Strings.Notify_Applied, result.Applied, device.DisplayName));
+                    var names = result.AreaKeys?.Select(k => Text.Get("Area_" + k)).ToList() ?? [];
+                    if (result.Repositories > 0)
+                    {
+                        names.Add(Text.Get("Area_" + Areas.Repositories));
+                    }
+
+                    ui.Notify(Strings.App_Title, Text.Format(Strings.Notify_AppliedAreas, string.Join(", ", names), device.DisplayName));
+                }
+
+                if (result.FirstContact > 0)
+                {
+                    await AskFirstContactAsync(device, result.FirstContact).ConfigureAwait(true);
                 }
 
                 if (result.Waiting > 0)
@@ -414,6 +426,25 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
         await RefreshAsync().ConfigureAwait(true);
     }
+    /// <summary>
+    /// The first transfer with a device: one question for every file that differs, instead of a
+    /// conflict per file (owner's request, 2026-11-06). Cancel leaves them on the transfer page.
+    /// </summary>
+    private async Task AskFirstContactAsync(DeviceInfo device, int files)
+    {
+        var answer = ui.Ask(Strings.FirstContact_Title, Text.Format(Strings.FirstContact_Question, device.DisplayName, files));
+        if (answer is null)
+        {
+            return;
+        }
+
+        var applied = 0;
+        if (await RunAsync(Strings.Status_Applying, () => applied = Engine.ResolveFirstContact(device.DeviceId, answer.Value)).ConfigureAwait(true) && answer.Value)
+        {
+            ui.Notify(Strings.App_Title, Text.Format(Strings.Notify_Applied, applied, device.DisplayName));
+        }
+    }
+
     private void OnGameRunningChanged(object? sender, bool running)
     {
         ui.OnUiThread(async () =>
