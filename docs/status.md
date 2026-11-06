@@ -10,7 +10,8 @@
   with a running game, and the owner's review. Not released.
 - Owner's requests of 2026-11-05 (FR-073 to FR-076, built 2026-11-06): files only on this device in
   the transfer list, XIVLauncher folder as the setting, character names from plugin data, rules
-  per plugin. Development stays on device A; device B is for tests.
+  per plugin; tested with generated data and in the interface on scratch copies. Development stays
+  on device A; device B is for tests.
 - Dalamud backup area and plugin repository merge (FR-072, 2026-11-05): tested with generated
   settings, on a copy of the owner's real file and in the interface on scratch copies (merge and undo);
   not yet tried in the game.
