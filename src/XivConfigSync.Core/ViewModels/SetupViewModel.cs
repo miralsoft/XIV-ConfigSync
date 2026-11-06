@@ -36,8 +36,9 @@ public sealed partial class SetupViewModel : ObservableObject
         DeviceName = string.IsNullOrWhiteSpace(known.DisplayName) ? Environment.MachineName : known.DisplayName;
         GameFolder = known.GameConfigFolder
             ?? (GameFolders.LooksLikeGameConfigFolder(GameFolders.DefaultGameConfigFolder) ? GameFolders.DefaultGameConfigFolder : string.Empty);
-        PluginFolder = known.PluginConfigFolder ?? GameFolders.FindPluginConfigFolder() ?? string.Empty;
-        BackUpPlugins = PluginFolder.Length > 0 && known.BackUpPlugins;
+        // A plugin folder chosen by hand in older settings stays in use; detection only without one.
+        LauncherFolder = known.DalamudFolder ?? (known.PluginConfigFolder is null ? GameFolders.FindLauncherFolder() : null) ?? string.Empty;
+        BackUpPlugins = (LauncherFolder.Length > 0 || known.PluginConfigFolder is not null) && known.BackUpPlugins;
         InstallFolder = known.GameInstallFolder ?? GameFolders.PickInstallFolder(locator.InstallFolderCandidates()) ?? string.Empty;
         BackupOnGameExit = known.BackupOnGameExit ?? true;
         AutoApply = known.AutoApplyAlways ?? true;
@@ -95,7 +96,11 @@ public sealed partial class SetupViewModel : ObservableObject
     public partial string GameFolder { get; set; }
 
     [ObservableProperty]
-    public partial string PluginFolder { get; set; }
+    [NotifyPropertyChangedFor(nameof(LauncherFolderState))]
+    public partial string LauncherFolder { get; set; }
+
+    /// <summary>Whether Dalamud was found in the chosen launcher folder.</summary>
+    public string LauncherFolderState => GameFolders.LooksLikeLauncherFolder(LauncherFolder.Trim()) ? Strings.Settings_LauncherFound : Strings.Settings_LauncherMissing;
 
     [ObservableProperty]
     public partial string InstallFolder { get; set; }
@@ -159,12 +164,12 @@ public sealed partial class SetupViewModel : ObservableObject
     }
 
     [RelayCommand]
-    public void BrowsePluginFolder()
+    public void BrowseLauncherFolder()
     {
-        var chosen = ui.PickFolder(Strings.Settings_PluginFolder, PluginFolder);
+        var chosen = ui.PickFolder(Strings.Settings_LauncherFolder, LauncherFolder);
         if (chosen is not null)
         {
-            PluginFolder = chosen;
+            LauncherFolder = chosen;
         }
     }
 
@@ -317,7 +322,12 @@ public sealed partial class SetupViewModel : ObservableObject
 
         var settings = engine.Settings;
         settings.GameConfigFolder = GameFolder;
-        settings.PluginConfigFolder = string.IsNullOrWhiteSpace(PluginFolder) ? null : PluginFolder;
+        settings.DalamudFolder = string.IsNullOrWhiteSpace(LauncherFolder) ? null : LauncherFolder.Trim();
+        if (settings.DalamudFolder is not null)
+        {
+            settings.PluginConfigFolder = GameFolders.PluginConfigFolderOf(settings.DalamudFolder);
+        }
+
         settings.GameInstallFolder = string.IsNullOrWhiteSpace(InstallFolder) ? null : InstallFolder;
         settings.BackUpPlugins = BackUpPlugins && settings.PluginConfigFolder is not null;
         settings.BackupOnGameExit = BackupOnGameExit;
@@ -361,6 +371,10 @@ public sealed partial class SetupViewModel : ObservableObject
                 }
 
                 engine.SaveSettings();
+
+                // Names the plugins already know replace the numbered ones (owner's request, 2026-11-05).
+                engine.TakeCharacterSuggestions();
+
                 try
                 {
                     engine.Backup(RevisionOrigin.Manual);

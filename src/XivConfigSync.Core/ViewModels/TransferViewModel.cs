@@ -38,7 +38,7 @@ public sealed partial class PlanRow : ObservableObject
 
     public string Root => Text.RootName(Item.Root);
 
-    public string ActionText => Item.Action switch
+    public string ActionText => Item.Reason == PlanReason.OnlyHere ? Strings.Action_OnlyHere : Item.Action switch
     {
         PlanAction.Apply => Strings.Action_Apply,
         PlanAction.Offer => Strings.Action_Offer,
@@ -410,6 +410,7 @@ public sealed partial class TransferViewModel : ObservableObject
 
         var names = main.Engine.Settings.CharacterNames;
         foreach (var item in plan.Items
+            .Concat(ShowSkipped ? plan.NotInSource.Select(OnlyHereItem) : [])
             .Where(i => ShowSkipped || i.Action != PlanAction.Skip)
             .OrderBy(i => i.Action switch { PlanAction.Conflict => 0, PlanAction.Apply => 1, PlanAction.Offer => 2, _ => 3 })
             .ThenBy(i => i.Root, StringComparer.Ordinal)
@@ -428,6 +429,29 @@ public sealed partial class TransferViewModel : ObservableObject
 
         Messages = string.Join(Environment.NewLine, messages);
         UpdateSummary();
+    }
+
+    /// <summary>
+    /// A row for a file this device has and the source does not (owner's request, 2026-11-05: show
+    /// which files these are). For display only: it can never be selected, and nothing is done
+    /// with it.
+    /// </summary>
+    private PlanItem OnlyHereItem(string key)
+    {
+        var slash = key.IndexOf('/', StringComparison.Ordinal);
+        var root = key[..slash];
+        var path = key[(slash + 1)..];
+        return new PlanItem
+        {
+            Root = root,
+            Path = path,
+            SourceHash = string.Empty,
+            SourceSize = 0,
+            Rule = main.Engine.Rules.RuleFor(root, path),
+            Matrix = FileMatrix.Lookup(root, path),
+            Action = PlanAction.Skip,
+            Reason = PlanReason.OnlyHere,
+        };
     }
 
     /// <summary>A path for display: the character folder is replaced by the name the user gave it (X-06).</summary>

@@ -55,6 +55,55 @@ public sealed partial class RuleRow : ObservableObject
     }
 }
 
+/// <summary>A rule choice for a plugin; a null rule follows the rule for all plugin files.</summary>
+public sealed record PluginRuleChoice(ApplyRule? Rule, string Name)
+{
+    public override string ToString() => Name;
+}
+
+/// <summary>One plugin on the rules page, with its own rule and whether it is backed up.</summary>
+public sealed partial class PluginRuleRow : ObservableObject
+{
+    private readonly RulesViewModel owner;
+    private bool loading = true;
+
+    public PluginRuleRow(RulesViewModel owner, PluginInfo plugin, ApplyRule? rule, bool excluded)
+    {
+        this.owner = owner;
+        Name = plugin.Name;
+        FilesText = Text.Format(Strings.Rules_PluginFiles, plugin.Files, Math.Max(1, (plugin.Size + 1023) / 1024));
+        Choice = RulesViewModel.PluginChoices.First(c => c.Rule == rule);
+        NotBackedUp = excluded;
+        loading = false;
+    }
+
+    public string Name { get; }
+
+    public string FilesText { get; }
+
+    [ObservableProperty]
+    public partial PluginRuleChoice Choice { get; set; }
+
+    [ObservableProperty]
+    public partial bool NotBackedUp { get; set; }
+
+    partial void OnChoiceChanged(PluginRuleChoice value)
+    {
+        if (!loading)
+        {
+            owner.ChangePlugin(Name, value.Rule);
+        }
+    }
+
+    partial void OnNotBackedUpChanged(bool value)
+    {
+        if (!loading)
+        {
+            owner.ExcludePlugin(Name, value);
+        }
+    }
+}
+
 /// <summary>A user exclusion in the list.</summary>
 public sealed record ExclusionRow(string Root, string Pattern, string RootText);
 
@@ -86,6 +135,21 @@ public sealed partial class RulesViewModel : ObservableObject
 
     public ObservableCollection<ExclusionRow> Exclusions { get; } = [];
 
+    /// <summary>The plugins found in the plugin settings folder, each with its own rule.</summary>
+    public ObservableCollection<PluginRuleRow> Plugins { get; } = [];
+
+    /// <summary>The choices for a plugin: its own rule, or the one for all plugin files.</summary>
+    public static IReadOnlyList<PluginRuleChoice> PluginChoices { get; } =
+    [
+        new(null, Strings.Rules_PluginDefault),
+        new(ApplyRule.Always, Strings.Rule_Always),
+        new(ApplyRule.OnRequest, Strings.Rule_OnRequest),
+        new(ApplyRule.Never, Strings.Rule_Never),
+    ];
+
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "Bound from XAML, which needs an instance member.")]
+    public IReadOnlyList<PluginRuleChoice> PluginRuleChoices => PluginChoices;
+
     public IReadOnlyList<string> RootChoices { get; } = [.. Roots.All.Select(Text.RootName)];
 
     [ObservableProperty]
@@ -111,6 +175,21 @@ public sealed partial class RulesViewModel : ObservableObject
         var pattern = row.Entry.Pattern;
         var value = rule == row.Entry.DefaultRule ? (ApplyRule?)null : rule;
         _ = main.RunAsync(Strings.Rules_Title, () => main.Engine.UpdateRules(main.Engine.Rules.WithOverride(root, pattern, value)));
+    }
+
+    /// <summary>Sets a plugin's own rule, through the operation queue like every rule change.</summary>
+    public void ChangePlugin(string name, ApplyRule? rule) =>
+        _ = main.RunAsync(Strings.Rules_Title, () => main.Engine.UpdateRules(PluginRules.WithRule(main.Engine.Rules, name, rule)));
+
+    /// <summary>Leaves a plugin out of the backup, or takes it in again.</summary>
+    public void ExcludePlugin(string name, bool excluded) => _ = ExcludePluginAsync(name, excluded);
+
+    private async Task ExcludePluginAsync(string name, bool excluded)
+    {
+        await main.RunAsync(Strings.Rules_Title, () => main.Engine.UpdateRules(PluginRules.WithExcluded(main.Engine.Rules, name, excluded))).ConfigureAwait(true);
+
+        // The two patterns show in the exclusion list too, where they can also be removed.
+        ReloadExclusions();
     }
 
     [RelayCommand]
@@ -167,6 +246,17 @@ public sealed partial class RulesViewModel : ObservableObject
             Rows.Add(new RuleRow(this, entry, effective));
         }
 
+        ReloadExclusions();
+
+        Plugins.Clear();
+        foreach (var plugin in PluginRules.List(main.Engine.PluginFolder))
+        {
+            Plugins.Add(new PluginRuleRow(this, plugin, PluginRules.RuleOf(main.Engine.Rules, plugin.Name), PluginRules.IsExcluded(main.Engine.Rules, plugin.Name)));
+        }
+    }
+
+    private void ReloadExclusions()
+    {
         Exclusions.Clear();
         foreach (var exclusion in main.Engine.Rules.File.Exclusions)
         {

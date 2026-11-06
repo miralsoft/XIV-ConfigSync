@@ -16,13 +16,19 @@ public sealed record LanguageChoice(string? Code, string Name)
 /// <summary>A name for a character folder (X-06: the folder's ID is not shown).</summary>
 public sealed partial class CharacterRow : ObservableObject
 {
-    public CharacterRow(string folder, string name, int number, DateTimeOffset? lastPlayed)
+    public CharacterRow(string folder, string name, int number, DateTimeOffset? lastPlayed, string? suggestion)
     {
         Folder = folder;
         Label = Text.Format(Strings.Character_Number, number);
         Name = name;
         LastPlayed = Text.Format(Strings.Character_LastPlayed, Text.Time(lastPlayed));
+        Suggestion = suggestion;
     }
+
+    /// <summary>The name and world the plugins know for this character, if any.</summary>
+    public string? Suggestion { get; }
+
+    public string SuggestionText => Suggestion is null ? string.Empty : Text.Format(Strings.Character_Suggestion, Suggestion);
 
     public string Folder { get; }
 
@@ -61,6 +67,10 @@ public sealed partial class SettingsViewModel : ObservableObject
 
     public ObservableCollection<CharacterRow> Characters { get; } = [];
 
+    /// <summary>Whether the plugins know a name for any character.</summary>
+    [ObservableProperty]
+    public partial bool HasSuggestions { get; set; }
+
     [ObservableProperty]
     public partial string DeviceName { get; set; } = string.Empty;
 
@@ -68,7 +78,11 @@ public sealed partial class SettingsViewModel : ObservableObject
     public partial string GameFolder { get; set; } = string.Empty;
 
     [ObservableProperty]
-    public partial string PluginFolder { get; set; } = string.Empty;
+    [NotifyPropertyChangedFor(nameof(LauncherFolderState))]
+    public partial string LauncherFolder { get; set; } = string.Empty;
+
+    /// <summary>Whether Dalamud was found in the chosen launcher folder.</summary>
+    public string LauncherFolderState => GameFolders.LooksLikeLauncherFolder(LauncherFolder.Trim()) ? Strings.Settings_LauncherFound : Strings.Settings_LauncherMissing;
 
     [ObservableProperty]
     public partial string InstallFolder { get; set; } = string.Empty;
@@ -113,7 +127,7 @@ public sealed partial class SettingsViewModel : ObservableObject
         var s = main.Engine.Settings;
         DeviceName = s.DisplayName;
         GameFolder = s.GameConfigFolder ?? string.Empty;
-        PluginFolder = s.PluginConfigFolder ?? string.Empty;
+        LauncherFolder = s.DalamudFolder ?? string.Empty;
         InstallFolder = s.GameInstallFolder ?? string.Empty;
         GameVersion = main.Engine.LocalGameVersion ?? Strings.Common_Unknown;
         BackUpPlugins = s.BackUpPlugins;
@@ -125,11 +139,15 @@ public sealed partial class SettingsViewModel : ObservableObject
         Language = Languages.FirstOrDefault(l => l.Code == s.Language) ?? Languages[0];
         KeepRevisions = s.KeepRevisions;
         Characters.Clear();
+        var suggestions = main.Engine.SuggestCharacterNames();
         var number = 1;
         foreach (var folder in GameFolders.FindCharacterFolders(s.GameConfigFolder))
         {
-            Characters.Add(new CharacterRow(folder, s.CharacterNames.TryGetValue(folder, out var name) ? name : string.Empty, number++, LastWrite(s.GameConfigFolder, folder)));
+            var suggestion = suggestions.TryGetValue(folder, out var identity) ? identity.Display : null;
+            Characters.Add(new CharacterRow(folder, s.CharacterNames.TryGetValue(folder, out var name) ? name : string.Empty, number++, LastWrite(s.GameConfigFolder, folder), suggestion));
         }
+
+        HasSuggestions = Characters.Any(c => c.Suggestion is not null);
     }
 
     [RelayCommand]
@@ -141,7 +159,7 @@ public sealed partial class SettingsViewModel : ObservableObject
         var languageChanged = main.Engine.Settings.Language != languageCode;
         var deviceName = DeviceName.Trim();
         var gameFolder = string.IsNullOrWhiteSpace(GameFolder) ? null : GameFolder.Trim();
-        var pluginFolder = string.IsNullOrWhiteSpace(PluginFolder) ? null : PluginFolder.Trim();
+        var launcherFolder = string.IsNullOrWhiteSpace(LauncherFolder) ? null : LauncherFolder.Trim();
         var installFolder = string.IsNullOrWhiteSpace(InstallFolder) ? null : InstallFolder.Trim();
         var backUpPlugins = BackUpPlugins;
         var backupOnGameExit = BackupOnGameExit;
@@ -175,7 +193,12 @@ public sealed partial class SettingsViewModel : ObservableObject
             var before = s.Clone();
             s.DisplayName = deviceName.Length == 0 ? s.DisplayName : deviceName;
             s.GameConfigFolder = gameFolder;
-            s.PluginConfigFolder = pluginFolder;
+            // An empty field keeps a plugin folder chosen by hand in older settings.
+            s.DalamudFolder = launcherFolder;
+            if (launcherFolder is not null)
+            {
+                s.PluginConfigFolder = GameFolders.PluginConfigFolderOf(launcherFolder);
+            }
             s.GameInstallFolder = installFolder;
             s.BackUpPlugins = backUpPlugins;
             s.BackupOnGameExit = backupOnGameExit;
@@ -212,6 +235,16 @@ public sealed partial class SettingsViewModel : ObservableObject
             main.StatusText = languageChanged ? Strings.Settings_LanguageRestart : Strings.Settings_Saved;
         }
     }
+    /// <summary>Puts the suggested names into the rows; saved with the other settings.</summary>
+    [RelayCommand]
+    public void TakeSuggestions()
+    {
+        foreach (var row in Characters.Where(c => c.Suggestion is not null))
+        {
+            row.Name = row.Suggestion!;
+        }
+    }
+
     [RelayCommand]
     public void BrowseGameFolder()
     {
@@ -223,12 +256,12 @@ public sealed partial class SettingsViewModel : ObservableObject
     }
 
     [RelayCommand]
-    public void BrowsePluginFolder()
+    public void BrowseLauncherFolder()
     {
-        var folder = ui.PickFolder(Strings.Settings_PluginFolder, PluginFolder);
+        var folder = ui.PickFolder(Strings.Settings_LauncherFolder, LauncherFolder);
         if (folder is not null)
         {
-            PluginFolder = folder;
+            LauncherFolder = folder;
         }
     }
 
@@ -247,7 +280,7 @@ public sealed partial class SettingsViewModel : ObservableObject
     public void DetectFolders()
     {
         GameFolder = GameFolders.LooksLikeGameConfigFolder(GameFolders.DefaultGameConfigFolder) ? GameFolders.DefaultGameConfigFolder : GameFolder;
-        PluginFolder = GameFolders.FindPluginConfigFolder() ?? PluginFolder;
+        LauncherFolder = GameFolders.FindLauncherFolder() ?? LauncherFolder;
         var install = GameFolders.PickInstallFolder(locator.InstallFolderCandidates());
         if (install is not null)
         {

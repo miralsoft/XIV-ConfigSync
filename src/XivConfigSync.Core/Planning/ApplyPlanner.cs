@@ -34,6 +34,9 @@ public static class PlanReason
     public const string OnRequestRule = "Reason_OnRequestRule";
     public const string Restore = "Reason_Restore";
     public const string NotScanned = "Reason_NotScanned";
+
+    /// <summary>Shown only: a file this device has and the source does not; never deleted (FR-044).</summary>
+    public const string OnlyHere = "Reason_OnlyHere";
 }
 
 /// <summary>One file in an apply plan.</summary>

@@ -378,3 +378,29 @@ Append-only. Never edit or delete past entries; a later entry may supersede an e
   give their name as their text form, which a screen reader announces. Found in the interface test
   of the repository merge: the items were records and announced their full form, device IDs
   included. A test covers every such record.
+- (2026-11-06) Four requests of the owner from 2026-11-05, built after the owner decided that
+  development stays on device A and device B is used for tests only:
+  - The transfer list shows the files only this device has, with the proposal "only here", when
+    the user asks for files with nothing to do; the note says that nothing needs to be done
+    (FR-073). Rationale: a count alone did not say which files or whether anything was needed.
+    The rows are for display only and can never be selected.
+  - The setting is XIVLauncher's folder (FR-074). The plugin settings and Dalamud's files are
+    found from it, also in the sandbox mode, where dalamudUserData wins when it holds plugin
+    settings. Settings that knew only the plugin folder get the launcher folder when the plugin
+    folder is Dalamud's pluginConfigs; a plugin folder chosen by hand elsewhere stays in use.
+    Rejected: keeping the plugin folder as the setting and deriving its parent, which the owner
+    found the wrong way round.
+  - Character names and worlds are suggested from plugin data, read-only (FR-075). Measured on
+    device A: the game's character files hold no name as text; AutoRetainer, Lifestream, ICE,
+    Allagan Tools and Allagan Market store the name by content ID, which is the hexadecimal number
+    in the folder name FFXIV_CHR<ID>. Only worlds stored as text are used (AutoRetainer,
+    Lifestream): Allagan's world numbers would need a table of world names, which is material
+    from the game (X-09). A suggestion replaces only an empty or numbered name, never one the user
+    chose; it is taken at the set-up and at each start, and the settings offer to take all
+    suggestions. On device A the plugins know 2 of 5 characters. Rejected: reading names from the
+    game's binary files, whose layout is not known (rule against invented field positions).
+  - Rules per plugin (FR-076): a plugin is <Name>.* and <Name>/** in the plugin folder; its
+    rule is an override on both patterns, and "not backed up" a user exclusion on both, so the
+    existing rule set carries it and the exclusion list shows it. A plugin's rule wins over the
+    rule for all plugin files by the patterns' specificity. Backing up everything stays the
+    default.

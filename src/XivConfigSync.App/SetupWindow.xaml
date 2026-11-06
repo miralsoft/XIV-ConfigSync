@@ -154,15 +154,19 @@
                             Margin="0,0,0,10"
                             Style="{StaticResource Muted}"
                             Text="{Binding GameFolderState}" />
-                        <TextBlock Margin="0,0,0,4" Text="{x:Static core:Strings.Settings_PluginFolder}" />
+                        <TextBlock Margin="0,0,0,4" Text="{x:Static core:Strings.Settings_LauncherFolder}" />
                         <DockPanel Margin="0,0,0,2">
                             <Button
-                                Command="{Binding BrowsePluginFolderCommand}"
+                                Command="{Binding BrowseLauncherFolderCommand}"
                                 Content="{x:Static core:Strings.Common_Browse}"
                                 DockPanel.Dock="Right"
                                 Margin="8,0,0,0" />
-                            <TextBox AutomationProperties.Name="{x:Static core:Strings.Settings_PluginFolder}" Text="{Binding PluginFolder, UpdateSourceTrigger=PropertyChanged}" />
+                            <TextBox AutomationProperties.Name="{x:Static core:Strings.Settings_LauncherFolder}" Text="{Binding LauncherFolder, UpdateSourceTrigger=PropertyChanged}" />
                         </DockPanel>
+                        <TextBlock
+                            AutomationProperties.AutomationId="LauncherFolderState"
+                            Style="{StaticResource Muted}"
+                            Text="{Binding LauncherFolderState}" />
                         <CheckBox
                             Content="{x:Static core:Strings.Settings_BackUpPlugins}"
                             IsChecked="{Binding BackUpPlugins}"

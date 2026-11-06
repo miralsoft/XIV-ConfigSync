@@ -7,6 +7,7 @@
   <data name="Action_Apply" xml:space="preserve"><value>Übernehmen</value></data>
   <data name="Action_Conflict" xml:space="preserve"><value>Konflikt</value></data>
   <data name="Action_Offer" xml:space="preserve"><value>Angeboten</value></data>
+  <data name="Action_OnlyHere" xml:space="preserve"><value>Nur hier</value></data>
   <data name="Action_Skip" xml:space="preserve"><value>Nichts zu tun</value></data>
   <data name="App_Title" xml:space="preserve"><value>XIV ConfigSync</value></data>
   <data name="Backup_Done" xml:space="preserve"><value>Sicherung erstellt: {0} Dateien, davon {1} neu.</value></data>
@@ -15,6 +16,7 @@
   <data name="Character_LastPlayed" xml:space="preserve"><value>zuletzt gespielt: {0}</value></data>
   <data name="Character_Number" xml:space="preserve"><value>Charakter {0}</value></data>
   <data name="Character_Path" xml:space="preserve"><value>{0}: {1}</value></data>
+  <data name="Character_Suggestion" xml:space="preserve"><value>Aus Plugin-Daten: {0}</value></data>
   <data name="Character_Unnamed" xml:space="preserve"><value>Charakter</value></data>
   <data name="Cleanup_Bytes" xml:space="preserve"><value>{0} Byte</value></data>
   <data name="Cleanup_Changed" xml:space="preserve"><value>seit dem Einlesen geändert; bitte neu einlesen</value></data>
@@ -44,7 +46,9 @@
   <data name="Col_Level" xml:space="preserve"><value>Stufe</value></data>
   <data name="Col_Message" xml:space="preserve"><value>Meldung</value></data>
   <data name="Col_Modified" xml:space="preserve"><value>Geändert</value></data>
+  <data name="Col_NotBackedUp" xml:space="preserve"><value>Nicht sichern</value></data>
   <data name="Col_Notes" xml:space="preserve"><value>Hinweise</value></data>
+  <data name="Col_Plugin" xml:space="preserve"><value>Plugin</value></data>
   <data name="Col_Reason" xml:space="preserve"><value>Begründung</value></data>
   <data name="Col_Receipt" xml:space="preserve"><value>Bestätigt von</value></data>
   <data name="Col_Remove" xml:space="preserve"><value>Entfernen</value></data>
@@ -148,6 +152,7 @@
   <data name="Reason_NeverRule" xml:space="preserve"><value>Gehört zum Quellgerät (Regel „nie“).</value></data>
   <data name="Reason_NoCommonState" xml:space="preserve"><value>Auf beiden Geräten verschieden, und ein gemeinsamer Stand ist noch nicht bekannt (erste Übertragung). Du entscheidest.</value></data>
   <data name="Reason_NotScanned" xml:space="preserve"><value>Von der Sicherung dieses Geräts ausgenommen (durch eine Regel, Größe oder Verknüpfung); nur von Hand.</value></data>
+  <data name="Reason_OnlyHere" xml:space="preserve"><value>Nur dieses Gerät hat die Datei, die gewählte Sicherung nicht. Sie wird nie gelöscht.</value></data>
   <data name="Reason_OnRequestRule" xml:space="preserve"><value>Auf der Quelle neuer; wird nur auf Anforderung übertragen.</value></data>
   <data name="Reason_Restore" xml:space="preserve"><value>Weicht von der gewählten älteren Sicherung ab.</value></data>
   <data name="Reason_SourceNewer" xml:space="preserve"><value>Auf der Quelle neuer.</value></data>
@@ -187,9 +192,14 @@
   <data name="Rules_Intro" xml:space="preserve"><value>Gesichert wird alles. Diese Regeln bestimmen, was von einem anderen Gerät übernommen wird. Immer: ohne Rückfrage, wenn nur das andere Gerät die Datei geändert hat. Nur auf Anforderung: du wählst aus. Nie: gehört zu einem Gerät.</value></data>
   <data name="Rules_NeverWarning" xml:space="preserve"><value>Vorsicht: Diese Datei enthält Einstellungen eines Geräts. Sie von einem anderen Gerät zu übernehmen, kann Auflösung, Grafik oder UI-Skalierung verändern.</value></data>
   <data name="Rules_PatternHint" xml:space="preserve"><value>Muster, zum Beispiel EinPlugin/*.json</value></data>
+  <data name="Rules_PluginDefault" xml:space="preserve"><value>Wie alle Plugin-Dateien</value></data>
+  <data name="Rules_PluginFiles" xml:space="preserve"><value>{0} Dateien, {1} KB</value></data>
+  <data name="Rules_PluginsIntro" xml:space="preserve"><value>Gesichert wird jedes Plugin. Hier legst du je Plugin fest, ob seine Einstellungen von einem anderen Gerät immer, auf Anforderung oder nie übernommen werden. „Wie alle Plugin-Dateien“ folgt der Zeile „Alle Plugin-Dateien“ auf dem Reiter „Dateien“. „Nicht sichern“ lässt ein Plugin aus der Sicherung heraus; es steht dann auch bei den Ausschlüssen.</value></data>
   <data name="Rules_Remove" xml:space="preserve"><value>Entfernen</value></data>
   <data name="Rules_Reset" xml:space="preserve"><value>Alle Regeln zurücksetzen</value></data>
   <data name="Rules_ResetConfirm" xml:space="preserve"><value>Alle Regeln auf den Standard zurücksetzen? Deine Ausschlüsse bleiben.</value></data>
+  <data name="Rules_TabFiles" xml:space="preserve"><value>Dateien</value></data>
+  <data name="Rules_TabPlugins" xml:space="preserve"><value>Plugins</value></data>
   <data name="Rules_Title" xml:space="preserve"><value>Regeln</value></data>
   <data name="Settings_AutoApply" xml:space="preserve"><value>Dateien mit der Regel „immer“ automatisch von anderen Geräten übernehmen</value></data>
   <data name="Settings_Autostart" xml:space="preserve"><value>Mit Windows starten (im Infobereich)</value></data>
@@ -199,7 +209,7 @@
   <data name="Settings_ChangeFolder" xml:space="preserve"><value>Sync-Ordner wechseln...</value></data>
   <data name="Settings_ChangeFolderConfirm" xml:space="preserve"><value>Die Einrichtung läuft noch einmal. Im bisherigen Sync-Ordner wird nichts gelöscht. Fortfahren?</value></data>
   <data name="Settings_Characters" xml:space="preserve"><value>Charaktere</value></data>
-  <data name="Settings_CharactersIntro" xml:space="preserve"><value>Gib jedem Charakterordner einen Namen. Das Programm zeigt die IDs aus den Ordnernamen nie an.</value></data>
+  <data name="Settings_CharactersIntro" xml:space="preserve"><value>Gib jedem Charakterordner einen Namen. Wo ein Plugin den Charakter kennt (zum Beispiel AutoRetainer oder Lifestream), werden Name und Welt vorgeschlagen und für Charaktere ohne eigenen Namen verwendet. Das Programm zeigt die IDs aus den Ordnernamen nie an.</value></data>
   <data name="Settings_Detect" xml:space="preserve"><value>Automatisch erkennen</value></data>
   <data name="Settings_Device" xml:space="preserve"><value>Dieses Gerät</value></data>
   <data name="Settings_DeviceName" xml:space="preserve"><value>Gerätename</value></data>
@@ -211,12 +221,15 @@
   <data name="Settings_KeepRevisions" xml:space="preserve"><value>Aufzubewahrende Sicherungen</value></data>
   <data name="Settings_Language" xml:space="preserve"><value>Sprache</value></data>
   <data name="Settings_LanguageRestart" xml:space="preserve"><value>Gespeichert. Die neue Sprache gilt nach einem Neustart.</value></data>
+  <data name="Settings_LauncherFolder" xml:space="preserve"><value>XIVLauncher-Ordner (Dalamud und Plugins)</value></data>
+  <data name="Settings_LauncherFound" xml:space="preserve"><value>Dalamud gefunden: Seine Einstellungen und die Plugin-Einstellungen werden von hier gesichert. Die Plugins selbst installiert Dalamud.</value></data>
+  <data name="Settings_LauncherMissing" xml:space="preserve"><value>In diesem Ordner liegt kein Dalamud. Üblich ist %APPDATA%\XIVLauncher.</value></data>
   <data name="Settings_MinimizeOnClose" xml:space="preserve"><value>Beim Schließen des Fensters im Infobereich weiterlaufen</value></data>
   <data name="Settings_OpenFolder" xml:space="preserve"><value>Im Explorer öffnen</value></data>
-  <data name="Settings_PluginFolder" xml:space="preserve"><value>Ordner der Plugin-Einstellungen</value></data>
   <data name="Settings_Save" xml:space="preserve"><value>Speichern</value></data>
   <data name="Settings_Saved" xml:space="preserve"><value>Einstellungen gespeichert.</value></data>
   <data name="Settings_SyncFolder" xml:space="preserve"><value>Sync-Ordner</value></data>
+  <data name="Settings_TakeSuggestions" xml:space="preserve"><value>Namen aus Plugin-Daten übernehmen</value></data>
   <data name="Settings_Title" xml:space="preserve"><value>Einstellungen</value></data>
   <data name="Setup_AgainDevice" xml:space="preserve"><value>Dieser PC ist schon im Sync-Ordner und wurde neu eingerichtet:</value></data>
   <data name="Setup_AgainRecent" xml:space="preserve"><value>{0} war am {1} noch aktiv. Richte diesen PC nur als {0} ein, wenn jener PC nicht mehr benutzt wird; zwei PCs unter einem Namen stören sich gegenseitig. Fortfahren?</value></data>
@@ -269,7 +282,7 @@
   <data name="Transfer_Intro" xml:space="preserve"><value>Wähle ein Gerät und eine Sicherung, dann vergleiche. Dateien mit Haken werden übernommen. Bis du bestätigst, wird nichts geschrieben, und jede Übertragung lässt sich rückgängig machen.</value></data>
   <data name="Transfer_Latest" xml:space="preserve"><value>Neueste Sicherung</value></data>
   <data name="Transfer_NothingToUndo" xml:space="preserve"><value>Es gibt keine Übertragung, die sich rückgängig machen lässt.</value></data>
-  <data name="Transfer_NotInSource" xml:space="preserve"><value>{0} Dateien auf diesem Gerät gibt es in der Quelle nicht. Sie werden nicht gelöscht.</value></data>
+  <data name="Transfer_NotInSource" xml:space="preserve"><value>{0} Dateien gibt es nur auf diesem Gerät, nicht in der gewählten Sicherung (zum Beispiel ein Plugin, das nur hier installiert ist). Sie bleiben, wie sie sind; es ist nichts zu tun. „Auch Dateien ohne Handlungsbedarf zeigen“ listet sie auf.</value></data>
   <data name="Transfer_Repositories" xml:space="preserve"><value>Plugin-Quellen abgleichen</value></data>
   <data name="Transfer_RepositoriesConfirm" xml:space="preserve"><value>Diese {0} Plugin-Quellen von {1} werden in die Dalamud-Einstellungen dieses Geräts eingetragen:{2}Vorhandene Quellen und alle anderen Einstellungen bleiben unverändert. Rückgängig machen kannst du es mit „Letzte Übertragung rückgängig“.</value></data>
   <data name="Transfer_RepositoriesDone" xml:space="preserve"><value>{0} Plugin-Quellen wurden eingetragen. Dalamud nutzt sie ab dem nächsten Start.</value></data>
@@ -278,7 +291,7 @@
   <data name="Transfer_Revision" xml:space="preserve"><value>Sicherung</value></data>
   <data name="Transfer_RevisionLabel" xml:space="preserve"><value>{0} ({1}, {2} Dateien)</value></data>
   <data name="Transfer_SelectNone" xml:space="preserve"><value>Auswahl aufheben</value></data>
-  <data name="Transfer_ShowSkipped" xml:space="preserve"><value>Auch unveränderte Dateien zeigen</value></data>
+  <data name="Transfer_ShowSkipped" xml:space="preserve"><value>Auch Dateien ohne Handlungsbedarf zeigen</value></data>
   <data name="Transfer_Source" xml:space="preserve"><value>Gerät</value></data>
   <data name="Transfer_Summary" xml:space="preserve"><value>{0} ausgewählt, {1} Konflikte, {2} angeboten, {3} nicht betroffen.</value></data>
   <data name="Transfer_ThisDevice" xml:space="preserve"><value>(dieses Gerät)</value></data>

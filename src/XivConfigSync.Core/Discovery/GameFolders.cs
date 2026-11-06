@@ -9,21 +9,54 @@ public static partial class GameFolders
     public static string DefaultGameConfigFolder =>
         Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "My Games", "FINAL FANTASY XIV - A Realm Reborn");
 
-    /// <summary>
-    /// Dalamud's plugin configuration folder. With the sandbox mode Dalamud keeps its data below
-    /// <c>dalamudUserData</c>; that folder wins when it exists.
-    /// </summary>
-    public static string? FindPluginConfigFolder()
+    /// <summary>XIVLauncher's folder below the roaming application data, when it exists.</summary>
+    public static string? FindLauncherFolder()
     {
         var launcher = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "XIVLauncher");
-        var sandbox = Path.Combine(launcher, "dalamudUserData", "pluginConfigs");
-        if (Directory.Exists(sandbox))
+        return Directory.Exists(launcher) ? launcher : null;
+    }
+
+    /// <summary>
+    /// Where Dalamud keeps its settings and the plugins' settings inside a launcher folder. With the
+    /// sandbox mode that is <c>dalamudUserData</c>; it wins when it holds plugin settings.
+    /// </summary>
+    public static string DalamudDataFolder(string launcherFolder)
+    {
+        var sandbox = Path.Combine(launcherFolder, "dalamudUserData");
+        return Directory.Exists(Path.Combine(sandbox, "pluginConfigs")) ? sandbox : launcherFolder;
+    }
+
+    /// <summary>The plugin settings folder of a launcher folder, or null without one.</summary>
+    public static string? PluginConfigFolderOf(string? launcherFolder) =>
+        string.IsNullOrWhiteSpace(launcherFolder) ? null : Path.Combine(DalamudDataFolder(launcherFolder), "pluginConfigs");
+
+    /// <summary>
+    /// The launcher folder a plugin settings folder belongs to, for settings that only knew the
+    /// plugin folder; null for a plugin folder chosen by hand elsewhere.
+    /// </summary>
+    public static string? LauncherFolderOf(string? pluginConfigFolder)
+    {
+        var data = DalamudFolderOf(pluginConfigFolder);
+        if (data is null)
         {
-            return sandbox;
+            return null;
         }
 
-        var classic = Path.Combine(launcher, "pluginConfigs");
-        return Directory.Exists(classic) ? classic : null;
+        return string.Equals(Path.GetFileName(data), "dalamudUserData", StringComparison.OrdinalIgnoreCase)
+            ? Path.GetDirectoryName(data)
+            : data;
+    }
+
+    /// <summary>Whether a folder holds Dalamud: its settings or the plugins' settings.</summary>
+    public static bool LooksLikeLauncherFolder(string? launcherFolder)
+    {
+        if (string.IsNullOrWhiteSpace(launcherFolder) || !Directory.Exists(launcherFolder))
+        {
+            return false;
+        }
+
+        var data = DalamudDataFolder(launcherFolder);
+        return File.Exists(Path.Combine(data, "dalamudConfig.json")) || Directory.Exists(Path.Combine(data, "pluginConfigs"));
     }
 
     /// <summary>

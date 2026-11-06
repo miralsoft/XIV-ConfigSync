@@ -40,6 +40,7 @@
 - [x] User guide, README
 - [x] First CI run of the .NET workflow (2026-11-05, passed)
 - [x] Clean-up page for old conflict copies (FR-071, 2026-11-05); still to try on the real game folder
+- [x] Owner's requests of 2026-11-05 (FR-073 to FR-076): files only here, launcher folder, character names, rules per plugin
 - [ ] Test on two real devices (gate 4 acceptance A01 to A05)
 - [ ] Dalamud test: does Dalamud keep a plugin settings file written from outside (decides
   whether applying plugin settings stays in 0.1)

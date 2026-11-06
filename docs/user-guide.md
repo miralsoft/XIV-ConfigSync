@@ -10,12 +10,18 @@ unless you choose one in the settings.
    must be empty or not exist yet. The application creates it and puts a file
    `FFXIV Sync.xivsync` into it.
 3. **This device:** give the PC a name you will recognise on the other PCs.
-4. **Folders:** the game's settings folder, the plugin settings folder and the installation
-   folder are found by themselves. Change them only if the game or Dalamud is installed elsewhere.
-5. **Automatic actions:** choose what may happen without asking: a backup after playing, taking
+4. **Folders:** the game's settings folder, the XIVLauncher folder (usually
+   `%APPDATA%XIVLauncher`) and the installation folder are found by themselves. From the
+   XIVLauncher folder the application takes the plugin settings and Dalamud's own settings, also
+   in Dalamud's sandbox mode; the plugins themselves are installed by Dalamud. Change the folders
+   only if the game or XIVLauncher is installed elsewhere.
+5. **Characters:** where a plugin already knows a character (AutoRetainer, Lifestream, ICE,
+   Allagan Tools, Allagan Market), its name and, where given as text, its world are used as the
+   character's name. You can rename every character in the settings.
+6. **Automatic actions:** choose what may happen without asking: a backup after playing, taking
    "always" files from other PCs, opening `.xivsync` files with the application, starting with
    Windows. Everything can be changed later.
-6. **Finish:** the first backup is made.
+7. **Finish:** the first backup is made.
 
 ## 2. Every further PC
 
@@ -54,6 +60,8 @@ one. Tick what you want from the other PC, or use **Take all conflicts from the 
   - *Offered* (not ticked): it differs, and you decide.
   - *Conflict* (not ticked): both PCs changed it. Both versions are kept until you decide.
 - Files with the rule "never" are not offered from another PC.
+- Files that exist only on this PC, not in the chosen backup, are never deleted. A note says how
+  many there are; **Also show files with nothing to do** lists them with the proposal *Only here*.
 - **Take selected** saves the current files first, then replaces them. **Undo last transfer**
   puts the saved files back.
 - **Merge plugin repositories:** adds the custom plugin repositories of the chosen PC that this
@@ -66,7 +74,10 @@ one. Tick what you want from the other PC, or use **Take all conflicts from the 
 ## 5. Rules
 
 The **Rules** page lists every known file with its default rule and how well it is known. Change
-a rule with the list in its row. **Leave out of the backup** takes files out of the backup by a
+a rule with the list in its row. The **Plugins** tab lists every plugin with its own rule: **As for all
+plugin files** follows the row "All plugin files", or choose always, on request or never for this
+plugin alone. **Not backed up** leaves a plugin out of the backup entirely; it then also shows
+under the exclusions, where it can be removed again. **Leave out of the backup** takes files out of the backup by a
 pattern, for example `SomePlugin/*.json`.
 
 Why some defaults are "on request": the game changes the HUD layout (`ADDON.DAT`), `UISAVE.DAT`

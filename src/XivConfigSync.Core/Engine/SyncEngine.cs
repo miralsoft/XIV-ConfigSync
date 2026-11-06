@@ -88,9 +88,49 @@ public sealed class SyncEngine
     public IReadOnlyDictionary<string, string?> Roots => new Dictionary<string, string?>
     {
         [Model.Roots.Game] = Settings.GameConfigFolder,
-        [Model.Roots.Plugins] = Settings.BackUpPlugins ? Settings.PluginConfigFolder : null,
-        [Model.Roots.Dalamud] = Settings.BackUpPlugins ? GameFolders.DalamudFolderOf(Settings.PluginConfigFolder) : null,
+        [Model.Roots.Plugins] = Settings.BackUpPlugins ? PluginFolder : null,
+        [Model.Roots.Dalamud] = Settings.BackUpPlugins ? DalamudDataFolder : null,
     };
+
+    /// <summary>The plugin settings folder: from the launcher folder, else the one set in older settings.</summary>
+    public string? PluginFolder =>
+        Settings.DalamudFolder is { Length: > 0 } launcher ? GameFolders.PluginConfigFolderOf(launcher) : Settings.PluginConfigFolder;
+
+    /// <summary>Dalamud's own folder: from the launcher folder, else the parent of a <c>pluginConfigs</c> folder.</summary>
+    public string? DalamudDataFolder =>
+        Settings.DalamudFolder is { Length: > 0 } launcher ? GameFolders.DalamudDataFolder(launcher) : GameFolders.DalamudFolderOf(Settings.PluginConfigFolder);
+
+    /// <summary>Names and worlds the plugins know for this device's character folders, read-only.</summary>
+    public IReadOnlyDictionary<string, CharacterIdentity> SuggestCharacterNames() =>
+        CharacterIdentities.FromPluginData(PluginFolder, GameFolders.FindCharacterFolders(Settings.GameConfigFolder));
+
+    /// <summary>
+    /// Takes the suggested names for characters that have no name yet or only the numbered one
+    /// the set-up gave them; a name the user chose is never replaced. Saves the settings when
+    /// anything changed and returns how many names were taken.
+    /// </summary>
+    public int TakeCharacterSuggestions()
+    {
+        var names = new Dictionary<string, string>(Settings.CharacterNames, StringComparer.OrdinalIgnoreCase);
+        var taken = 0;
+        foreach (var (folder, identity) in SuggestCharacterNames())
+        {
+            if (!names.TryGetValue(folder, out var current) || CharacterIdentities.IsPlaceholder(current))
+            {
+                names[folder] = identity.Display;
+                taken++;
+            }
+        }
+
+        if (taken > 0)
+        {
+            // A new dictionary, so a page reading the names never sees one half changed.
+            Settings.CharacterNames = names;
+            SaveSettings();
+        }
+
+        return taken;
+    }
 
     /// <summary>The game version on this device, if it can be read.</summary>
     public string? LocalGameVersion => GameFolders.ReadGameVersion(Settings.GameInstallFolder);

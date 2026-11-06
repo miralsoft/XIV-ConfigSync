@@ -31,6 +31,13 @@ public sealed class AppSettings
 
     public string? GameConfigFolder { get; set; }
 
+    /// <summary>
+    /// XIVLauncher's folder (owner's request, 2026-11-05): plugin settings and Dalamud's own files
+    /// are found from it. When it is set, <see cref="PluginConfigFolder"/> is not used.
+    /// </summary>
+    public string? DalamudFolder { get; set; }
+
+    /// <summary>The plugin settings folder; only used when <see cref="DalamudFolder"/> is not set (older settings, or a folder chosen by hand).</summary>
     public string? PluginConfigFolder { get; set; }
 
     public string? GameInstallFolder { get; set; }
@@ -66,7 +73,10 @@ public sealed class AppSettings
             throw new InvalidDataException("The settings were written by a newer version of the application.");
         }
 
-        // Schema 1 is the first; later migrations go here, oldest first.
+        // Schema 1 is the first; later migrations go here, oldest first. Settings from before the
+        // launcher folder knew only the plugin folder: the launcher folder is taken from it when
+        // that is Dalamud's pluginConfigs.
+        settings.DalamudFolder ??= Discovery.GameFolders.LauncherFolderOf(settings.PluginConfigFolder);
         settings.Schema = CurrentSchema;
         settings.KeepRevisions = Math.Clamp(settings.KeepRevisions, 5, 500);
         return settings;

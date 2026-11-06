@@ -70,6 +70,9 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     /// <summary>The page index of the clean-up page; the pages before it keep their numbers.</summary>
     public const int CleanupPage = 6;
 
+    /// <summary>The page index of the rules page.</summary>
+    public const int RulesPage = 2;
+
     public ObservableCollection<DeviceRow> Devices { get; } = [];
 
     [ObservableProperty]
@@ -153,6 +156,10 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     public async Task StartAsync()
     {
         await AskRecoveryAsync().ConfigureAwait(true);
+
+        // Characters still named "Character n" get the names the plugins know; read-only towards
+        // the plugins, and a name the user chose stays (owner's request, 2026-11-05).
+        await RunAsync(Strings.Status_Refreshing, () => Engine.TakeCharacterSuggestions(), showErrors: false).ConfigureAwait(true);
         await RefreshAsync().ConfigureAwait(true);
         if (!game.IsRunning)
         {
@@ -246,6 +253,11 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         if (value == CleanupPage)
         {
             _ = Cleanup.LoadAsync();
+        }
+        else if (value == RulesPage)
+        {
+            // Plugins installed since the last visit show up.
+            Rules.Reload();
         }
     }
 

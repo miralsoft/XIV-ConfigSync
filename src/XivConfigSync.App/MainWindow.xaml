@@ -565,55 +565,106 @@
                     Content="{x:Static core:Strings.Rules_Reset}"
                     Margin="0,10,0,0" />
             </StackPanel>
-            <DataGrid
-                AutomationProperties.AutomationId="RuleRows"
-                AutomationProperties.Name="{x:Static core:Strings.Rules_Title}"
-                ItemsSource="{Binding Rows}">
-                <DataGrid.Columns>
-                    <DataGridTextColumn
-                        Binding="{Binding Root}"
-                        Header="{x:Static core:Strings.Col_Area}"
-                        IsReadOnly="True"
-                        Width="Auto" />
-                    <DataGridTextColumn
-                        Binding="{Binding Pattern}"
-                        Header="{x:Static core:Strings.Col_File}"
-                        IsReadOnly="True"
-                        Width="1.3*" />
-                    <DataGridTemplateColumn Header="{x:Static core:Strings.Col_Rule}" Width="170">
-                        <DataGridTemplateColumn.CellTemplate>
-                            <DataTemplate>
-                                <ComboBox
-                                    AutomationProperties.Name="{Binding Pattern}"
-                                    DisplayMemberPath="Name"
-                                    ItemsSource="{Binding DataContext.RuleChoices, RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                    SelectedItem="{Binding Choice, UpdateSourceTrigger=PropertyChanged}" />
-                            </DataTemplate>
-                        </DataGridTemplateColumn.CellTemplate>
-                    </DataGridTemplateColumn>
-                    <DataGridTextColumn
-                        Binding="{Binding DefaultText}"
-                        Header="{x:Static core:Strings.Col_Default}"
-                        IsReadOnly="True"
-                        Width="Auto" />
-                    <DataGridTextColumn
-                        Binding="{Binding EvidenceText}"
-                        Header="{x:Static core:Strings.Col_Evidence}"
-                        IsReadOnly="True"
-                        Width="Auto" />
-                    <DataGridTextColumn
-                        Binding="{Binding Note}"
-                        Header="{x:Static core:Strings.Col_Notes}"
-                        IsReadOnly="True"
-                        Width="2*">
-                        <DataGridTextColumn.ElementStyle>
-                            <Style TargetType="TextBlock">
-                                <Setter Property="TextWrapping" Value="Wrap" />
-                            </Style>
-                        </DataGridTextColumn.ElementStyle>
-                    </DataGridTextColumn>
-                </DataGrid.Columns>
-            </DataGrid>
+            <TabControl AutomationProperties.AutomationId="RuleTabs">
+                <TabItem AutomationProperties.AutomationId="RuleTabFiles" Header="{x:Static core:Strings.Rules_TabFiles}">
+                    <DataGrid
+                        AutomationProperties.AutomationId="RuleRows"
+                        AutomationProperties.Name="{x:Static core:Strings.Rules_Title}"
+                        ItemsSource="{Binding Rows}">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn
+                                Binding="{Binding Root}"
+                                Header="{x:Static core:Strings.Col_Area}"
+                                IsReadOnly="True"
+                                Width="Auto" />
+                            <DataGridTextColumn
+                                Binding="{Binding Pattern}"
+                                Header="{x:Static core:Strings.Col_File}"
+                                IsReadOnly="True"
+                                Width="1.3*" />
+                            <DataGridTemplateColumn Header="{x:Static core:Strings.Col_Rule}" Width="170">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <ComboBox
+                                            AutomationProperties.Name="{Binding Pattern}"
+                                            DisplayMemberPath="Name"
+                                            ItemsSource="{Binding DataContext.RuleChoices, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                            SelectedItem="{Binding Choice, UpdateSourceTrigger=PropertyChanged}" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTextColumn
+                                Binding="{Binding DefaultText}"
+                                Header="{x:Static core:Strings.Col_Default}"
+                                IsReadOnly="True"
+                                Width="Auto" />
+                            <DataGridTextColumn
+                                Binding="{Binding EvidenceText}"
+                                Header="{x:Static core:Strings.Col_Evidence}"
+                                IsReadOnly="True"
+                                Width="Auto" />
+                            <DataGridTextColumn
+                                Binding="{Binding Note}"
+                                Header="{x:Static core:Strings.Col_Notes}"
+                                IsReadOnly="True"
+                                Width="2*">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="TextWrapping" Value="Wrap" />
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </TabItem>
+                <TabItem AutomationProperties.AutomationId="RuleTabPlugins" Header="{x:Static core:Strings.Rules_TabPlugins}">
+                    <DockPanel>
+                        <TextBlock
+                            DockPanel.Dock="Top"
+                            Margin="0,8,0,8"
+                            Style="{StaticResource Muted}"
+                            Text="{x:Static core:Strings.Rules_PluginsIntro}" />
+                        <DataGrid
+                            AutomationProperties.AutomationId="PluginRows"
+                            AutomationProperties.Name="{x:Static core:Strings.Rules_TabPlugins}"
+                            ItemsSource="{Binding Plugins}">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn
+                                    Binding="{Binding Name}"
+                                    Header="{x:Static core:Strings.Col_Plugin}"
+                                    IsReadOnly="True"
+                                    Width="1.5*" />
+                                <DataGridTextColumn
+                                    Binding="{Binding FilesText}"
+                                    Header="{x:Static core:Strings.Col_Size}"
+                                    IsReadOnly="True"
+                                    Width="Auto" />
+                                <DataGridTemplateColumn Header="{x:Static core:Strings.Col_Rule}" Width="200">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <ComboBox
+                                                AutomationProperties.Name="{Binding Name}"
+                                                DisplayMemberPath="Name"
+                                                ItemsSource="{Binding DataContext.PluginRuleChoices, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                SelectedItem="{Binding Choice, UpdateSourceTrigger=PropertyChanged}" />
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTemplateColumn Header="{x:Static core:Strings.Col_NotBackedUp}" Width="Auto">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <CheckBox
+                                                AutomationProperties.Name="{Binding Name}"
+                                                HorizontalAlignment="Center"
+                                                IsChecked="{Binding NotBackedUp, UpdateSourceTrigger=PropertyChanged}" />
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </DockPanel>
+                </TabItem>
+            </TabControl>
         </DockPanel>
 
         <!--  Settings  -->
@@ -717,24 +768,27 @@
                         <TextBlock
                             Grid.Row="2"
                             Style="{StaticResource Label}"
-                            Text="{x:Static core:Strings.Settings_PluginFolder}" />
+                            Text="{x:Static core:Strings.Settings_LauncherFolder}" />
                         <TextBox
-                            AutomationProperties.Name="{x:Static core:Strings.Settings_PluginFolder}"
+                            AutomationProperties.Name="{x:Static core:Strings.Settings_LauncherFolder}"
                             Grid.Column="1"
                             Grid.Row="2"
                             Margin="0,0,8,6"
-                            Text="{Binding PluginFolder, UpdateSourceTrigger=PropertyChanged}" />
+                            Text="{Binding LauncherFolder, UpdateSourceTrigger=PropertyChanged}" />
                         <Button
-                            Command="{Binding BrowsePluginFolderCommand}"
+                            Command="{Binding BrowseLauncherFolderCommand}"
                             Content="{x:Static core:Strings.Common_Browse}"
                             Grid.Column="2"
                             Grid.Row="2"
                             Margin="0,0,0,6" />
-                        <CheckBox
-                            Content="{x:Static core:Strings.Settings_BackUpPlugins}"
-                            Grid.Column="1"
-                            Grid.Row="3"
-                            IsChecked="{Binding BackUpPlugins}" />
+                        <StackPanel Grid.Column="1" Grid.Row="3">
+                            <TextBlock
+                                AutomationProperties.AutomationId="LauncherFolderState"
+                                Margin="0,0,0,4"
+                                Style="{StaticResource Muted}"
+                                Text="{Binding LauncherFolderState}" />
+                            <CheckBox Content="{x:Static core:Strings.Settings_BackUpPlugins}" IsChecked="{Binding BackUpPlugins}" />
+                        </StackPanel>
                         <TextBlock
                             Grid.Row="4"
                             Style="{StaticResource Label}"
@@ -794,10 +848,22 @@
                                             Style="{StaticResource Muted}"
                                             Text="{Binding LastPlayed}"
                                             VerticalAlignment="Center" />
+                                        <TextBlock
+                                            Margin="12,0,0,0"
+                                            Style="{StaticResource Muted}"
+                                            Text="{Binding SuggestionText}"
+                                            VerticalAlignment="Center" />
                                     </StackPanel>
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
+                        <Button
+                            AutomationProperties.AutomationId="TakeSuggestions"
+                            Command="{Binding TakeSuggestionsCommand}"
+                            Content="{x:Static core:Strings.Settings_TakeSuggestions}"
+                            HorizontalAlignment="Left"
+                            Margin="0,8,0,0"
+                            Visibility="{Binding HasSuggestions, Converter={StaticResource BoolToVisibility}}" />
                     </StackPanel>
                 </Border>
                 <Border Style="{StaticResource Card}">

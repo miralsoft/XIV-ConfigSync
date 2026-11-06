@@ -8,6 +8,9 @@
   on in one run that night. Release 0.1 is implemented and tested on one machine with generated
   data and with copies of real data. **Open:** the test on two real devices, the Dalamud test
   with a running game, and the owner's review. Not released.
+- Owner's requests of 2026-11-05 (FR-073 to FR-076, built 2026-11-06): files only on this device in
+  the transfer list, XIVLauncher folder as the setting, character names from plugin data, rules
+  per plugin. Development stays on device A; device B is for tests.
 - Dalamud backup area and plugin repository merge (FR-072, 2026-11-05): tested with generated
   settings, on a copy of the owner's real file and in the interface on scratch copies (merge and undo);
   not yet tried in the game.
@@ -35,7 +38,7 @@
 - **App** (`XivConfigSync.App`, WPF): set-up wizard, overview, transfer, rules, settings, log,
   about; tray icon; one instance per user with hand-over of `.xivsync` files; portable single
   executable of 67 MB that starts in about 1.5 s.
-- **Tests:** 119 xUnit tests (unit, two- and three-device flows, a simulated crash at every step
+- **Tests:** 133 xUnit tests (unit, two- and three-device flows, a simulated crash at every step
   of an apply, damaged and incomplete revisions, localisation completeness, one test per finding
   of the independent review), 41 Pester tests for the analysis tools and the analyzer wrapper. Deliberately planted
   defects were caught by the tests, twice before and three times after the review fixes.
