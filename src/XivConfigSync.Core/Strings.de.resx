@@ -4,12 +4,29 @@
   <resheader name="version"><value>2.0</value></resheader>
   <data name="About_Disclaimer" xml:space="preserve"><value>FINAL FANTASY ist eine eingetragene Marke der Square Enix Holdings Co., Ltd. XIV ConfigSync ist ein unabhängiges, nichtkommerzielles Open-Source-Projekt. Es steht in keiner Verbindung zu Square Enix oder dem Dalamud-Projekt und wird von ihnen weder unterstützt noch gebilligt. Es enthält kein Material aus dem Spiel.</value></data>
   <data name="About_Text" xml:space="preserve"><value>XIV ConfigSync sichert die Client-Einstellungen des Spiels und die Einstellungen von Dalamud-Plugins in einen Ordner, den du mit OneDrive synchronisierst, und überträgt sie auf deine anderen PCs. Es kopiert nur ganze Dateien, und nur solange das Spiel geschlossen ist. Es liest nie den Speicher des Spiels, spricht nie mit Spielservern und verändert das Spiel nicht. Lizenz: GPL-3.0-or-later.</value></data>
+  <data name="Act_BadPaths" xml:space="preserve"><value>Diese Zeilen lassen sich nicht verwenden. Ein Pfad muss unter AppData\Roaming liegen, vollständig oder relativ dazu; * und ** sind erlaubt.{0}</value></data>
+  <data name="Act_Custom" xml:space="preserve"><value>Pfade von dir geändert</value></data>
+  <data name="Act_Disabled" xml:space="preserve"><value>in ACT ausgeschaltet</value></data>
+  <data name="Act_Enabled" xml:space="preserve"><value>von ACT geladen</value></data>
+  <data name="Act_Files" xml:space="preserve"><value>{0} Dateien</value></data>
+  <data name="Act_FilesOne" xml:space="preserve"><value>1 Datei</value></data>
+  <data name="Act_Intro" xml:space="preserve"><value>Gefunden über die Plugin-Liste von ACT. Jede Zeile ist ein Pfad unter AppData\Roaming; * steht für beliebige Zeichen innerhalb eines Ordners, ** auch über Ordner hinweg. Logs, Caches, Sicherungskopien und Programmdateien werden nie gesichert, egal was in einer Zeile steht.</value></data>
+  <data name="Act_NotFound" xml:space="preserve"><value>ACT wurde auf diesem PC nicht gefunden (kein Ordner Advanced Combat Tracker\Config in AppData\Roaming).</value></data>
+  <data name="Act_Off" xml:space="preserve"><value>Die Sicherung von ACT ist in den Einstellungen ausgeschaltet. Die Pfade unten zeigen, was gesichert würde.</value></data>
+  <data name="Act_Outside" xml:space="preserve"><value>In seinen Einstellungen genannt, aber nicht gesichert, weil es außerhalb von AppData\Roaming liegt oder zu groß ist: {0}</value></data>
+  <data name="Act_Proposal" xml:space="preserve"><value>Pfade wie vorgeschlagen</value></data>
+  <data name="Act_Save" xml:space="preserve"><value>Pfade speichern</value></data>
+  <data name="Act_Self" xml:space="preserve"><value>ACT selbst</value></data>
+  <data name="Act_SelfState" xml:space="preserve"><value>eigene Einstellungen von ACT; gesichert, nie übernommen</value></data>
+  <data name="Act_UseProposal" xml:space="preserve"><value>Vorschlag verwenden</value></data>
   <data name="Action_Apply" xml:space="preserve"><value>Übernehmen</value></data>
   <data name="Action_Conflict" xml:space="preserve"><value>Konflikt</value></data>
   <data name="Action_Offer" xml:space="preserve"><value>Angeboten</value></data>
   <data name="Action_OnlyHere" xml:space="preserve"><value>Nur hier</value></data>
   <data name="Action_Skip" xml:space="preserve"><value>Nichts zu tun</value></data>
   <data name="App_Title" xml:space="preserve"><value>XIV ConfigSync</value></data>
+  <data name="Area_act" xml:space="preserve"><value>ACT und seine Plugins</value></data>
+  <data name="Area_act_Hint" xml:space="preserve"><value>Die Einstellungen der ACT-Plugins, etwa Overlays, cactbot und Timer. Welche Dateien dazugehören, ergibt sich aus der Plugin-Liste von ACT; die Pfade lassen sich auf dem Reiter „ACT“ ändern. Logs werden nie gesichert, und die eigene Datei von ACT bleibt auf jedem PC.</value></data>
   <data name="Area_character" xml:space="preserve"><value>Charakter-Einstellungen</value></data>
   <data name="Area_character_Hint" xml:space="preserve"><value>Namensschilder, Kamera, Kampfeffekte, Begleiter und die übrigen Charakter-Einstellungen, ohne den Chat. Dazu die Daten der Bekanntenliste, die Gegenstandssuche und Aussehensvorlagen aus der Charaktererstellung.</value></data>
   <data name="Area_chat" xml:space="preserve"><value>Chat</value></data>
@@ -115,6 +132,7 @@
   <data name="Exclude_Log" xml:space="preserve"><value>Logdatei</value></data>
   <data name="Exclude_NotConfig" xml:space="preserve"><value>keine Konfiguration</value></data>
   <data name="Exclude_Old" xml:space="preserve"><value>die eigene Vorgängerkopie des Spiels</value></data>
+  <data name="Exclude_Program" xml:space="preserve"><value>Programmdatei</value></data>
   <data name="Exclude_Shadow" xml:space="preserve"><value>Dalamuds Schattenkopie der Einstellungen</value></data>
   <data name="Exclude_Temp" xml:space="preserve"><value>temporäre Datei</value></data>
   <data name="Exclude_TooLarge" xml:space="preserve"><value>größer als 64 MB</value></data>
@@ -133,6 +151,8 @@
   <data name="Log_OpenFolder" xml:space="preserve"><value>Protokollordner öffnen</value></data>
   <data name="Matrix_Accounts" xml:space="preserve"><value>Die Kontenliste des Launchers (Namen, keine Passwörter). Gehört zu diesem Gerät.</value></data>
   <data name="Matrix_Acq" xml:space="preserve"><value>Bekanntschaftsliste und weitere Charakterdaten.</value></data>
+  <data name="Matrix_ActConfig" xml:space="preserve"><value>Die eigenen Einstellungen von ACT: Plugin-Pfade, Fenster und der Log-Ordner dieses PCs. Gesichert, nie von einem anderen PC übernommen.</value></data>
+  <data name="Matrix_ActPlugin" xml:space="preserve"><value>Einstellungen eines ACT-Plugins, gefunden über die Plugin-Liste von ACT.</value></data>
   <data name="Matrix_Addon" xml:space="preserve"><value>HUD-Layout. Das Spiel ändert diese Datei bei jedem Login von selbst, deshalb wird sie nur auf Anforderung übertragen.</value></data>
   <data name="Matrix_BootCfg" xml:space="preserve"><value>Launcher-Einstellungen dieses Geräts.</value></data>
   <data name="Matrix_Cfgcopy" xml:space="preserve"><value>Enthält Name und IDs des Charakters; gehört zu diesem Gerät.</value></data>
@@ -164,6 +184,7 @@
   <data name="Nav_Rules" xml:space="preserve"><value>Bereiche</value></data>
   <data name="Nav_Settings" xml:space="preserve"><value>Einstellungen</value></data>
   <data name="Nav_Transfer" xml:space="preserve"><value>Übertragen</value></data>
+  <data name="Notify_ActWaiting" xml:space="preserve"><value>ACT läuft: Die ACT-Einstellungen von {0} werden übernommen, sobald ACT geschlossen ist.</value></data>
   <data name="Notify_Applied" xml:space="preserve"><value>{0} Dateien von {1} übernommen.</value></data>
   <data name="Notify_AppliedAreas" xml:space="preserve"><value>Von {1} übernommen: {0}.</value></data>
   <data name="Notify_Conflicts" xml:space="preserve"><value>{0} Dateien von {1} wurden auch hier geändert. Bitte entscheide auf der Seite „Übertragen“.</value></data>
@@ -223,6 +244,7 @@
   <data name="Recovery_LeftAlone" xml:space="preserve"><value>{0} Dateien wurden nach der Unterbrechung geändert und so gelassen, wie sie sind. Du kannst sie auf der Seite Übertragen übernehmen.</value></data>
   <data name="Recovery_Text" xml:space="preserve"><value>Eine Übertragung oder ein Rückgängigmachen wurde unterbrochen, zum Beispiel durch einen Stromausfall oder weil das Spiel gestartet wurde. Ja: zu Ende führen. Nein: auf den Stand davor zurück. Abbrechen: später entscheiden.</value></data>
   <data name="Recovery_Title" xml:space="preserve"><value>Unterbrochene Übertragung</value></data>
+  <data name="Refuse_ActRunning" xml:space="preserve"><value>ACT läuft. Schließe es zuerst: Es speichert seine Einstellungen beim Beenden und würde die übertragenen überschreiben.</value></data>
   <data name="Refuse_AlreadySyncFolder" xml:space="preserve"><value>Dieser Ordner ist schon ein Sync-Ordner. Wähle ihn, um ihm beizutreten, statt einen neuen anzulegen.</value></data>
   <data name="Refuse_Busy" xml:space="preserve"><value>Ein anderer Vorgang läuft gerade. Bitte versuche es gleich noch einmal.</value></data>
   <data name="Refuse_ChangedSincePlan" xml:space="preserve"><value>Einige Dateien haben sich seit dem Vergleich geändert, zum Beispiel weil das Spiel lief. Es wurde nichts geschrieben. Bitte vergleiche noch einmal.</value></data>
@@ -241,6 +263,7 @@
   <data name="Refuse_SourceNoDalamudSettings" xml:space="preserve"><value>Die letzte Sicherung dieses Geräts enthält noch keine Dalamud-Einstellungen. Dafür braucht es diese Programmversion und eine Sicherung.</value></data>
   <data name="Refuse_SyncFolderUnavailable" xml:space="preserve"><value>Der Sync-Ordner ist gerade nicht erreichbar. Verbinde das Laufwerk oder starte OneDrive und versuche es dann noch einmal.</value></data>
   <data name="Refuse_UnknownDevice" xml:space="preserve"><value>Dieses Gerät ist nicht im Sync-Ordner.</value></data>
+  <data name="Root_Act" xml:space="preserve"><value>ACT</value></data>
   <data name="Root_Dalamud" xml:space="preserve"><value>Dalamud</value></data>
   <data name="Root_Game" xml:space="preserve"><value>Spiel</value></data>
   <data name="Root_Plugins" xml:space="preserve"><value>Plugins</value></data>
@@ -263,6 +286,7 @@
   <data name="Rules_SettingChoices" xml:space="preserve"><value>{0} einzelne Einstellungen haben eine eigene Wahl, getroffen auf der Seite „Übertragen“.</value></data>
   <data name="Rules_SettingChoicesOne" xml:space="preserve"><value>Eine einzelne Einstellung hat eine eigene Wahl, getroffen auf der Seite „Übertragen“.</value></data>
   <data name="Rules_SettingChoicesReset" xml:space="preserve"><value>Wieder den Gruppen folgen lassen</value></data>
+  <data name="Rules_TabAct" xml:space="preserve"><value>ACT</value></data>
   <data name="Rules_TabAreas" xml:space="preserve"><value>Bereiche</value></data>
   <data name="Rules_TabFiles" xml:space="preserve"><value>Dateien (erweitert)</value></data>
   <data name="Rules_TabPlugins" xml:space="preserve"><value>Plugins (erweitert)</value></data>
@@ -300,6 +324,7 @@
   <data name="Setting_ToolTipDispSize" xml:space="preserve"><value>Größe der Tooltips</value></data>
   <data name="Settings_AutoApply" xml:space="preserve"><value>Eingeschaltete Bereiche automatisch von anderen PCs übernehmen (vorher wird gesichert)</value></data>
   <data name="Settings_Autostart" xml:space="preserve"><value>Mit Windows starten (im Infobereich)</value></data>
+  <data name="Settings_BackUpAct" xml:space="preserve"><value>ACT-Einstellungen sichern (Advanced Combat Tracker)</value></data>
   <data name="Settings_BackupOnGameExit" xml:space="preserve"><value>Nach dem Spielen automatisch sichern</value></data>
   <data name="Settings_BackUpPlugins" xml:space="preserve"><value>Plugin-Einstellungen sichern</value></data>
   <data name="Settings_Behaviour" xml:space="preserve"><value>Verhalten</value></data>
@@ -370,6 +395,7 @@
   <data name="Status_Refreshing" xml:space="preserve"><value>Prüfe den Sync-Ordner...</value></data>
   <data name="SyncFile_OtherFolder" xml:space="preserve"><value>Diese Sync-Datei gehört zu {0}, dieses Gerät nutzt aber {1}. Um den anderen Ordner zu nutzen, wähle in den Einstellungen „Sync-Ordner wechseln“.</value></data>
   <data name="SyncFile_TypeName" xml:space="preserve"><value>XIV ConfigSync Sync-Ordner</value></data>
+  <data name="Transfer_ActMissing" xml:space="preserve"><value>ACT-Plugins auf dem gewählten Gerät, die hier nicht installiert sind: {0}. Ihre Einstellungen werden mit übernommen, wirken aber erst, wenn du sie installierst.</value></data>
   <data name="Transfer_AllConflicts" xml:space="preserve"><value>Alle Konflikte von der Quelle übernehmen</value></data>
   <data name="Transfer_Apply" xml:space="preserve"><value>Ausgewählte übernehmen</value></data>
   <data name="Transfer_Compare" xml:space="preserve"><value>Vergleichen</value></data>
@@ -405,6 +431,8 @@
   <data name="Upload_InSync" xml:space="preserve"><value>Hochgeladen (OneDrive meldet synchron)</value></data>
   <data name="Upload_Pending" xml:space="preserve"><value>An OneDrive übergeben, Upload ausstehend</value></data>
   <data name="Upload_Unknown" xml:space="preserve"><value>An den Sync-Ordner übergeben; Cloud-Status unbekannt</value></data>
+  <data name="Warn_ActOff" xml:space="preserve"><value>Das gewählte Gerät sichert auch ACT. Seine ACT-Einstellungen werden nicht angeboten, weil ACT hier nicht gefunden wird oder seine Sicherung ausgeschaltet ist (siehe Einstellungen).</value></data>
+  <data name="Warn_ActRunning" xml:space="preserve"><value>ACT läuft. Seine Einstellungen lassen sich erst übernehmen, wenn es geschlossen ist, weil es sie beim Beenden speichert.</value></data>
   <data name="Warn_GameVersionUnknown" xml:space="preserve"><value>Die Spielversion eines Geräts ist unbekannt und kann deshalb nicht verglichen werden.</value></data>
   <data name="Warn_PluginsOff" xml:space="preserve"><value>Die Quelle hat auch Plugin-Einstellungen. Sie werden nicht angeboten, weil dieses Gerät keine Plugin-Einstellungen sichert (siehe Einstellungen).</value></data>
 </root>

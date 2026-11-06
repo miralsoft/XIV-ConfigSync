@@ -22,7 +22,8 @@ public enum ConflictPolicy
 /// <param name="Key">The stored key.</param>
 /// <param name="Patterns">The files of the area, per root.</param>
 /// <param name="Conflicts">What happens when both devices changed a file.</param>
-public sealed record Area(string Key, IReadOnlyList<(string Root, Glob Glob)> Patterns, ConflictPolicy Conflicts)
+/// <param name="Except">Files matched by <paramref name="Patterns"/> that still do not belong to the area.</param>
+public sealed record Area(string Key, IReadOnlyList<(string Root, Glob Glob)> Patterns, ConflictPolicy Conflicts, IReadOnlyList<(string Root, Glob Glob)>? Except = null)
 {
     /// <summary>The resource key of the name.</summary>
     public string NameKey => "Area_" + Key;
@@ -31,7 +32,8 @@ public sealed record Area(string Key, IReadOnlyList<(string Root, Glob Glob)> Pa
     public string DescriptionKey => "Area_" + Key + "_Hint";
 
     /// <summary>Whether a file belongs to the area.</summary>
-    public bool Contains(string root, string path) => Patterns.Any(p => p.Root == root && p.Glob.IsMatch(path));
+    public bool Contains(string root, string path) =>
+        Patterns.Any(p => p.Root == root && p.Glob.IsMatch(path)) && !(Except?.Any(p => p.Root == root && p.Glob.IsMatch(path)) ?? false);
 }
 
 /// <summary>The built-in areas and which files belong to which.</summary>
@@ -45,6 +47,9 @@ public static class Areas
     public const string Hud = "hud";
     public const string Inventory = "inventory";
     public const string Plugins = "plugins";
+
+    /// <summary>ACT and its plugins (owner's request, 2026-11-06).</summary>
+    public const string Act = "act";
 
     /// <summary>Not a set of files: the custom plugin repositories merged into Dalamud's settings.</summary>
     public const string Repositories = "repositories";
@@ -65,6 +70,10 @@ public static class Areas
         new(Hud, Game(Chr + "ADDON.DAT"), ConflictPolicy.NewestWins),
         new(Inventory, Game(Chr + "ITEMODR.DAT"), ConflictPolicy.NewestWins),
         new(Plugins, [(Roots.Plugins, new Glob("**"))], ConflictPolicy.Ask),
+
+        // ACT rewrites its settings on every exit, as the game does the HUD layout: the state backed
+        // up last wins. ACT's own file holds this device's paths and windows and is never taken.
+        new(Act, [(Roots.Act, new Glob("**"))], ConflictPolicy.NewestWins, [(Roots.Act, new Glob(Discovery.ActPlugins.MainConfig))]),
     ];
 
     /// <summary>The keys of everything that can be switched, the repositories included.</summary>

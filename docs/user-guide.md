@@ -88,6 +88,7 @@ names: switch an area on or off, and the application knows which files belong to
 | Inventory order | The order of items in inventory, saddlebag and retainers |
 | Plugin settings | The settings of your Dalamud plugins |
 | Plugin sources | Custom plugin repositories another PC has and this one lacks |
+| ACT and its plugins | The settings of ACT and its plugins (overlays, cactbot, timers), when ACT is installed |
 
 Some areas can be opened further: under **Chat**, **Character settings**, **Hotbars and macros** and **Key bindings and controls**, single groups of settings can be switched, for example only the chat's font size and transparency. This works where the game keeps its settings as named text. Window positions, the contents of hotbars, macros, key bindings and gear sets can only be taken whole.
 
@@ -106,6 +107,17 @@ leaves a plugin out of the backup entirely; it then also shows under the exclusi
 **Files (advanced)** lists every known file with its rule; a rule chosen there wins over the area.
 **Leave out of the backup** takes files out of the backup by a pattern, for example
 `SomePlugin/*.json`.
+
+**ACT** lists ACT and each of its plugins with the paths of their settings, below
+`AppData\Roaming`. The application finds them from ACT's own list of plugins: the plugin settings
+in ACT's `Config` folder, folders a plugin's settings point to (such as cactbot's user folder) and
+a few known places (Hojoring's `anoyetta\ACT`). You can change the paths of a plugin, one per line
+(`*` within a folder, `**` across folders), and go back to the proposal. Logs, caches, backups and
+program files are never backed up, whatever a line says. ACT's own settings file holds this PC's
+plugin paths and windows: it is backed up but never taken from another PC. While ACT is open,
+nothing is written to its settings, because ACT saves them when it closes; the automatic transfer
+takes them once ACT is closed. Plugins the other PC has and this one lacks are named after a
+comparison; install them yourself. The backup of ACT can be switched off under Settings.
 
 Why some defaults are "on request": the game changes the HUD layout (`ADDON.DAT`), `UISAVE.DAT`
 and the item order on every login by itself. Taking them automatically would overwrite a real

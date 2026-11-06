@@ -22,6 +22,7 @@ public static class Text
         Model.Roots.Game => Strings.Root_Game,
         Model.Roots.Plugins => Strings.Root_Plugins,
         Model.Roots.Dalamud => Strings.Root_Dalamud,
+        Model.Roots.Act => Strings.Root_Act,
         _ => root,
     };
 

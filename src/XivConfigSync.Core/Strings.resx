@@ -4,12 +4,29 @@
   <resheader name="version"><value>2.0</value></resheader>
   <data name="About_Disclaimer" xml:space="preserve"><value>FINAL FANTASY is a registered trademark of Square Enix Holdings Co., Ltd. XIV ConfigSync is an independent, non-commercial open-source project. It is not affiliated with, endorsed or supported by Square Enix or the Dalamud project. It contains no material from the game.</value></data>
   <data name="About_Text" xml:space="preserve"><value>XIV ConfigSync backs up the client settings of the game and the settings of Dalamud plugins into a folder you sync with OneDrive, and applies them on your other PCs. It only copies whole files while the game is closed. It never reads game memory, never talks to game servers and never changes the game. Licence: GPL-3.0-or-later.</value></data>
+  <data name="Act_BadPaths" xml:space="preserve"><value>These lines cannot be used. A path must be below AppData\Roaming, as a full path or relative to it; * and ** are allowed.{0}</value></data>
+  <data name="Act_Custom" xml:space="preserve"><value>paths changed by you</value></data>
+  <data name="Act_Disabled" xml:space="preserve"><value>switched off in ACT</value></data>
+  <data name="Act_Enabled" xml:space="preserve"><value>loaded by ACT</value></data>
+  <data name="Act_Files" xml:space="preserve"><value>{0} files</value></data>
+  <data name="Act_FilesOne" xml:space="preserve"><value>1 file</value></data>
+  <data name="Act_Intro" xml:space="preserve"><value>Found from ACT&apos;s list of plugins. Each line is a path below AppData\Roaming; * matches within a folder, ** across folders. Logs, caches, backups and program files are never backed up, whatever a line says.</value></data>
+  <data name="Act_NotFound" xml:space="preserve"><value>ACT was not found on this PC (no folder Advanced Combat Tracker\Config in AppData\Roaming).</value></data>
+  <data name="Act_Off" xml:space="preserve"><value>The backup of ACT is switched off in the settings. The paths below are what would be backed up.</value></data>
+  <data name="Act_Outside" xml:space="preserve"><value>Named in its settings but not backed up, because it is outside AppData\Roaming or too large: {0}</value></data>
+  <data name="Act_Proposal" xml:space="preserve"><value>paths as proposed</value></data>
+  <data name="Act_Save" xml:space="preserve"><value>Save paths</value></data>
+  <data name="Act_Self" xml:space="preserve"><value>ACT itself</value></data>
+  <data name="Act_SelfState" xml:space="preserve"><value>ACT&apos;s own settings; backed up, never taken</value></data>
+  <data name="Act_UseProposal" xml:space="preserve"><value>Use the proposal</value></data>
   <data name="Action_Apply" xml:space="preserve"><value>Apply</value></data>
   <data name="Action_Conflict" xml:space="preserve"><value>Conflict</value></data>
   <data name="Action_Offer" xml:space="preserve"><value>Offered</value></data>
   <data name="Action_OnlyHere" xml:space="preserve"><value>Only here</value></data>
   <data name="Action_Skip" xml:space="preserve"><value>Nothing to do</value></data>
   <data name="App_Title" xml:space="preserve"><value>XIV ConfigSync</value></data>
+  <data name="Area_act" xml:space="preserve"><value>ACT and its plugins</value></data>
+  <data name="Area_act_Hint" xml:space="preserve"><value>The settings of ACT&apos;s plugins, such as overlays, cactbot and timers. Which files belong to them is found from ACT&apos;s list of plugins; the paths can be changed on the ACT tab. Logs are never backed up, and ACT&apos;s own file stays on each PC.</value></data>
   <data name="Area_character" xml:space="preserve"><value>Character settings</value></data>
   <data name="Area_character_Hint" xml:space="preserve"><value>Name plates, camera, battle effects, pets and the other character settings, without the chat. Also the friend list data, the item search and appearance presets from character creation.</value></data>
   <data name="Area_chat" xml:space="preserve"><value>Chat</value></data>
@@ -115,6 +132,7 @@
   <data name="Exclude_Log" xml:space="preserve"><value>log file</value></data>
   <data name="Exclude_NotConfig" xml:space="preserve"><value>not configuration</value></data>
   <data name="Exclude_Old" xml:space="preserve"><value>the game&apos;s own previous copy</value></data>
+  <data name="Exclude_Program" xml:space="preserve"><value>program file</value></data>
   <data name="Exclude_Shadow" xml:space="preserve"><value>Dalamud&apos;s shadow copy of the settings</value></data>
   <data name="Exclude_Temp" xml:space="preserve"><value>temporary file</value></data>
   <data name="Exclude_TooLarge" xml:space="preserve"><value>larger than 64 MB</value></data>
@@ -133,6 +151,8 @@
   <data name="Log_OpenFolder" xml:space="preserve"><value>Open log folder</value></data>
   <data name="Matrix_Accounts" xml:space="preserve"><value>The launcher&apos;s list of accounts (names, no passwords). Belongs to this device.</value></data>
   <data name="Matrix_Acq" xml:space="preserve"><value>Acquaintance list and related character data.</value></data>
+  <data name="Matrix_ActConfig" xml:space="preserve"><value>ACT&apos;s own settings: plugin paths, windows and the log folder of this PC. Backed up, never taken from another PC.</value></data>
+  <data name="Matrix_ActPlugin" xml:space="preserve"><value>Settings of an ACT plugin, found from ACT&apos;s list of plugins.</value></data>
   <data name="Matrix_Addon" xml:space="preserve"><value>HUD layout. The game changes this file by itself on every login, so it is only applied on request.</value></data>
   <data name="Matrix_BootCfg" xml:space="preserve"><value>Launcher settings of this device.</value></data>
   <data name="Matrix_Cfgcopy" xml:space="preserve"><value>Holds the character&apos;s name and IDs; belongs to this device.</value></data>
@@ -164,6 +184,7 @@
   <data name="Nav_Rules" xml:space="preserve"><value>Areas</value></data>
   <data name="Nav_Settings" xml:space="preserve"><value>Settings</value></data>
   <data name="Nav_Transfer" xml:space="preserve"><value>Transfer</value></data>
+  <data name="Notify_ActWaiting" xml:space="preserve"><value>ACT is running: the ACT settings from {0} are taken once ACT is closed.</value></data>
   <data name="Notify_Applied" xml:space="preserve"><value>{0} files taken over from {1}.</value></data>
   <data name="Notify_AppliedAreas" xml:space="preserve"><value>Taken from {1}: {0}.</value></data>
   <data name="Notify_Conflicts" xml:space="preserve"><value>{0} files from {1} were also changed here. Please decide on the Transfer page.</value></data>
@@ -223,6 +244,7 @@
   <data name="Recovery_LeftAlone" xml:space="preserve"><value>{0} files changed after the interruption and were left as they are. You can take them on the Transfer page.</value></data>
   <data name="Recovery_Text" xml:space="preserve"><value>A transfer or an undo was interrupted, for example by a power cut or because the game was started. Yes: finish it. No: go back to the state before it. Cancel: decide later.</value></data>
   <data name="Recovery_Title" xml:space="preserve"><value>Interrupted transfer</value></data>
+  <data name="Refuse_ActRunning" xml:space="preserve"><value>ACT is running. Close it first: it saves its settings when it exits and would overwrite the transferred ones.</value></data>
   <data name="Refuse_AlreadySyncFolder" xml:space="preserve"><value>This folder is already a sync folder. Choose it to join it instead of creating a new one.</value></data>
   <data name="Refuse_Busy" xml:space="preserve"><value>Another operation is running. Please try again in a moment.</value></data>
   <data name="Refuse_ChangedSincePlan" xml:space="preserve"><value>Some files changed since the comparison, for example because the game ran. Nothing was written. Please compare again.</value></data>
@@ -241,6 +263,7 @@
   <data name="Refuse_SourceNoDalamudSettings" xml:space="preserve"><value>The latest backup of that device has no Dalamud settings yet. It needs this version of the application and one backup.</value></data>
   <data name="Refuse_SyncFolderUnavailable" xml:space="preserve"><value>The sync folder is not reachable right now. Connect the drive or start OneDrive, then try again.</value></data>
   <data name="Refuse_UnknownDevice" xml:space="preserve"><value>This device is not in the sync folder.</value></data>
+  <data name="Root_Act" xml:space="preserve"><value>ACT</value></data>
   <data name="Root_Dalamud" xml:space="preserve"><value>Dalamud</value></data>
   <data name="Root_Game" xml:space="preserve"><value>Game</value></data>
   <data name="Root_Plugins" xml:space="preserve"><value>Plugins</value></data>
@@ -263,6 +286,7 @@
   <data name="Rules_SettingChoices" xml:space="preserve"><value>{0} single settings have their own choice, made on the Transfer page.</value></data>
   <data name="Rules_SettingChoicesOne" xml:space="preserve"><value>One single setting has its own choice, made on the Transfer page.</value></data>
   <data name="Rules_SettingChoicesReset" xml:space="preserve"><value>Let them follow their groups again</value></data>
+  <data name="Rules_TabAct" xml:space="preserve"><value>ACT</value></data>
   <data name="Rules_TabAreas" xml:space="preserve"><value>Areas</value></data>
   <data name="Rules_TabFiles" xml:space="preserve"><value>Files (advanced)</value></data>
   <data name="Rules_TabPlugins" xml:space="preserve"><value>Plugins (advanced)</value></data>
@@ -300,6 +324,7 @@
   <data name="Setting_ToolTipDispSize" xml:space="preserve"><value>Size of tooltips</value></data>
   <data name="Settings_AutoApply" xml:space="preserve"><value>Take the areas switched on from other PCs automatically (with a backup first)</value></data>
   <data name="Settings_Autostart" xml:space="preserve"><value>Start with Windows (in the notification area)</value></data>
+  <data name="Settings_BackUpAct" xml:space="preserve"><value>Back up ACT settings (Advanced Combat Tracker)</value></data>
   <data name="Settings_BackupOnGameExit" xml:space="preserve"><value>Back up automatically after playing</value></data>
   <data name="Settings_BackUpPlugins" xml:space="preserve"><value>Back up plugin settings</value></data>
   <data name="Settings_Behaviour" xml:space="preserve"><value>Behaviour</value></data>
@@ -370,6 +395,7 @@
   <data name="Status_Refreshing" xml:space="preserve"><value>Checking the sync folder...</value></data>
   <data name="SyncFile_OtherFolder" xml:space="preserve"><value>This sync file belongs to {0}, but this device uses {1}. To use the other folder, choose &quot;Change sync folder&quot; in the settings.</value></data>
   <data name="SyncFile_TypeName" xml:space="preserve"><value>XIV ConfigSync sync folder</value></data>
+  <data name="Transfer_ActMissing" xml:space="preserve"><value>ACT plugins on the chosen device that are not installed here: {0}. Their settings are taken too, but only take effect once you install them.</value></data>
   <data name="Transfer_AllConflicts" xml:space="preserve"><value>Take all conflicts from the source</value></data>
   <data name="Transfer_Apply" xml:space="preserve"><value>Take selected</value></data>
   <data name="Transfer_Compare" xml:space="preserve"><value>Compare</value></data>
@@ -405,6 +431,8 @@
   <data name="Upload_InSync" xml:space="preserve"><value>Uploaded (OneDrive reports it in sync)</value></data>
   <data name="Upload_Pending" xml:space="preserve"><value>Handed to OneDrive, upload pending</value></data>
   <data name="Upload_Unknown" xml:space="preserve"><value>Handed to the sync folder; cloud state unknown</value></data>
+  <data name="Warn_ActOff" xml:space="preserve"><value>The chosen device also backs up ACT. Its ACT settings are not offered because ACT is not found here or its backup is off (see Settings).</value></data>
+  <data name="Warn_ActRunning" xml:space="preserve"><value>ACT is running. Its settings can only be taken once it is closed, because it saves them when it exits.</value></data>
   <data name="Warn_GameVersionUnknown" xml:space="preserve"><value>The game version of one device is unknown, so it cannot be compared.</value></data>
   <data name="Warn_PluginsOff" xml:space="preserve"><value>The source also has plugin settings. They are not offered because this device does not back up plugin settings (see Settings).</value></data>
 </root>

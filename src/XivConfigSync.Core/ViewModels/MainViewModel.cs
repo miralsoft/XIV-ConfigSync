@@ -413,6 +413,18 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
                     ui.Notify(Strings.App_Title, Text.Format(Strings.Notify_Conflicts, result.Waiting, device.DisplayName));
                 }
 
+                if (result.ActWaiting > 0)
+                {
+                    // ACT runs: its files wait, and the revision stays unhandled so a later try takes them.
+                    if (announcedRefusals.GetValueOrDefault(device.DeviceId) != revisionId + "act")
+                    {
+                        announcedRefusals[device.DeviceId] = revisionId + "act";
+                        ui.Notify(Strings.App_Title, Text.Format(Strings.Notify_ActWaiting, device.DisplayName));
+                    }
+
+                    continue;
+                }
+
                 await RunAsync(Strings.Status_Refreshing, () => Engine.MarkHandled(device.DeviceId, revisionId), showErrors: false).ConfigureAwait(true);
             }
             else if (refusal is not null && refusal != "Refuse_GameRunning" && refusal != "Refuse_Busy"

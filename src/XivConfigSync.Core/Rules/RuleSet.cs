@@ -41,6 +41,12 @@ public sealed class RuleFile
     /// request, 2026-11-06).
     /// </summary>
     public Dictionary<string, bool> Settings { get; set; } = [];
+
+    /// <summary>
+    /// Per ACT plugin (and "ACT" itself), the user's own list of paths to back up, relative to the
+    /// roaming folder; a plugin not listed uses the proposal (owner's request, 2026-11-06).
+    /// </summary>
+    public Dictionary<string, List<string>> ActPaths { get; set; } = [];
 }
 
 /// <summary>The effective rules: the built-in matrix with the user's overrides and exclusions.</summary>
@@ -124,6 +130,7 @@ public sealed class RuleSet
             Settings = new(File.Settings),
             Overrides = File.Overrides.Where(o => !(o.Root == root && string.Equals(o.Pattern, pattern, StringComparison.OrdinalIgnoreCase))).ToList(),
             Exclusions = [.. File.Exclusions],
+            ActPaths = File.ActPaths,
         };
         if (rule is not null)
         {
@@ -143,6 +150,7 @@ public sealed class RuleSet
             Settings = new(File.Settings),
             Overrides = [.. File.Overrides],
             Exclusions = File.Exclusions.Where(e => !(e.Root == root && string.Equals(e.Pattern, pattern, StringComparison.OrdinalIgnoreCase))).ToList(),
+            ActPaths = File.ActPaths,
         };
         if (excluded)
         {
@@ -184,6 +192,7 @@ public sealed class RuleSet
                 .Where(o => area is null || !area.Patterns.Any(p => p.Root == o.Root && string.Equals(p.Glob.Pattern, o.Pattern.Replace('\\', '/'), StringComparison.OrdinalIgnoreCase)))
                 .ToList(),
             Exclusions = [.. File.Exclusions],
+            ActPaths = File.ActPaths,
         };
         return new RuleSet(copy);
     }
@@ -202,6 +211,7 @@ public sealed class RuleSet
         Settings = new(File.Settings),
         Overrides = [.. File.Overrides],
         Exclusions = [.. File.Exclusions],
+        ActPaths = File.ActPaths,
     });
 
     /// <summary>The key of a single setting in <see cref="RuleFile.Settings"/>: the file's name and the setting.</summary>
@@ -233,6 +243,31 @@ public sealed class RuleSet
             Settings = settings,
             Overrides = [.. File.Overrides],
             Exclusions = [.. File.Exclusions],
+            ActPaths = File.ActPaths,
+        });
+    }
+
+    /// <summary>Sets the user's own paths of an ACT plugin; null goes back to the proposal.</summary>
+    public RuleSet WithActPaths(string key, IReadOnlyList<string>? paths)
+    {
+        var all = new Dictionary<string, List<string>>(File.ActPaths, StringComparer.OrdinalIgnoreCase);
+        if (paths is null)
+        {
+            all.Remove(key);
+        }
+        else
+        {
+            all[key] = [.. paths];
+        }
+
+        return new RuleSet(new RuleFile
+        {
+            Areas = new(File.Areas),
+            Parts = new(File.Parts),
+            Settings = new(File.Settings),
+            Overrides = [.. File.Overrides],
+            Exclusions = [.. File.Exclusions],
+            ActPaths = all,
         });
     }
 
@@ -243,6 +278,7 @@ public sealed class RuleSet
         Parts = new(File.Parts),
         Overrides = [.. File.Overrides],
         Exclusions = [.. File.Exclusions],
+        ActPaths = File.ActPaths,
     });
 
     /// <summary>

@@ -93,6 +93,13 @@ public sealed partial class SettingsViewModel : ObservableObject
     [ObservableProperty]
     public partial bool BackUpPlugins { get; set; }
 
+    /// <summary>Whether ACT's settings are backed up (owner's request, 2026-11-06).</summary>
+    [ObservableProperty]
+    public partial bool BackUpAct { get; set; }
+
+    /// <summary>Whether ACT is found here; the switch is shown only then.</summary>
+    public bool HasAct => main.Engine.HasAct;
+
     [ObservableProperty]
     public partial bool Autostart { get; set; }
 
@@ -131,6 +138,8 @@ public sealed partial class SettingsViewModel : ObservableObject
         InstallFolder = s.GameInstallFolder ?? string.Empty;
         GameVersion = main.Engine.LocalGameVersion ?? Strings.Common_Unknown;
         BackUpPlugins = s.BackUpPlugins;
+        BackUpAct = s.BackUpAct != false;
+        OnPropertyChanged(nameof(HasAct));
         Autostart = shell.IsAutostartEnabled;
         FileAssociation = shell.IsFileAssociationRegistered;
         BackupOnGameExit = s.BackupOnGameExit != false;
@@ -162,6 +171,7 @@ public sealed partial class SettingsViewModel : ObservableObject
         var launcherFolder = string.IsNullOrWhiteSpace(LauncherFolder) ? null : LauncherFolder.Trim();
         var installFolder = string.IsNullOrWhiteSpace(InstallFolder) ? null : InstallFolder.Trim();
         var backUpPlugins = BackUpPlugins;
+        var backUpAct = BackUpAct;
         var backupOnGameExit = BackupOnGameExit;
         var autoApply = AutoApply;
         var minimizeOnClose = MinimizeOnClose;
@@ -201,6 +211,7 @@ public sealed partial class SettingsViewModel : ObservableObject
             }
             s.GameInstallFolder = installFolder;
             s.BackUpPlugins = backUpPlugins;
+            s.BackUpAct = backUpAct;
             s.BackupOnGameExit = backupOnGameExit;
             s.AutoApplyAlways = autoApply;
             s.CloseAction = minimizeOnClose ? CloseAction.MinimizeToTray : CloseAction.Exit;

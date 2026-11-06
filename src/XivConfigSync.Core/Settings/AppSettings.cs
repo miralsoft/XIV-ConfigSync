@@ -59,6 +59,12 @@ public sealed class AppSettings
 
     public bool BackUpPlugins { get; set; } = true;
 
+    /// <summary>Whether ACT's settings are backed up; null means yes when ACT is found (owner's request, 2026-11-06).</summary>
+    public bool? BackUpAct { get; set; }
+
+    /// <summary>The roaming application data folder ACT is found in; null means this user's own. Set by tests.</summary>
+    public string? RoamingFolder { get; set; }
+
     public int KeepRevisions { get; set; } = 50;
 
     /// <summary>Whether the first-start set-up was completed.</summary>

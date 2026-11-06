@@ -16,11 +16,22 @@ public static class Roots
     /// </summary>
     public const string Dalamud = "dalamud";
 
+    /// <summary>
+    /// The user's roaming application data folder (<c>%APPDATA%</c>), for ACT and its plugins
+    /// (owner's request, 2026-11-06). Never walked as a whole: only the paths of the detected ACT
+    /// plugins are read (<see cref="Discovery.ActPlugins"/>). Paths are relative to this folder, so they
+    /// fit a device with another Windows user name too.
+    /// </summary>
+    public const string Act = "act";
+
     /// <summary>All roots in a fixed order.</summary>
-    public static IReadOnlyList<string> All { get; } = [Game, Plugins, Dalamud];
+    public static IReadOnlyList<string> All { get; } = [Game, Plugins, Dalamud, Act];
 
     /// <summary>Roots read without their subfolders.</summary>
     public static bool IsTopLevelOnly(string root) => root == Dalamud;
+
+    /// <summary>Roots never walked as a whole: only the files a list of paths names are read.</summary>
+    public static bool IsOnlyListed(string root) => root == Act;
 }
 
 /// <summary>Flags a scan sets on a file.</summary>

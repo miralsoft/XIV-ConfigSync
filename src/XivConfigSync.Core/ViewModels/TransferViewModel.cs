@@ -395,14 +395,21 @@ public sealed partial class TransferViewModel : ObservableObject
         var deviceId = Source.DeviceId;
         var revisionId = Revision?.RevisionId;
         IReadOnlyList<PluginRepository> missing = [];
+        IReadOnlyList<string> missingAct = [];
         if (await main.RunAsync(Strings.Status_Comparing, () =>
         {
             built = main.Engine.Plan(deviceId, revisionId);
             missing = MissingRepositoriesOrNone(deviceId);
+            missingAct = main.Engine.MissingActPlugins(deviceId);
         }).ConfigureAwait(true))
         {
             plan = built;
             Fill();
+            if (missingAct.Count > 0)
+            {
+                Messages = string.Join(Environment.NewLine, new[] { Messages, Text.Format(Strings.Transfer_ActMissing, string.Join(", ", missingAct)) }.Where(m => m.Length > 0));
+            }
+
             RepositoryHint = missing.Count > 0 ? Text.Format(Strings.Transfer_RepositoriesHint, missing.Count) : string.Empty;
         }
     }

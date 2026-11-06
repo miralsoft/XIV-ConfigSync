@@ -64,8 +64,9 @@ public sealed class SyncEngine
     private readonly ICloudStateReader cloud;
     private readonly Log log;
     private readonly IApplyProbe? probe;
+    private readonly Func<bool> actRunning;
 
-    public SyncEngine(LocalData local, AppSettings settings, RuleSet rules, IGameMonitor game, ICloudStateReader cloud, Log log, IApplyProbe? probe = null)
+    public SyncEngine(LocalData local, AppSettings settings, RuleSet rules, IGameMonitor game, ICloudStateReader cloud, Log log, IApplyProbe? probe = null, Func<bool>? actRunning = null)
     {
         this.local = local;
         Settings = settings;
@@ -74,6 +75,7 @@ public sealed class SyncEngine
         this.cloud = cloud;
         this.log = log;
         this.probe = probe;
+        this.actRunning = actRunning ?? IsActProcessRunning;
     }
 
     /// <summary>The application version written into revisions.</summary>
@@ -90,7 +92,41 @@ public sealed class SyncEngine
         [Model.Roots.Game] = Settings.GameConfigFolder,
         [Model.Roots.Plugins] = Settings.BackUpPlugins ? PluginFolder : null,
         [Model.Roots.Dalamud] = Settings.BackUpPlugins ? DalamudDataFolder : null,
+        [Model.Roots.Act] = BacksUpAct ? RoamingFolder : null,
     };
+
+    /// <summary>The roaming application data folder ACT is looked for in.</summary>
+    public string RoamingFolder =>
+        Settings.RoamingFolder is { Length: > 0 } roaming ? roaming : Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+
+    /// <summary>Whether ACT is found on this device.</summary>
+    public bool HasAct => ActPlugins.IsInstalled(RoamingFolder);
+
+    /// <summary>Whether ACT's settings are backed up: ACT is found and the user did not turn it off.</summary>
+    public bool BacksUpAct => Settings.BackUpAct != false && HasAct;
+
+    /// <summary>Whether ACT runs now; its settings are not written while it does, since it saves them on exit.</summary>
+    public bool IsActRunning => actRunning();
+
+    /// <summary>ACT and its plugins on this device with the paths of their settings (owner's request, 2026-11-06).</summary>
+    public IReadOnlyList<ActPlugin> ActPluginList() => ActPlugins.Discover(RoamingFolder, Rules.File.ActPaths);
+
+    /// <summary>The paths read below the roaming folder: those of every ACT plugin.</summary>
+    private Dictionary<string, IReadOnlyList<string>> OnlyPaths() => new()
+    {
+        [Model.Roots.Act] = BacksUpAct ? [.. ActPluginList().SelectMany(p => p.Paths).Distinct(StringComparer.OrdinalIgnoreCase)] : [],
+    };
+
+    private static bool IsActProcessRunning()
+    {
+        var processes = System.Diagnostics.Process.GetProcessesByName("Advanced Combat Tracker");
+        foreach (var process in processes)
+        {
+            process.Dispose();
+        }
+
+        return processes.Length > 0;
+    }
 
     /// <summary>The plugin settings folder: from the launcher folder, else the one set in older settings.</summary>
     public string? PluginFolder =>
@@ -214,7 +250,7 @@ public sealed class SyncEngine
         var deviceId = Settings.DeviceId;
         var newObjects = 0;
         log.Info(correlation, $"Backup started ({origin}).");
-        var scan = Scanner.Scan(Roots, Rules, (file, content) =>
+        var scan = Scanner.Scan(Roots, Rules, onlyPaths: OnlyPaths(), contentSink: (file, content) =>
         {
             if (store.PutObject(deviceId, content, file.Hash))
             {
@@ -412,7 +448,8 @@ public sealed class SyncEngine
     /// </param>
     /// <param name="AreaKeys">The areas files were applied in, for the notification.</param>
     /// <param name="Repositories">Plugin repositories added.</param>
-    public sealed record AutoApplyResult(int Applied, int Waiting, string? RefusalKey, int FirstContact = 0, IReadOnlyList<string>? AreaKeys = null, int Repositories = 0);
+    /// <param name="ActWaiting">ACT files not applied because ACT runs; the revision is tried again later.</param>
+    public sealed record AutoApplyResult(int Applied, int Waiting, string? RefusalKey, int FirstContact = 0, IReadOnlyList<string>? AreaKeys = null, int Repositories = 0, int ActWaiting = 0);
 
     /// <summary>
     /// Applies from another device what the areas switched on allow without asking: files planned
@@ -430,6 +467,13 @@ public sealed class SyncEngine
         if (plan.Refusals.Count > 0)
         {
             return new AutoApplyResult(0, waiting, plan.Refusals[0], firstContact);
+        }
+
+        // ACT saves its settings when it exits: while it runs, its files wait for the next try.
+        var actWaiting = IsActRunning ? plan.Items.Count(i => i.Root == Model.Roots.Act && i.Action == PlanAction.Apply) : 0;
+        if (actWaiting > 0)
+        {
+            plan.Items.RemoveAll(i => i.Root == Model.Roots.Act);
         }
 
         var applied = 0;
@@ -452,7 +496,7 @@ public sealed class SyncEngine
             }
         }
 
-        return new AutoApplyResult(applied, waiting, null, firstContact, areaKeys, AutoMergeRepositories(sourceDeviceId));
+        return new AutoApplyResult(applied, waiting, null, firstContact, areaKeys, AutoMergeRepositories(sourceDeviceId), actWaiting);
     }
 
     /// <summary>
@@ -597,7 +641,7 @@ public sealed class SyncEngine
 
         var id = revisionId ?? store.ReadHead(sourceDeviceId) ?? throw new RefusedException("Refuse_NoRevision");
         var source = store.ReadRevision(sourceDeviceId, id);
-        var scan = Scanner.Scan(roots, Rules);
+        var scan = Scanner.Scan(roots, Rules, onlyPaths: OnlyPaths());
 
         // Files of the source this scan did not cover: hash them where they are, so they are never
         // taken for missing (review finding 2).
@@ -668,7 +712,20 @@ public sealed class SyncEngine
         if (unknownRoots.Count > 0)
         {
             plan.Items.RemoveAll(i => unknownRoots.Contains(i.Root));
-            plan.Warnings.Add("Warn_PluginsOff");
+            if (unknownRoots.Any(r => r != Model.Roots.Act))
+            {
+                plan.Warnings.Add("Warn_PluginsOff");
+            }
+
+            if (unknownRoots.Contains(Model.Roots.Act))
+            {
+                plan.Warnings.Add("Warn_ActOff");
+            }
+        }
+
+        if (plan.Items.Any(i => i.Root == Model.Roots.Act && i.Action != PlanAction.Skip) && IsActRunning)
+        {
+            plan.Warnings.Add("Warn_ActRunning");
         }
 
         if (!plan.IsOwnDevice)
@@ -699,6 +756,11 @@ public sealed class SyncEngine
         if (selected.Count == 0)
         {
             throw new RefusedException("Refuse_NothingSelected");
+        }
+
+        if (selected.Any(i => i.Root == Model.Roots.Act) && IsActRunning)
+        {
+            throw new RefusedException("Refuse_ActRunning");
         }
 
         string snapshotId;
@@ -775,6 +837,11 @@ public sealed class SyncEngine
             var applier = NewApplier(null);
             var snapshot = applier.ListSnapshots().FirstOrDefault(s => s.SnapshotId == snapshotId)
                 ?? throw new RefusedException("Refuse_NoSnapshot");
+            if (snapshot.Files.Any(f => f.Root == Model.Roots.Act) && IsActRunning)
+            {
+                throw new RefusedException("Refuse_ActRunning");
+            }
+
             applier.Restore(snapshotId);
 
             // The files are no longer in the state both devices shared: forget that state, so the
@@ -850,7 +917,7 @@ public sealed class SyncEngine
     }
 
     /// <summary>A scan of this device without storing anything; for diagnostics.</summary>
-    public ScanResult ScanOnly() => Scanner.Scan(Roots, Rules);
+    public ScanResult ScanOnly() => Scanner.Scan(Roots, Rules, onlyPaths: OnlyPaths());
 
     /// <summary>
     /// The custom plugin repositories in the latest backup of a device that this device's Dalamud
@@ -860,6 +927,33 @@ public sealed class SyncEngine
     {
         var (local, source, _, _) = ReadRepositorySettings(sourceDeviceId);
         return RepositoryMerge.Missing(local, source);
+    }
+
+    /// <summary>
+    /// The ACT plugins another device's latest backup lists that this device's ACT does not, by
+    /// name, read from ACT's own settings in that backup. Read-only; nothing is installed.
+    /// </summary>
+    public IReadOnlyList<string> MissingActPlugins(string sourceDeviceId)
+    {
+        if (!HasAct || sourceDeviceId == Settings.DeviceId)
+        {
+            return [];
+        }
+
+        var store = OpenStore();
+        var head = store.ReadHead(sourceDeviceId);
+        var file = head is null ? null : store.ReadRevision(sourceDeviceId, head).AllFiles()
+            .FirstOrDefault(f => f.Root == Model.Roots.Act && string.Equals(f.File.Path, ActPlugins.MainConfig, StringComparison.OrdinalIgnoreCase)).File;
+        if (file is null)
+        {
+            return [];
+        }
+
+        var here = ActPluginList().Select(p => p.Key).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        return [.. ActPlugins.ReadPluginList(store.ReadObject(sourceDeviceId, file.Hash))
+            .Select(p => ActPlugins.KeyOf(p.Path))
+            .Where(k => k.Length > 0 && !here.Contains(k))
+            .Distinct(StringComparer.OrdinalIgnoreCase)];
     }
 
     /// <summary>

@@ -113,6 +113,7 @@ internal sealed class Device
         Name = name;
         GameFolder = temp.Sub(name + "-game");
         PluginFolder = temp.Sub(name + "-plugins");
+        RoamingFolder = temp.Sub(name + "-roaming");
         Local = new LocalData(temp.Sub(name + "-local"));
         Directory.CreateDirectory(Path.Combine(GameFolder, Chr));
         Directory.CreateDirectory(PluginFolder);
@@ -120,9 +121,12 @@ internal sealed class Device
         {
             GameConfigFolder = GameFolder,
             PluginConfigFolder = PluginFolder,
+
+            // Never the real roaming folder: ACT there must not be read by a test.
+            RoamingFolder = RoamingFolder,
         };
         Game = new FakeGame();
-        Engine = new SyncEngine(Local, Settings, new RuleSet(new RuleFile()), Game, new FakeCloud(CloudFileState.InSync), Log.None, probe);
+        Engine = new SyncEngine(Local, Settings, new RuleSet(new RuleFile()), Game, new FakeCloud(CloudFileState.InSync), Log.None, probe, () => ActRunning);
     }
 
     public string Name { get; }
@@ -130,6 +134,12 @@ internal sealed class Device
     public string GameFolder { get; }
 
     public string PluginFolder { get; }
+
+    /// <summary>This device's roaming folder, where a test may put an ACT folder.</summary>
+    public string RoamingFolder { get; }
+
+    /// <summary>Whether ACT counts as running.</summary>
+    public bool ActRunning { get; set; }
 
     public LocalData Local { get; }
 

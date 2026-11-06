@@ -58,7 +58,8 @@ set up again under its old ID; other devices do not carry a common state across 
   "roots": {
     "game": { "files": [ { "path": "FFXIV_CHR.../HOTBAR.DAT", "hash": "...", "size": 204832, "flags": [] } ] },
     "plugins": { "files": [ { "path": "SomePlugin.json", "hash": "...", "size": 1063, "flags": ["credential"] } ] },
-    "dalamud": { "files": [ { "path": "dalamudConfig.json", "hash": "...", "size": 83564, "flags": [] } ] }
+    "dalamud": { "files": [ { "path": "dalamudConfig.json", "hash": "...", "size": 83564, "flags": [] } ] },
+    "act": { "files": [ { "path": "Advanced Combat Tracker/Config/RainbowMage.OverlayPlugin.config.json", "hash": "...", "size": 16788, "flags": ["absolute-path"] } ] }
   },
   "excluded": [ { "root": "plugins", "path": "SomePlugin/cache", "reason": "cache rule" } ]
 }
@@ -68,7 +69,9 @@ set up again under its old ID; other devices do not carry a common state across 
   `dalamud` (the files directly in Dalamud's own folder, the parent of `pluginConfigs`; its
   subfolders are not read). A manifest with any other root is rejected, so a device with an
   older version of the application rejects revisions that carry `dalamud`: all devices need the
-  same version.
+  same version. `act` (owner's request, 2026-11-06) is the roaming folder `%APPDATA%`, read only at
+  the paths found for ACT and its plugins; older versions reject revisions that carry it in the
+  same way.
 - `origin`: `game-exit`, `manual`, `app-start`, `before-apply` (the backup taken right after an
   apply).
 - `path` is relative to its root, with `/` as separator, validated on read: no empty segment, no
@@ -137,11 +140,12 @@ logs\                rotated log files
   "exclusions": [ { "root": "plugins", "pattern": "SomePlugin/cache/**" } ],
   "areas": { "chat": false, "hud": true },
   "parts": { "chat.font": false },
-  "settings": { "COMMON.DAT/LogFontSize": false }
+  "settings": { "COMMON.DAT/LogFontSize": false },
+  "actPaths": { "CactbotOverlay": ["Advanced Combat Tracker/Plugins/cactbot/cactbot/user/**"] }
 }
 ```
 
-`areas` holds the switches per area (FR-077); an area not listed is on. `parts` holds the switches of groups of settings within an area (FR-082); a group not listed is on, and it is taken only when its area is on too. `settings` holds the choices on single settings of a split settings file, keyed by file name and setting (FR-084): `true` always taken, `false` always kept here, not listed follows its group. A rule in `overrides`
+`areas` holds the switches per area (FR-077); an area not listed is on. `parts` holds the switches of groups of settings within an area (FR-082); a group not listed is on, and it is taken only when its area is on too. `settings` holds the choices on single settings of a split settings file, keyed by file name and setting (FR-084): `true` always taken, `false` always kept here, not listed follows its group. `actPaths` holds, per ACT plugin (and `ACT` for ACT itself), the user's own list of paths below `%APPDATA%` that replaces the proposal (FR-086). A rule in `overrides`
 wins over the area of its files. In `bases\<sourceDeviceId>.json`, a value beginning with `cmp:`
 is the hash of the part of a split settings file (`COMMON.DAT`, `CONTROL0.DAT`, `CONTROL1.DAT`) compared when some of its groups are off (FR-078, FR-082), not of
 the whole file.

@@ -683,6 +683,57 @@
                         </ScrollViewer>
                     </DockPanel>
                 </TabItem>
+                <TabItem AutomationProperties.AutomationId="RuleTabAct" Header="{x:Static core:Strings.Rules_TabAct}">
+                    <DockPanel>
+                        <TextBlock
+                            AutomationProperties.AutomationId="ActState"
+                            DockPanel.Dock="Top"
+                            Margin="0,8,0,8"
+                            Style="{StaticResource Muted}"
+                            Text="{Binding ActState}"
+                            TextWrapping="Wrap" />
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                            <ItemsControl AutomationProperties.AutomationId="ActRows" ItemsSource="{Binding ActRows}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Margin="0,0,0,8" Style="{StaticResource Card}">
+                                            <StackPanel>
+                                                <TextBlock FontWeight="SemiBold" Text="{Binding Name}" />
+                                                <TextBlock Style="{StaticResource Muted}" Text="{Binding StateText}" />
+                                                <TextBox
+                                                    AcceptsReturn="True"
+                                                    AutomationProperties.Name="{Binding Name}"
+                                                    FontFamily="Consolas"
+                                                    Margin="0,6,0,4"
+                                                    MinLines="2"
+                                                    Text="{Binding PathsText, UpdateSourceTrigger=PropertyChanged}"
+                                                    TextWrapping="NoWrap"
+                                                    VerticalScrollBarVisibility="Auto" />
+                                                <TextBlock
+                                                    Style="{StaticResource Muted}"
+                                                    Text="{Binding OutsideText}"
+                                                    TextWrapping="Wrap"
+                                                    Visibility="{Binding OutsideText, Converter={StaticResource TextToVisibility}}" />
+                                                <StackPanel Margin="0,4,0,0" Orientation="Horizontal">
+                                                    <Button
+                                                        AutomationProperties.Name="{x:Static core:Strings.Act_Save}"
+                                                        Command="{Binding SaveCommand}"
+                                                        Content="{x:Static core:Strings.Act_Save}"
+                                                        Margin="0,0,8,0" />
+                                                    <Button
+                                                        AutomationProperties.Name="{x:Static core:Strings.Act_UseProposal}"
+                                                        Command="{Binding UseProposalCommand}"
+                                                        Content="{x:Static core:Strings.Act_UseProposal}"
+                                                        Visibility="{Binding IsCustom, Converter={StaticResource BoolToVisibility}}" />
+                                                </StackPanel>
+                                            </StackPanel>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </DockPanel>
+                </TabItem>
                 <TabItem AutomationProperties.AutomationId="RuleTabPlugins" Header="{x:Static core:Strings.Rules_TabPlugins}">
                     <DockPanel>
                         <TextBlock
@@ -963,6 +1014,11 @@
                                 Style="{StaticResource Muted}"
                                 Text="{Binding LauncherFolderState}" />
                             <CheckBox Content="{x:Static core:Strings.Settings_BackUpPlugins}" IsChecked="{Binding BackUpPlugins}" />
+                            <CheckBox
+                                Content="{x:Static core:Strings.Settings_BackUpAct}"
+                                IsChecked="{Binding BackUpAct}"
+                                Margin="0,4,0,0"
+                                Visibility="{Binding HasAct, Converter={StaticResource BoolToVisibility}}" />
                         </StackPanel>
                         <TextBlock
                             Grid.Row="4"

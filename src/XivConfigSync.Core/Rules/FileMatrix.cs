@@ -91,6 +91,11 @@ public static class FileMatrix
         new(Roots.Dalamud, "launcherConfigV3.json", FileClass.Device, ApplyRule.Never, Evidence.Confirmed, "Matrix_LauncherConfig"),
         new(Roots.Dalamud, "accountsList.json", FileClass.Sensitive, ApplyRule.Never, Evidence.Unconfirmed, "Matrix_Accounts"),
         new(Roots.Dalamud, "**", FileClass.Device, ApplyRule.Never, Evidence.Unknown, "Matrix_DalamudOther"),
+
+        // ACT (owner's request, 2026-11-06): its own file names this device's plugin paths, windows
+        // and log folder and is never taken; the plugins' settings follow the area.
+        new(Roots.Act, Discovery.ActPlugins.MainConfig, FileClass.Mixed, ApplyRule.Never, Evidence.Confirmed, "Matrix_ActConfig"),
+        new(Roots.Act, "**", FileClass.Unknown, ApplyRule.OnRequest, Evidence.Unconfirmed, "Matrix_ActPlugin"),
     ];
 
     /// <summary>
@@ -133,6 +138,24 @@ public static class FileMatrix
         (Roots.Dalamud, new Glob("*.db-wal"), "Exclude_Lock"),
         (Roots.Dalamud, new Glob("*.db-shm"), "Exclude_Lock"),
         (Roots.Dalamud, new Glob("*.tmp"), "Exclude_Temp"),
+
+        // ACT: only settings, never logs, caches, backups or programs, whatever a path list says.
+        (Roots.Act, new Glob("Advanced Combat Tracker/FFXIVLogs*/**"), "Exclude_Log"),
+        (Roots.Act, new Glob("**/*.log"), "Exclude_Log"),
+        (Roots.Act, new Glob("**/log/**"), "Exclude_Log"),
+        (Roots.Act, new Glob("**/logs/**"), "Exclude_Log"),
+        (Roots.Act, new Glob("**/*historydb*"), "Exclude_Log"),
+        (Roots.Act, new Glob("**/cache/**"), "Exclude_Cache"),
+        (Roots.Act, new Glob("**/*cache/**"), "Exclude_Cache"),
+        (Roots.Act, new Glob("**/backup/**"), "Exclude_Backup"),
+        (Roots.Act, new Glob("**/*.backup"), "Exclude_Backup"),
+        (Roots.Act, new Glob("**/*.bak"), "Exclude_Backup"),
+        (Roots.Act, new Glob("**/*.tmp"), "Exclude_Temp"),
+        (Roots.Act, new Glob("**/*.db"), "Exclude_Cache"),
+        (Roots.Act, new Glob("**/*.db-*"), "Exclude_Lock"),
+        (Roots.Act, new Glob("**/*.dll"), "Exclude_Program"),
+        (Roots.Act, new Glob("**/*.exe"), "Exclude_Program"),
+        (Roots.Act, new Glob("**/*.pdb"), "Exclude_Program"),
     ];
 
     /// <summary>A single file above this size is left out and reported (cache rule by size).</summary>

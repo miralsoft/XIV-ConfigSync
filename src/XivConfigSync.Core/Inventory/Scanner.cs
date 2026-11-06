@@ -101,7 +101,8 @@ public static class Scanner
     /// <param name="roots">Root name to folder.</param>
     /// <param name="rules">Exclusions to apply.</param>
     /// <param name="contentSink">Receives each file's content, so a backup can store it without reading it twice.</param>
-    public static ScanResult Scan(IReadOnlyDictionary<string, string?> roots, RuleSet rules, Action<ScannedFile, byte[]>? contentSink = null)
+    /// <param name="onlyPaths">For a root listed here, only the files these paths name are read instead of walking its folder (ACT below the roaming folder).</param>
+    public static ScanResult Scan(IReadOnlyDictionary<string, string?> roots, RuleSet rules, Action<ScannedFile, byte[]>? contentSink = null, IReadOnlyDictionary<string, IReadOnlyList<string>>? onlyPaths = null)
     {
         var result = new ScanResult();
         foreach (var (root, folder) in roots)
@@ -111,7 +112,10 @@ public static class Scanner
                 continue;
             }
 
-            foreach (var (full, skipped) in WalkWithSkipped(folder, !Roots.IsTopLevelOnly(root)))
+            var entries = onlyPaths is not null && onlyPaths.TryGetValue(root, out var paths)
+                ? Discovery.ActPlugins.Expand(folder, paths).Select(p => (FullPath: Path.Combine(folder, p.Replace('/', Path.DirectorySeparatorChar)), Reason: (string?)null))
+                : Roots.IsOnlyListed(root) ? Enumerable.Empty<(string FullPath, string? Reason)>() : WalkWithSkipped(folder, !Roots.IsTopLevelOnly(root));
+            foreach (var (full, skipped) in entries)
             {
                 if (!RelativePath.TryNormalize(Path.GetRelativePath(folder, full), out var relative))
                 {

@@ -1,10 +1,61 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using XivConfigSync.Core.Discovery;
 using XivConfigSync.Core.Model;
 using XivConfigSync.Core.Rules;
 
 namespace XivConfigSync.Core.ViewModels;
+
+/// <summary>
+/// ACT or one of its plugins on the rules page, with the paths of its settings: the proposal, or
+/// the user's own list (owner's request, 2026-11-06).
+/// </summary>
+public sealed partial class ActRow : ObservableObject
+{
+    private readonly RulesViewModel owner;
+
+    public ActRow(RulesViewModel owner, ActPlugin plugin, int files)
+    {
+        this.owner = owner;
+        Key = plugin.Key;
+        Name = plugin.Key == ActPlugins.ActKey ? Strings.Act_Self : plugin.Key;
+        PathsText = string.Join(Environment.NewLine, plugin.Paths);
+        var state = new List<string>
+        {
+            plugin.Key == ActPlugins.ActKey ? Strings.Act_SelfState : plugin.Enabled ? Strings.Act_Enabled : Strings.Act_Disabled,
+            files == 1 ? Strings.Act_FilesOne : Text.Format(Strings.Act_Files, files),
+            plugin.IsCustom ? Strings.Act_Custom : Strings.Act_Proposal,
+        };
+        StateText = string.Join(" · ", state);
+        OutsideText = plugin.Outside.Count == 0 ? string.Empty : Text.Format(Strings.Act_Outside, string.Join(", ", plugin.Outside));
+        IsCustom = plugin.IsCustom;
+    }
+
+    public string Key { get; }
+
+    public string Name { get; }
+
+    /// <summary>Whether ACT loads it, how many files its paths name, and whether they are the proposal.</summary>
+    public string StateText { get; }
+
+    /// <summary>Paths its settings name that are not backed up: outside the roaming folder or too large.</summary>
+    public string OutsideText { get; }
+
+    public bool IsCustom { get; }
+
+    /// <summary>The paths, one per line, relative to the roaming folder; editable.</summary>
+    [ObservableProperty]
+    public partial string PathsText { get; set; }
+
+    [RelayCommand]
+    public void Save() => owner.SaveActPaths(this);
+
+    [RelayCommand]
+    public void UseProposal() => owner.ResetActPaths(Key);
+
+    public override string ToString() => Name;
+}
 
 /// <summary>A rule as a choice in a list.</summary>
 public sealed record RuleChoice(ApplyRule Rule, string Name)
@@ -328,6 +379,57 @@ public sealed partial class RulesViewModel : ObservableObject
         Reload();
     }
 
+    /// <summary>ACT and its plugins, each with the paths of its settings.</summary>
+    public ObservableCollection<ActRow> ActRows { get; } = [];
+
+    /// <summary>Whether ACT is found here, and whether its settings are backed up.</summary>
+    [ObservableProperty]
+    public partial string ActState { get; set; } = string.Empty;
+
+    /// <summary>Saves the paths a row's text names; lines that are not usable are reported and nothing is saved.</summary>
+    public void SaveActPaths(ActRow row)
+    {
+        var roaming = main.Engine.RoamingFolder;
+        var lines = row.PathsText.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        var bad = lines.Where(l => ActPlugins.ParsePath(roaming, l) is null).ToList();
+        if (bad.Count > 0)
+        {
+            ui.Inform(Strings.Rules_Title, Text.Format(Strings.Act_BadPaths, Environment.NewLine + Environment.NewLine + string.Join(Environment.NewLine, bad)));
+            return;
+        }
+
+        var paths = lines.Select(l => ActPlugins.ParsePath(roaming, l)!).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+        var key = row.Key;
+        _ = SaveActAsync(rules => rules.WithActPaths(key, paths));
+    }
+
+    /// <summary>Goes back to the proposal for a plugin.</summary>
+    public void ResetActPaths(string key) => _ = SaveActAsync(rules => rules.WithActPaths(key, null));
+
+    private async Task SaveActAsync(Func<RuleSet, RuleSet> change)
+    {
+        await main.RunAsync(Strings.Rules_Title, () => main.Engine.UpdateRules(change(main.Engine.Rules))).ConfigureAwait(true);
+        ReloadAct();
+    }
+
+    private void ReloadAct()
+    {
+        ActRows.Clear();
+        var engine = main.Engine;
+        if (!engine.HasAct)
+        {
+            ActState = Strings.Act_NotFound;
+            return;
+        }
+
+        ActState = engine.BacksUpAct ? Strings.Act_Intro : Strings.Act_Off;
+        foreach (var plugin in engine.ActPluginList())
+        {
+            var files = ActPlugins.Expand(engine.RoamingFolder, plugin.Paths).Count(p => engine.Rules.ExclusionReason(Roots.Act, p) is null);
+            ActRows.Add(new ActRow(this, plugin, files));
+        }
+    }
+
     /// <summary>How many single settings have their own choice from the transfer page; empty when none.</summary>
     [ObservableProperty]
     public partial string SettingChoicesText { get; set; } = string.Empty;
@@ -362,6 +464,7 @@ public sealed partial class RulesViewModel : ObservableObject
 
         ReloadFiles();
         ReloadExclusions();
+        ReloadAct();
 
         Plugins.Clear();
         foreach (var plugin in PluginRules.List(main.Engine.PluginFolder))

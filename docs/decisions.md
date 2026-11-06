@@ -491,3 +491,32 @@ Append-only. Never edit or delete past entries; a later entry may supersede an e
   - Rejected: a choice for one transfer only (the automatic transfer would undo it next time);
     `FFXIV.cfg` (belongs to one device and is never taken); plugin JSON fields (after the Dalamud
     test, as agreed); binary files (no field may be changed by a guessed position).
+- (2026-11-06) ACT in the backup (FR-085 to FR-087). The owner noted that ACT was missing: only its
+  settings matter, never its logs, and the backup should follow which plugins are installed
+  instead of needing code per plugin, with a proposal per plugin that can be changed. Decided:
+  - A new root `act` is the roaming folder `%APPDATA%`, never walked as a whole: only the paths
+    found for ACT and its plugins are read. Paths are relative to it, so they fit a device with
+    another Windows user name. Rejected: one root per folder (ACT's folder, `anoyetta`, plugin
+    folders), which would need roots that change with the plugins.
+  - The plugins come from ACT's own list in its settings file. Their settings are found in ACT's
+    settings folder (ACT's convention for plugins), in a plugin's own folder (settings files at
+    its top level only), through paths written in those settings (this finds cactbot's user
+    folder in OverlayPlugin's settings), and in a short table for places no path points to
+    (Hojoring's `anoyetta\ACT`). The table is data, so a new case is one entry.
+  - Paths that look like logs, caches, temporary files or backups are never followed, judged only
+    below the roaming folder so a user name never decides. Exclusions in the file matrix keep
+    logs, caches, backups and program files out even when a user's path names them. A named
+    folder above 20 MB is shown, not proposed.
+  - ACT's own settings file holds this device's plugin paths, windows and log folder: backed up,
+    never taken. The plugins' settings follow the area; since ACT rewrites them on every exit,
+    a file both changed goes to the state backed up later.
+  - Program files are not backed up (about 330 MB on the owner's device, and code should not be
+    copied between devices); the transfer page names the plugins the other device has and this
+    one lacks instead.
+  - While ACT runs, its files are not written; the automatic transfer leaves the revision
+    unhandled so a later try takes them. ACT is recognised by its process name.
+  - Older versions of the application reject revisions with the root `act`, as with `dalamud`:
+    all devices need this version.
+  - Tests never read the real roaming folder: each simulated device has its own. An earlier test
+    run before this guard read the owner's ACT folder; it only read, and the files' times show no
+    change.

@@ -111,6 +111,23 @@ position.
 | `installedPlugins\` | Ignore | unconfirmed (launcher FAQ) | Must not be copied; the launcher installs plugins itself |
 | `*.log`, `*.dmp`, `*.tspack` | Ignore | confirmed | |
 
+## ACT (Advanced Combat Tracker)
+
+`%APPDATA%\` (root `act`; owner's request, 2026-11-06). Only the paths found for ACT and its
+plugins are read, never the whole folder. Paths are kept relative to `%APPDATA%`, so they fit a
+device with another Windows user name.
+
+| File or pattern | Class | Known | Note |
+|---|---|---|---|
+| `Advanced Combat Tracker\Config\Advanced Combat Tracker.config.xml` | Mixed (backed up, rule never) | confirmed (structure) | ACT's own settings: the list of plugins with full paths and whether each is loaded, window positions, the log folder. Read to find the plugins; never taken from another device |
+| `Advanced Combat Tracker\Config\<Plugin>.config.xml` or `.json` | Shared, area ACT | confirmed (existence) | Plugins keep their settings here by ACT's convention (`FFXIV_ACT_Plugin.config.xml`, `RainbowMage.OverlayPlugin.config.json`); ACT rewrites them on exit |
+| `Advanced Combat Tracker\Config\Backup\`, `*.backup` | Ignore | confirmed | ACT's own daily copies of its settings |
+| `Advanced Combat Tracker\Plugins\cactbot\cactbot\user\` | Shared, area ACT | confirmed (path in OverlayPlugin's settings) | cactbot's user files; found through `CactbotUserDirectory` in OverlayPlugin's settings |
+| `anoyetta\ACT\*.xml`, `*.config` | Shared, area ACT | confirmed (existence) | Hojoring's settings (spell timers, telops, TTS); no path points here, so it is in the table of known places |
+| `anoyetta\ACT\logs\`, `tts cache\`, `fflogs.db` | Ignore | confirmed | Logs, speech cache, downloaded data |
+| `Advanced Combat Tracker\Plugins\` (`*.dll` and the rest) | Ignore | confirmed | Programs, about 330 MB on one device; ACT and the plugins update them themselves |
+| `Advanced Combat Tracker\FFXIVLogs\`, `*.log`, `*historydb*`, `OverlayPluginCache\`, `OverlayPluginCef\` | Ignore | confirmed | Combat logs (about 17 GB on one device), history and browser caches |
+
 ## Consequences already visible
 
 - A plugin is synced only when the user turns it on (opt-in), and each plugin needs its own rule for
