@@ -82,6 +82,40 @@ public sealed partial class PlanRow : ObservableObject
     partial void OnIsSelectedChanged(bool value) => Item.Selected = value && Item.Selectable;
 }
 
+/// <summary>One setting that differs, as shown under the transfer list.</summary>
+/// <param name="Name">A readable name where one is known, else the setting's own name.</param>
+/// <param name="Setting">The setting's own name, shown small when <paramref name="Name"/> is a readable one; else empty.</param>
+/// <param name="Here">The value on this device.</param>
+/// <param name="There">The value on the other device.</param>
+/// <param name="Outcome">What happens to it when the file is taken.</param>
+/// <param name="IsKnown">Whether a readable name is known: such settings are the important ones and shown first.</param>
+public sealed record DiffRow(string Name, string Setting, string Here, string There, string Outcome, bool IsKnown)
+{
+    public override string ToString() => Name;
+}
+
+/// <summary>The differing settings of one group, folded open or shut.</summary>
+public sealed partial class DiffGroup : ObservableObject
+{
+    public DiffGroup(string name, IReadOnlyList<DiffRow> rows, bool expanded)
+    {
+        Name = name;
+        Rows = rows;
+        IsExpanded = expanded;
+    }
+
+    public string Name { get; }
+
+    public IReadOnlyList<DiffRow> Rows { get; }
+
+    public string Header => Text.Format(Strings.Diff_GroupHeader, Name, Rows.Count);
+
+    [ObservableProperty]
+    public partial bool IsExpanded { get; set; }
+
+    public override string ToString() => Header;
+}
+
 /// <summary>The transfer page: choose a source, preview, apply, undo.</summary>
 public sealed partial class TransferViewModel : ObservableObject
 {
@@ -123,6 +157,109 @@ public sealed partial class TransferViewModel : ObservableObject
 
     [ObservableProperty]
     public partial bool HasPlan { get; set; }
+
+    /// <summary>The row whose differences are shown below the list.</summary>
+    [ObservableProperty]
+    public partial PlanRow? SelectedRow { get; set; }
+
+    /// <summary>The differing settings of the selected file, by group.</summary>
+    public ObservableCollection<DiffGroup> DiffGroups { get; } = [];
+
+    /// <summary>The title above the differences; empty when nothing is shown.</summary>
+    [ObservableProperty]
+    public partial string DiffTitle { get; set; } = string.Empty;
+
+    /// <summary>What the differences mean for this file: not readable, not selected, or a part stays here.</summary>
+    [ObservableProperty]
+    public partial string DiffNote { get; set; } = string.Empty;
+
+    private int diffVersion;
+
+    partial void OnSelectedRowChanged(PlanRow? value) => _ = ShowDifferencesAsync(value);
+
+    /// <summary>
+    /// Reads what differs inside the selected file (owner's request, 2026-11-06). The important
+    /// settings, those with a readable name, come first and their groups are open; the rest is
+    /// folded away under its group. Read-only.
+    /// </summary>
+    private async Task ShowDifferencesAsync(PlanRow? row)
+    {
+        var version = ++diffVersion;
+        DiffGroups.Clear();
+        DiffTitle = string.Empty;
+        DiffNote = string.Empty;
+        var current = plan;
+        if (row is null || current is null || row.Item.Reason == PlanReason.OnlyHere || row.Item.Action == PlanAction.Skip)
+        {
+            return;
+        }
+
+        SettingsComparisonResult? result = null;
+        var item = row.Item;
+        await main.RunAsync(Strings.Status_ReadingDifferences, () => result = main.Engine.CompareSettings(current, item), showErrors: false).ConfigureAwait(true);
+        if (version != diffVersion || result is null)
+        {
+            return;
+        }
+
+        DiffTitle = Text.Format(Strings.Diff_Title, row.AreaText, row.DisplayPath);
+        var notes = new List<string>();
+        if (!result.Readable)
+        {
+            notes.Add(Strings.Diff_Unreadable);
+        }
+        else if (result.Differences.Count == 0)
+        {
+            notes.Add(Strings.Diff_None);
+        }
+        else
+        {
+            notes.Add(result.Differences.Count == 1 && !result.Truncated
+                ? Strings.Diff_CountOne
+                : Text.Format(Strings.Diff_Count, result.Differences.Count + (result.Truncated ? "+" : string.Empty)));
+        }
+
+        if (item.Rule == ApplyRule.Never && !current.IsOwnDevice)
+        {
+            notes.Add(Strings.Diff_NeverTaken);
+        }
+        else if (result.Differences.Any(d => d.StaysHere))
+        {
+            notes.Add(Strings.Diff_PartsStay);
+        }
+
+        DiffNote = string.Join(" ", notes);
+        var never = item.Rule == ApplyRule.Never && !current.IsOwnDevice;
+        var groups = result.Differences
+            .Select(d => (Group: d.GroupKey is not null ? Text.Get(d.GroupKey) : d.GroupText.Length > 0 ? d.GroupText : Strings.Diff_GroupGeneral, Row: ToRow(d, never)))
+            .GroupBy(x => x.Group, StringComparer.Ordinal)
+            .Select(g => (Name: g.Key, Rows: g.Select(x => x.Row).OrderByDescending(r => r.IsKnown).ToList()))
+            .OrderByDescending(g => g.Rows.Any(r => r.IsKnown))
+            .ToList();
+        var openAll = result.Differences.Count <= 12;
+        for (var i = 0; i < groups.Count; i++)
+        {
+            DiffGroups.Add(new DiffGroup(groups[i].Name, groups[i].Rows, openAll || i == 0 || groups[i].Rows.Any(r => r.IsKnown)));
+        }
+
+        if (DiffGroups.Any(g => !g.IsExpanded))
+        {
+            DiffNote += " " + Strings.Diff_Folded;
+        }
+    }
+
+    private static DiffRow ToRow(SettingDifference difference, bool never)
+    {
+        var label = Strings.ResourceManager.GetString("Setting_" + difference.Setting, System.Globalization.CultureInfo.CurrentUICulture);
+        var outcome = never ? Strings.Diff_OutcomeNever : difference.StaysHere ? Strings.Diff_OutcomeStays : Strings.Diff_OutcomeTaken;
+        return new DiffRow(
+            label ?? difference.Setting,
+            label is null ? string.Empty : difference.Setting,
+            difference.Here ?? Strings.Diff_Missing,
+            difference.There ?? Strings.Diff_Missing,
+            outcome,
+            label is not null);
+    }
 
     /// <summary>Fills the list of devices.</summary>
     public void LoadSources()

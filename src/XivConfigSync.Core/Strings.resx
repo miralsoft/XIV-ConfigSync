@@ -77,6 +77,24 @@
   <data name="Common_Browse" xml:space="preserve"><value>Browse...</value></data>
   <data name="Common_Never" xml:space="preserve"><value>never</value></data>
   <data name="Common_Unknown" xml:space="preserve"><value>unknown</value></data>
+  <data name="Diff_ColHere" xml:space="preserve"><value>On this PC</value></data>
+  <data name="Diff_ColOutcome" xml:space="preserve"><value>When taken</value></data>
+  <data name="Diff_ColSetting" xml:space="preserve"><value>Setting</value></data>
+  <data name="Diff_ColThere" xml:space="preserve"><value>On the other PC</value></data>
+  <data name="Diff_Count" xml:space="preserve"><value>{0} settings differ.</value></data>
+  <data name="Diff_CountOne" xml:space="preserve"><value>One setting differs.</value></data>
+  <data name="Diff_Folded" xml:space="preserve"><value>The most important come first; open a folded group to see the rest.</value></data>
+  <data name="Diff_GroupGeneral" xml:space="preserve"><value>General</value></data>
+  <data name="Diff_GroupHeader" xml:space="preserve"><value>{0} ({1})</value></data>
+  <data name="Diff_Missing" xml:space="preserve"><value>(missing)</value></data>
+  <data name="Diff_NeverTaken" xml:space="preserve"><value>This file belongs to one PC and is never taken; the list only shows how the PCs differ.</value></data>
+  <data name="Diff_None" xml:space="preserve"><value>The settings are the same; the file differs only in its layout.</value></data>
+  <data name="Diff_OutcomeNever" xml:space="preserve"><value>never taken</value></data>
+  <data name="Diff_OutcomeStays" xml:space="preserve"><value>stays here</value></data>
+  <data name="Diff_OutcomeTaken" xml:space="preserve"><value>is taken</value></data>
+  <data name="Diff_PartsStay" xml:space="preserve"><value>Some groups are switched off on the Areas page: their settings stay as they are on this PC.</value></data>
+  <data name="Diff_Title" xml:space="preserve"><value>What differs: {0}, {1}</value></data>
+  <data name="Diff_Unreadable" xml:space="preserve"><value>The file differs, but its format is binary and not known, so single settings cannot be shown. It is taken whole or not at all.</value></data>
   <data name="Error_Generic" xml:space="preserve"><value>{0}</value></data>
   <data name="Error_Settings" xml:space="preserve"><value>The settings in {0} could not be read. Rename or remove the file to start with new settings.</value></data>
   <data name="Error_Unexpected" xml:space="preserve"><value>An unexpected error occurred. The details are in the log. The application stays open.</value></data>
@@ -240,6 +258,37 @@
   <data name="Rules_TabFiles" xml:space="preserve"><value>Files (advanced)</value></data>
   <data name="Rules_TabPlugins" xml:space="preserve"><value>Plugins (advanced)</value></data>
   <data name="Rules_Title" xml:space="preserve"><value>What is taken from other PCs</value></data>
+  <data name="Setting_FlyTextDispSize" xml:space="preserve"><value>Size of flying text</value></data>
+  <data name="Setting_FullScreenHeight" xml:space="preserve"><value>Full screen height</value></data>
+  <data name="Setting_FullScreenWidth" xml:space="preserve"><value>Full screen width</value></data>
+  <data name="Setting_KeyboardSpeed" xml:space="preserve"><value>Camera speed with the keyboard</value></data>
+  <data name="Setting_LogChatBubbleEnableChatBubble" xml:space="preserve"><value>Chat bubbles on</value></data>
+  <data name="Setting_LogFontSize" xml:space="preserve"><value>Chat font size (window 1)</value></data>
+  <data name="Setting_LogFontSizeLog2" xml:space="preserve"><value>Chat font size (window 2)</value></data>
+  <data name="Setting_LogFontSizeLog3" xml:space="preserve"><value>Chat font size (window 3)</value></data>
+  <data name="Setting_LogFontSizeLog4" xml:space="preserve"><value>Chat font size (window 4)</value></data>
+  <data name="Setting_LogPermeationRate" xml:space="preserve"><value>Chat transparency (window 1)</value></data>
+  <data name="Setting_LogPermeationRateLog2" xml:space="preserve"><value>Chat transparency (window 2)</value></data>
+  <data name="Setting_LogPermeationRateLog3" xml:space="preserve"><value>Chat transparency (window 3)</value></data>
+  <data name="Setting_LogPermeationRateLog4" xml:space="preserve"><value>Chat transparency (window 4)</value></data>
+  <data name="Setting_LogTabName2" xml:space="preserve"><value>Name of chat tab 2</value></data>
+  <data name="Setting_LogTabName3" xml:space="preserve"><value>Name of chat tab 3</value></data>
+  <data name="Setting_LogTimeDisp" xml:space="preserve"><value>Time stamps in the chat</value></data>
+  <data name="Setting_MapDispSize" xml:space="preserve"><value>Size of the map</value></data>
+  <data name="Setting_MouseSpeed" xml:space="preserve"><value>Mouse speed</value></data>
+  <data name="Setting_NamePlateDispSize" xml:space="preserve"><value>Size of name plates</value></data>
+  <data name="Setting_PadSpeed" xml:space="preserve"><value>Camera speed with the game pad</value></data>
+  <data name="Setting_PopUpTextDispSize" xml:space="preserve"><value>Size of pop-up text</value></data>
+  <data name="Setting_ScreenHeight" xml:space="preserve"><value>Window height</value></data>
+  <data name="Setting_ScreenMode" xml:space="preserve"><value>Display mode</value></data>
+  <data name="Setting_ScreenWidth" xml:space="preserve"><value>Window width</value></data>
+  <data name="Setting_SoundBgm" xml:space="preserve"><value>Music volume</value></data>
+  <data name="Setting_SoundEnv" xml:space="preserve"><value>Ambient sound volume</value></data>
+  <data name="Setting_SoundMaster" xml:space="preserve"><value>Master volume</value></data>
+  <data name="Setting_SoundSe" xml:space="preserve"><value>Sound effects volume</value></data>
+  <data name="Setting_SoundSystem" xml:space="preserve"><value>System sounds volume</value></data>
+  <data name="Setting_SoundVoice" xml:space="preserve"><value>Voice volume</value></data>
+  <data name="Setting_ToolTipDispSize" xml:space="preserve"><value>Size of tooltips</value></data>
   <data name="Settings_AutoApply" xml:space="preserve"><value>Take the areas switched on from other PCs automatically (with a backup first)</value></data>
   <data name="Settings_Autostart" xml:space="preserve"><value>Start with Windows (in the notification area)</value></data>
   <data name="Settings_BackupOnGameExit" xml:space="preserve"><value>Back up automatically after playing</value></data>
@@ -306,6 +355,7 @@
   <data name="Status_Cleaning" xml:space="preserve"><value>Moving files to the Recycle Bin...</value></data>
   <data name="Status_Comparing" xml:space="preserve"><value>Comparing...</value></data>
   <data name="Status_Merging" xml:space="preserve"><value>Merging plugin repositories...</value></data>
+  <data name="Status_ReadingDifferences" xml:space="preserve"><value>Reading the differences...</value></data>
   <data name="Status_Ready" xml:space="preserve"><value>Ready.</value></data>
   <data name="Status_Recovering" xml:space="preserve"><value>Recovering an interrupted transfer...</value></data>
   <data name="Status_Refreshing" xml:space="preserve"><value>Checking the sync folder...</value></data>

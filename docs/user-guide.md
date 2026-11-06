@@ -62,6 +62,7 @@ settings of this PC, and the other PC takes them from here, **Cancel** leaves th
 - Files of an area switched off, and settings of one PC, are not offered from another PC.
 - Files that exist only on this PC, not in the chosen backup, are never deleted. A note says how
   many there are; **Also show files with nothing to do** lists them with the proposal *Only here*.
+- Select a row to see **what differs** inside the file: each setting with its value here and on the other PC, and whether it is taken or stays here. The most important settings come first; the rest is folded into groups you can open. This works for the game's settings files and for plugin settings; for binary files such as hotbars and the HUD layout, only the fact that they differ can be shown. Values that look like passwords or keys are hidden.
 - **Take selected** saves the current files first, then replaces them. **Undo last transfer**
   puts the saved files back.
 - **Merge plugin repositories:** adds the custom plugin repositories of the chosen PC that this

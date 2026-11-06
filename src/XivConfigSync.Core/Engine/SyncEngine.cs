@@ -729,6 +729,24 @@ public sealed class SyncEngine
         return new ApplyResult(snapshotId, selected.Count, BackupAfterChange(correlation));
     }
 
+    /// <summary>
+    /// What differs inside one file of a plan, setting by setting, as far as the file can be read.
+    /// Read-only: the source's object from the sync folder, this device's file from its folder.
+    /// </summary>
+    public SettingsComparisonResult CompareSettings(ApplyPlan plan, PlanItem item)
+    {
+        if (!Roots.TryGetValue(item.Root, out var folder) || folder is null)
+        {
+            return SettingsComparisonResult.Unreadable;
+        }
+
+        var source = OpenStore().ReadObject(plan.SourceDeviceId, item.SourceHash);
+        var full = RelativePath.Combine(folder, item.Path);
+        var local = File.Exists(full) ? FileOps.ReadStable(full).Content : null;
+        var keep = plan.IsOwnDevice ? null : Rules.KeepLocalKeys(item.Root, item.Path);
+        return SettingsComparison.Compare(item.Root, item.Path, local, source, keep);
+    }
+
     /// <summary>The applies that can be undone, newest first. Works without the sync folder.</summary>
     public IReadOnlyList<SnapshotManifest> ListSnapshots() => NewApplier(null).ListSnapshots();
 

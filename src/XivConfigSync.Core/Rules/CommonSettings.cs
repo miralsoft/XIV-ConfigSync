@@ -89,6 +89,39 @@ public static class CommonSettings
     // Latin-1 maps every byte to one char and back, so bytes outside ASCII survive unchanged.
     private static readonly Encoding Latin1 = Encoding.Latin1;
 
+    /// <summary>
+    /// The settings of a file of this shape with the section each is in (the last header line
+    /// before it, without the angle brackets), in file order. Null when the file is not of the
+    /// known shape. Read-only, to show what differs.
+    /// </summary>
+    public static IReadOnlyList<(string Section, string Key, string Value)>? Read(byte[] content)
+    {
+        var lines = Split(content);
+        if (lines is null)
+        {
+            return null;
+        }
+
+        var section = string.Empty;
+        var settings = new List<(string, string, string)>();
+        foreach (var line in lines)
+        {
+            if (line.Key is null)
+            {
+                if (line.Text.StartsWith('<'))
+                {
+                    section = line.Text.Trim('<', '>');
+                }
+
+                continue;
+            }
+
+            settings.Add((section, line.Key, line.Value!.TrimEnd('\0')));
+        }
+
+        return settings;
+    }
+
     private sealed record Line(string Text, string End, string? Key, string? Value);
 
     private static List<Line>? Split(byte[] content)

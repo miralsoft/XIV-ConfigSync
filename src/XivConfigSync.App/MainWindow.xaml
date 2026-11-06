@@ -333,10 +333,107 @@
                         VerticalAlignment="Center" />
                 </WrapPanel>
             </StackPanel>
+            <Border
+                AutomationProperties.AutomationId="Differences"
+                DockPanel.Dock="Bottom"
+                Margin="0,10,0,0"
+                Style="{StaticResource Card}"
+                Visibility="{Binding DiffTitle, Converter={StaticResource TextToVisibility}}">
+                <DockPanel>
+                    <StackPanel DockPanel.Dock="Top">
+                        <TextBlock
+                            Style="{StaticResource SectionTitle}"
+                            Text="{Binding DiffTitle}"
+                            TextWrapping="Wrap" />
+                        <TextBlock
+                            AutomationProperties.AutomationId="DiffNote"
+                            Margin="0,0,0,6"
+                            Style="{StaticResource Muted}"
+                            Text="{Binding DiffNote}"
+                            TextWrapping="Wrap" />
+                        <Grid Margin="26,0,0,4">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="2*" />
+                                <ColumnDefinition Width="1.4*" />
+                                <ColumnDefinition Width="1.4*" />
+                                <ColumnDefinition Width="1*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock FontWeight="SemiBold" Text="{x:Static core:Strings.Diff_ColSetting}" />
+                            <TextBlock
+                                FontWeight="SemiBold"
+                                Grid.Column="1"
+                                Text="{x:Static core:Strings.Diff_ColHere}" />
+                            <TextBlock
+                                FontWeight="SemiBold"
+                                Grid.Column="2"
+                                Text="{x:Static core:Strings.Diff_ColThere}" />
+                            <TextBlock
+                                FontWeight="SemiBold"
+                                Grid.Column="3"
+                                Text="{x:Static core:Strings.Diff_ColOutcome}" />
+                        </Grid>
+                    </StackPanel>
+                    <ScrollViewer MaxHeight="180" VerticalScrollBarVisibility="Auto">
+                        <ItemsControl AutomationProperties.AutomationId="DiffGroups" ItemsSource="{Binding DiffGroups}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Expander
+                                        AutomationProperties.Name="{Binding Header}"
+                                        Header="{Binding Header}"
+                                        IsExpanded="{Binding IsExpanded}"
+                                        Margin="0,2">
+                                        <ItemsControl ItemsSource="{Binding Rows}" Margin="2,2,0,4">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Grid Margin="0,1">
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="2*" />
+                                                            <ColumnDefinition Width="1.4*" />
+                                                            <ColumnDefinition Width="1.4*" />
+                                                            <ColumnDefinition Width="1*" />
+                                                        </Grid.ColumnDefinitions>
+                                                        <StackPanel Margin="0,0,8,0">
+                                                            <TextBlock Text="{Binding Name}" TextWrapping="Wrap" />
+                                                            <TextBlock
+                                                                FontFamily="Consolas"
+                                                                FontSize="11"
+                                                                Style="{StaticResource Muted}"
+                                                                Text="{Binding Setting}"
+                                                                Visibility="{Binding Setting, Converter={StaticResource TextToVisibility}}" />
+                                                        </StackPanel>
+                                                        <TextBlock
+                                                            FontFamily="Consolas"
+                                                            Grid.Column="1"
+                                                            Margin="0,0,8,0"
+                                                            Text="{Binding Here}"
+                                                            TextWrapping="Wrap" />
+                                                        <TextBlock
+                                                            FontFamily="Consolas"
+                                                            Grid.Column="2"
+                                                            Margin="0,0,8,0"
+                                                            Text="{Binding There}"
+                                                            TextWrapping="Wrap" />
+                                                        <TextBlock
+                                                            Grid.Column="3"
+                                                            Text="{Binding Outcome}"
+                                                            TextWrapping="Wrap" />
+                                                    </Grid>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </Expander>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </DockPanel>
+            </Border>
             <DataGrid
                 AutomationProperties.AutomationId="PlanRows"
                 AutomationProperties.Name="{x:Static core:Strings.Transfer_Title}"
-                ItemsSource="{Binding Rows}">
+                ItemsSource="{Binding Rows}"
+                MinHeight="150"
+                SelectedItem="{Binding SelectedRow}">
                 <DataGrid.Columns>
                     <DataGridTemplateColumn Header="{x:Static core:Strings.Col_Take}" Width="Auto">
                         <DataGridTemplateColumn.CellTemplate>

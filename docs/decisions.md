@@ -460,3 +460,19 @@ Append-only. Never edit or delete past entries; a later entry may supersede an e
     generically, with fields that look like positions, sizes or paths suggested to stay. Deferred
     because the field names are the developers' own and because it is not yet known whether
     Dalamud keeps a settings file written from outside.
+- (2026-11-06) Showing which settings differ (FR-083). The owner wanted to see what differs, not
+  only that a file is taken, for plugins too, readable and with the details folded away. Decided:
+  - Selecting a row on the transfer page shows the differing settings below the list: the value
+    here, the value on the other PC, and what happens when the file is taken. Read-only.
+  - The game's text files (`COMMON.DAT`, `CONTROL0.DAT`, `CONTROL1.DAT`, `FFXIV.cfg`) are compared
+    by setting name and occurrence; JSON files of plugins and Dalamud by field path. Groups: the
+    parts of FR-082, else the file's section or the top-level field.
+  - Readability: about 30 settings get a readable name (chat font size and transparency, window
+    size, volumes, sizes of map and tooltips and similar), derived from the setting's own name;
+    the internal name stays visible under it. These come first and their groups are open; the
+    rest is folded. Rejected: a readable name for each of the about 600 settings of the game, and
+    any names for plugin fields, which only each plugin defines.
+  - Values whose name suggests a credential or a session (password, token, key, session, last
+    login and similar) are shown as dots; long values are shortened; at most 400 differences are
+    listed.
+  - Binary files (hotbars, macros, HUD layout, key bindings) only say that they differ.
